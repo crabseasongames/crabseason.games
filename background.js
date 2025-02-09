@@ -20,15 +20,15 @@ function createProgram(gl, vertexShader, fragmentShader) {
 function resizeCanvasToDisplaySize(canvas) {
   const displayWidth  = canvas.clientWidth;
   const displayHeight = canvas.clientHeight;
- 
+
   const needResize = canvas.width  !== displayWidth ||
                      canvas.height !== displayHeight;
- 
+
   if (needResize) {
     canvas.width  = displayWidth;
     canvas.height = displayHeight;
   }
- 
+
   return needResize;
 }
 
@@ -73,9 +73,9 @@ const fs = `#version 300 es
   }
 
   void main() {
-    float t = 1.0 * u_time;
-    vec2 uv = vec2(gl_FragCoord.x - u_resolution.x / 2.0, (u_resolution.y - gl_FragCoord.y) - u_resolution.y / 2.0) / u_resolution.xx;
-    vec4 color = vec4(0.3, 0.6, 0.7, 1.0);
+    vec2 uv = (vec2(gl_FragCoord.x, (u_resolution.y - gl_FragCoord.y)) / u_resolution.xx) - vec2(0.5, 0.25);
+    float t = 1.0 * u_time + length(uv) * 100.0;
+    vec4 color = vec4(0.3 + 0.05 * sin(t), 0.6 + 0.1 * sin(t * 3.0), 0.7 + 0.12 * sin(t * 7.0), 1.0);
 
     float d;
     vec4 c = vec4(0.0);
