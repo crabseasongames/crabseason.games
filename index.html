@@ -1,8 +1,57 @@
 <head>
+<link rel="stylesheet" href="main.css">
+<style>
+
+body {
+  background-color: #e0e0e0;
+  font-family: monospace;
+}
+
+#background {
+  background-color: #000;
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  z-index: -10;
+}
+
+#main-container {
+  width: 500px;
+  margin: 0 auto;
+  padding: 50px;
+  background-color: #f8f8f8;
+  border-radius: 5px;
+
+
+  position: relative;
+  top: 50%;
+  -webkit-transform: translateY(-50%);
+  -ms-transform: translateY(-50%);
+  transform: translateY(-50%);
+}
+
+#head {
+  font-size: 50px;
+  text-align: center;
+  margin-bottom: 10px;
+}
+
+#subhead {
+  font-size: 30px;
+  text-align: center;
+}
+
+</style>
 </head>
 <body>
-<h1>Crab Season Games</h1>
-<h3>the website</h3>
+<canvas id="background"></canvas>
+<div id="main-container">
+  <div id="head">Crab Season Games</div>
+  <div id="subhead">the website</div>
+</div>
+<script src="background.js"></script>
 </body>
 
 
