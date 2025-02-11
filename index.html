@@ -1,13 +1,107 @@
 <head>
-<link rel="stylesheet" href="main.css">
+<style>
+
+@font-face {
+  font-family: "Noto Sans";
+  src: url("NotoSans.ttf");
+}
+
+body {
+  font-family: "Noto Sans", monospace;
+  margin: 0;
+  display: flex;
+}
+
+#background {
+  background-color: #000;
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  z-index: -10;
+}
+
+#main-container {
+  width: 100%;
+  text-align: center;
+  margin: auto auto;
+}
+
+#a, #b, #c, #d, #cutout {
+  background-color: #fff;
+  height: 96px;
+}
+
+#a, #d {
+  height: 60px;
+  width: 820px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+#b, #c {
+  display: inline-block;
+  width: 82px;
+}
+
+#head {
+  display: inline-block;
+  background-color: #fff;
+  text-align: center;
+  font-size: 70px;
+  vertical-align: bottom;
+  width: 656px;
+}
+
+#cutout {
+  display: inline-block;
+  mix-blend-mode: lighten;
+  text-shadow: 0 0 1px #000;
+}
+
+</style>
 </head>
 <body>
-<canvas id="background"></canvas>
-<div id="main-container">
-  <div id="head">Crab Season Games</div>
-  <!-- <div id="subhead">the website</div> -->
-</div>
-<script src="background.js"></script>
+<div id="main-container"><canvas id="background"></canvas><div id="a"></div><div id="b"></div><div id="cutout"><div id="head">Crab Season Games</div></div><div id="c"></div><div id="d"></div></div>
+<script src="draw.js"></script>
+<script>
+const canvas = document.querySelector("#background");
+canvas.setAttribute("width", window.innerWidth);
+canvas.setAttribute("height", window.innerHeight);
+draw(canvas,
+`#version 300 es
+  precision highp float;
+
+  uniform vec2 u_resolution;
+  uniform float u_time;
+
+  out vec4 outColor;
+
+  float circle(float radius, vec2 p) {
+    float t = u_time * 0.5;
+    // float r = radius * (0.1 + tan(0.4 * t) * tan(0.4 * (t + 0.0)));
+    // float r = (radius * (1.0 + sin(t * 2.0) * sin(t * 5.0)) * 0.5);
+    float r = radius * (1.0 + sin(t) + 0.02 * sin(100.0 * (1.0 + 0.1 * sin(t)) * t));
+    return length(p) - r;
+  }
+
+  void main() {
+    vec2 uv = (vec2(gl_FragCoord.x, (u_resolution.y - gl_FragCoord.y)) / u_resolution.xx) - vec2(0.5, 0.25);
+    float t = 1.0 * u_time + length(uv) * 100.0;
+    vec4 color = vec4(0.3 + 0.05 * sin(t), 0.6 + 0.1 * sin(t * 3.0), 0.7 + 0.12 * sin(t * 7.0), 1.0);
+
+    float d;
+    vec4 c = vec4(0.0);
+    int octaves = 2 + int(10.0 * (1.0 - cos(u_time * 0.08)));
+    for (int i = 0; i < octaves; i++) {
+        d = abs(circle(0.1, fract(pow(2.0, float(i)) * uv) - 0.5));
+        c += color * 0.001 / smoothstep(0.05, 6.0, pow(d, 0.45));
+    }
+    outColor = c;
+  }
+`);
+</script>
 </body>
 
 
