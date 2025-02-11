@@ -7,7 +7,42 @@
   <div id="head">Crab Season Games</div>
   <!-- <div id="subhead">the website</div> -->
 </div>
-<script src="background.js"></script>
+<script src="draw.js"></script>
+<script>
+const canvas = document.querySelector("#background");
+canvas.setAttribute("width", window.innerWidth);
+canvas.setAttribute("height", window.innerHeight);
+resizeCanvasToDisplaySize(canvas);
+draw(canvas, `#version 300 es
+  precision highp float;
+
+  uniform vec2 u_resolution;
+  uniform float u_time;
+
+  out vec4 outColor;
+
+  float circle(float radius, vec2 p) {
+    float t = u_time * 0.5;
+    float r = radius * (1.0 + sin(t) + 0.02 * sin(100.0 * (1.0 + 0.1 * sin(t)) * t));
+    return length(p) - r;
+  }
+
+  void main() {
+    vec2 uv = (vec2(gl_FragCoord.x, (u_resolution.y - gl_FragCoord.y)) / u_resolution.xx) - vec2(0.5, 0.25);
+    float t = 1.0 * u_time + length(uv) * 100.0;
+    vec4 color = vec4(0.3 + 0.05 * sin(t), 0.6 + 0.1 * sin(t * 3.0), 0.7 + 0.12 * sin(t * 7.0), 1.0);
+
+    float d;
+    vec4 c = vec4(0.0);
+    int octaves = 2 + int(10.0 * (1.0 - cos(u_time * 0.08)));
+    for (int i = 0; i < octaves; i++) {
+        d = abs(circle(0.1, fract(pow(2.0, float(i)) * uv) - 0.5));
+        c += color * 0.001 / smoothstep(0.05, 6.0, pow(d, 0.45));
+    }
+    outColor = c;
+  }
+`);
+</script>
 </body>
 
 
