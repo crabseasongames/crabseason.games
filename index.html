@@ -85,7 +85,7 @@ draw(canvas, `#version 300 es
     // uv += u_mouse * 0.01;
     // uv = uv * rotate(u_time * 0.01 / pow(length(uv), 0.1));
     float t = 1.0 * u_time + length(uv) * 100.0;
-    vec4 color = vec4(0.3 + 0.02 * sin(t), 0.6 + 0.05 * sin(t * 3.0), 0.7 + 0.06 * sin(t * 7.0), 1.0);
+    vec4 color = vec4(0.3 + 0.05 * sin(t), 0.6 + 0.1 * sin(t * 3.0), 0.7 + 0.12 * sin(t * 7.0), 1.0);
 
     float d;
     vec4 c = vec4(0.0);
