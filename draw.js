@@ -52,6 +52,7 @@ function draw(canvas, fragmentShaderString) {
   const positionAttributeLocation = gl.getAttribLocation(program, "a_position");
   const resolutionLocation = gl.getUniformLocation(program, "u_resolution");
   const timeLocation = gl.getUniformLocation(program, "u_time");
+  const mouseLocation = gl.getUniformLocation(program, "u_mouse");
   const vao = gl.createVertexArray();
   gl.bindVertexArray(vao);
   gl.bindBuffer(gl.ARRAY_BUFFER, gl.createBuffer());
@@ -62,10 +63,17 @@ function draw(canvas, fragmentShaderString) {
   gl.enableVertexAttribArray(positionAttributeLocation);
   gl.vertexAttribPointer(positionAttributeLocation, 2, gl.FLOAT, false, 0, 0);
 
+
+  let mouseX = 0.5;
+  let mouseY = 0.5;
+
+  addEventListener("mousemove", (e) => {
+    mouseX = (e.screenX / gl.canvas.width) - 0.5;
+    mouseY = (e.screenY / gl.canvas.height) - 0.5;
+  });
+
   let render = (time) => {
     time *= 0.001;
-    canvas.setAttribute("width", window.innerWidth);
-    canvas.setAttribute("height", window.innerHeight);
     resizeCanvasToDisplaySize(gl.canvas);
 
     gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
@@ -73,11 +81,13 @@ function draw(canvas, fragmentShaderString) {
     gl.bindVertexArray(vao);
     gl.uniform2f(resolutionLocation, gl.canvas.width, gl.canvas.height);
     gl.uniform1f(timeLocation, time);
+    gl.uniform2f(mouseLocation, mouseX, mouseY);
     gl.drawArrays(gl.TRIANGLES, 0, 6);
 
     requestAnimationFrame(render);
   };
 
   requestAnimationFrame(render);
+
 }
 

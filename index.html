@@ -1,44 +1,105 @@
 <head>
 <link rel="stylesheet" href="main.css">
+<style>
+@font-face {
+  font-family: "Noto Sans";
+  src: url("NotoSans.ttf");
+}
+
+body {
+  font-family: "Noto Sans", monospace;
+}
+
+#background {
+  background-color: #000;
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  z-index: -10;
+}
+
+#main-container {
+  width: 700px;
+  margin: 0 auto;
+  padding: 60px;
+  background-color: #fff;
+  position: relative;
+  top: 50%;
+  transform: translateY(-50%);
+  mix-blend-mode: lighten;
+}
+
+#head {
+  text-align: center;
+  font-size: 70px;
+}
+
+#subhead {
+  font-size: 30px;
+  text-align: center;
+}
+
+</style>
 </head>
 <body>
 <canvas id="background"></canvas>
 <div id="main-container">
   <div id="head">Crab Season Games</div>
-  <!-- <div id="subhead">the website</div> -->
 </div>
 <script src="draw.js"></script>
 <script>
 const canvas = document.querySelector("#background");
-canvas.setAttribute("width", window.innerWidth);
-canvas.setAttribute("height", window.innerHeight);
-resizeCanvasToDisplaySize(canvas);
+let resize = () => {
+  canvas.setAttribute("width", window.innerWidth);
+  canvas.setAttribute("height", window.innerHeight);
+}
+addEventListener("resize", resize);
+resize()
+
 draw(canvas, `#version 300 es
   precision highp float;
 
   uniform vec2 u_resolution;
   uniform float u_time;
+  uniform vec2 u_mouse;
 
   out vec4 outColor;
 
-  float circle(float radius, vec2 p) {
-    float t = u_time * 0.5;
-    float r = radius * (1.0 + sin(t) + 0.02 * sin(100.0 * (1.0 + 0.1 * sin(t)) * t));
+  float hash(vec2 v, float t) {
+    return t * 1000000.0 * fract(v.x * v.y * 10000000.0);
+  }
+
+  float circle(float radius, vec2 p, float t) {
+    float r = radius * (1.0 + sin(t) + 0.02 * sin(100.0 * (1.0 + 0.15 * sin(t)) * t));
     return length(p) - r;
+  }
+
+  mat2 rotate(float theta) {
+    return mat2(vec2(cos(theta), sin(theta)), vec2(-sin(theta), cos(theta)));
   }
 
   void main() {
     vec2 uv = (vec2(gl_FragCoord.x, (u_resolution.y - gl_FragCoord.y)) / u_resolution.xx) - vec2(0.5, 0.25);
+    // uv += u_mouse * 0.01;
+    // uv = uv * rotate(u_time * 0.01 / pow(length(uv), 0.1));
     float t = 1.0 * u_time + length(uv) * 100.0;
-    vec4 color = vec4(0.3 + 0.05 * sin(t), 0.6 + 0.1 * sin(t * 3.0), 0.7 + 0.12 * sin(t * 7.0), 1.0);
+    vec4 color = vec4(0.3 + 0.02 * sin(t), 0.6 + 0.05 * sin(t * 3.0), 0.7 + 0.06 * sin(t * 7.0), 1.0);
 
     float d;
     vec4 c = vec4(0.0);
     int octaves = 2 + int(10.0 * (1.0 - cos(u_time * 0.08)));
     for (int i = 0; i < octaves; i++) {
-        d = abs(circle(0.1, fract(pow(2.0, float(i)) * uv) - 0.5));
+        d = abs(circle(0.1, fract(pow(2.0, float(i)) * uv) - 0.5, u_time * 0.5));
         c += color * 0.001 / smoothstep(0.05, 6.0, pow(d, 0.45));
     }
+
+    if (sin(hash(uv, u_time)) > 0.0) {
+      c *= 1.1 + 0.05 * sin(u_time);
+    }
+
+
     outColor = c;
   }
 `);
