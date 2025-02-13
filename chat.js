@@ -120,9 +120,7 @@ function startChat(chat, textbox, displayNumber) {
 
   setTimeout(() => { connectClient(); }, 1000);
 
-  setInterval(() => {
-    displayNumber(Object.keys(connections).length);
-  }, 1000);
+  setInterval(() => { displayNumber(Object.keys(connections).length); }, 1000);
 
   let die = () => {
     let peerIds = Object.keys(connections)
@@ -135,5 +133,4 @@ function startChat(chat, textbox, displayNumber) {
   };
 
   addEventListener("beforeunload", die);
-  addEventListener("unload", die);
 }
