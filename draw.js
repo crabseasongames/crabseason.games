@@ -10,7 +10,7 @@ function createShader(gl, type, source) {
 }
 
 function createProgram(gl, vertexShader, fragmentShader) {
-  var program = gl.createProgram();
+  const program = gl.createProgram();
   gl.attachShader(program, vertexShader);
   gl.attachShader(program, fragmentShader);
   gl.linkProgram(program);
@@ -44,7 +44,7 @@ function draw(canvas, fragmentShaderString) {
     }
   `;
 
-  var program = createProgram(
+  const program = createProgram(
     gl,
     createShader(gl, gl.VERTEX_SHADER, vs),
     createShader(gl, gl.FRAGMENT_SHADER, fragmentShaderString)
@@ -72,7 +72,7 @@ function draw(canvas, fragmentShaderString) {
     mouseY = (e.screenY / gl.canvas.height) - 0.5;
   });
 
-  let render = (time) => {
+  const render = (time) => {
     time *= 0.001;
     resizeCanvasToDisplaySize(gl.canvas);
 

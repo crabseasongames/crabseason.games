@@ -8,15 +8,14 @@
 
 body {
   font-family: "Noto Sans", monospace;
+  margin: 0;
 }
 
 #background {
   background-color: #000;
   position: absolute;
   left: 0;
-  right: 0;
   top: 0;
-  bottom: 0;
   z-index: -10;
 }
 
@@ -49,14 +48,14 @@ body {
   top: 50px;
   background-color: white;
   width: 300px;
-  height: 500px;
+  height: calc(90% - 126px);
   padding: 15px 15px 15px 25px;
   word-wrap: break-word;
 }
 
 #chat-textbox {
   position: absolute;
-  top: 550px;
+  top: calc(90% - 62px);
   left: 10px;
   background-color: #fff;
   padding: 20px;
@@ -101,6 +100,7 @@ const canvas = document.querySelector("#background");
 let resize = () => {
   canvas.setAttribute("width", window.innerWidth);
   canvas.setAttribute("height", window.innerHeight);
+
 }
 addEventListener("resize", resize);
 resize()
@@ -155,11 +155,13 @@ draw(canvas, `#version 300 es
 <script>
 
 const numberDisplay = document.getElementById("number-display");
-startChat(
-  document.getElementById("chat"),
-  document.getElementById("textbox"),
-  (n) => { numberDisplay.innerHTML = "<span id='chat-number'>" + n + " other people here</span>" }
-);
+const chat = document.getElementById("chat");
+const chatBox = document.getElementById("textbox");
+startChat(chat, chatBox, (n) => { numberDisplay.innerHTML = "<span id='chat-number'>" + n + " other people here</span>" });
+
+addEventListener("resize", () => {
+  chat.scroll(0, Number.MAX_SAFE_INTEGER);
+});
 
 
 </script>

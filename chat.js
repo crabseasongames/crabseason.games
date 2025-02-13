@@ -8,11 +8,6 @@
 
 function startChat(chat, textbox, displayNumber) {
 
-  let hosting = false;
-  let peerList = {};
-  let connections = {};
-  let client;
-
   function appendToChat(html) {
     chat.innerHTML += html;
     chat.scroll(0, Number.MAX_SAFE_INTEGER);
@@ -33,11 +28,63 @@ function startChat(chat, textbox, displayNumber) {
       }
   }
 
+  let hosting = false;
+  const peerList = {};
+  const connections = {};
+  let client;
+
+  const trackerId = "static_tracker_id_15702293750198783";
+
+  function startTracker(peerIds) {
+    let tracker = new Peer(trackerId);
+    tracker.on("error", (e) => {
+      setTimeout(startTracker, 10000);
+    });
+
+    tracker.on("open", (id) => {
+      hosting = true;
+      addNotification("now hosting chat");
+      tracker.on("connection", (conn) => {
+        // addNotification("tracker: got peer connection: " + conn.peer);
+        conn.on("close", () => {
+          delete peerList[conn.peer];
+        });
+        conn.on("data", (newPeerId) => {
+          let newPeerConn = tracker.connect(newPeerId);
+          newPeerConn.on("open", () => {
+            for (existingPeer in peerList) {
+              newPeerConn.send({ type: "peer", id: existingPeer });
+              peerList[existingPeer].send({ type: "peer", id: newPeerId });
+              // addNotification("tracker: registering: " + newPeerId + " <-> " + existingPeer);
+            }
+            peerList[newPeerId] = newPeerConn;
+          });
+        });
+      });
+
+      if (peerIds) {
+        peerIds.forEach((peerId) => {
+          let peerConn = tracker.connect(peerId);
+          peerConn.on("open", () => {
+            peerList[peerId] = peerConn;
+          });
+        });
+      }
+    });
+
+    setInterval(() => {
+      for (peer in connections) {
+        connections[peer].send({ type: "heartbeat" });
+      }
+    }, 5000);
+
+  }
+
   function connectClient() {
     client = new Peer("crab_" + Math.floor(Math.random() * 1000));
     client.on("open", (id) => {
       // addNotification("client: " + client.id);
-      let hostConn = client.connect(hostId);
+      let hostConn = client.connect(trackerId);
       hostConn.on("open", () => {
         addNotification("welcome " + client.id);
         textbox.focus();
@@ -57,7 +104,7 @@ function startChat(chat, textbox, displayNumber) {
               connections[data.id] = peerConn;
             });
           } else if (data.type == "change-host") {
-            becomeHost(data.peers);
+            startTracker(data.peers);
           }
         });
 
@@ -68,55 +115,18 @@ function startChat(chat, textbox, displayNumber) {
     });
   }
 
-  textbox.addEventListener("keyup", (e) => {
+  textbox.addEventListener("keydown", (e) => {
     if (e.keyCode == 13) {
       let text = textbox.value.trim();
       if (text.length) {
         sendMessage(textbox.value);
       }
       textbox.value = "";
+      e.preventDefault();
     }
   });
 
-  const hostId = "static_host_id_15702293750198783";
-
-  function becomeHost(peerIds) {
-
-    let host = new Peer(hostId);
-    host.on("open", (id) => {
-      hosting = true;
-      // addNotification("now hosting chat");
-      host.on("connection", (conn) => {
-        // addNotification("host: got peer connection: " + conn.peer);
-        conn.on("close", () => {
-          delete peerList[conn.peer];
-        });
-        conn.on("data", (newPeerId) => {
-          let newPeerConn = host.connect(newPeerId);
-          newPeerConn.on("open", () => {
-            for (existingPeer in peerList) {
-              newPeerConn.send({ type: "peer", id: existingPeer });
-              peerList[existingPeer].send({ type: "peer", id: newPeerId });
-              // addNotification("host: registering: " + newPeerId + " <-> " + existingPeer);
-            }
-            peerList[newPeerId] = newPeerConn;
-          });
-        });
-      });
-
-      if (peerIds) {
-        peerIds.forEach((peerId) => {
-          let peerConn = host.connect(peerId);
-          peerConn.on("open", () => {
-            peerList[peerId] = peerConn;
-          });
-        });
-      }
-    });
-
-  }
-
-  becomeHost();
+  startTracker();
 
   setTimeout(() => { connectClient(); }, 1000);
 
