@@ -124,7 +124,7 @@ function startChat(chat, textbox, displayNumber) {
     displayNumber(Object.keys(connections).length);
   }, 1000);
 
-  addEventListener("beforeunload", () => {
+  let die = () => {
     let peerIds = Object.keys(connections)
     if (hosting && peerIds.length) {
       connections[peerIds[Math.floor(Math.random() * peerIds.length)]].send({ type: "change-host", peers: peerIds });
@@ -132,5 +132,8 @@ function startChat(chat, textbox, displayNumber) {
     for (peer in connections) {
       connections[peer].close();
     }
-  });
+  };
+
+  addEventListener("beforeunload", die);
+  addEventListener("unload", die);
 }
