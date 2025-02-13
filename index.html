@@ -41,9 +41,56 @@ body {
   text-align: center;
 }
 
+#chat {
+  position: absolute;
+  overflow-y: scroll;
+  scrollbar-width: thin;
+  left: 10px;
+  top: 50px;
+  background-color: white;
+  width: 300px;
+  height: 500px;
+  padding: 15px 15px 15px 25px;
+  word-wrap: break-word;
+}
+
+#chat-textbox {
+  position: absolute;
+  top: 550px;
+  left: 10px;
+  background-color: #fff;
+  padding: 20px;
+}
+
+#chat-textbox textarea {
+  resize: none;
+  width: 300px;
+}
+
+.id {
+  font-size: 10px;
+  font-weight: bold;
+}
+
+.message {
+  text-indent: -10px;
+}
+
+#number-display {
+  position: absolute;
+  left: 10px;
+  top: 10px;
+  height: 30px;
+  width: 320px;
+  background-color: #f0f0f0;
+  padding: 10px;
+}
+
 </style>
 </head>
 <body>
+<div id="number-display"></div><div id="chat"></div>
+<div id="chat-textbox"><textarea id="textbox" spellcheck="false"></textarea></div>
 <canvas id="background"></canvas>
 <div id="main-container">
   <div id="head">Crab Season Games</div>
@@ -103,6 +150,18 @@ draw(canvas, `#version 300 es
     outColor = c;
   }
 `);
+</script>
+<script src="chat.js"></script>
+<script>
+
+const numberDisplay = document.getElementById("number-display");
+startChat(
+  document.getElementById("chat"),
+  document.getElementById("textbox"),
+  (n) => { numberDisplay.innerHTML = "<span id='chat-number'>" + n + " other people here</span>" }
+);
+
+
 </script>
 </body>
 
