@@ -43,7 +43,7 @@ function startChat(chat, textbox, displayNumber) {
 
     tracker.on("open", (id) => {
       hosting = true;
-      addNotification("now hosting chat");
+      // addNotification("running tracker");
       tracker.on("connection", (conn) => {
         // addNotification("tracker: got peer connection: " + conn.peer);
         conn.on("close", () => {
