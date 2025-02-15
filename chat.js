@@ -28,7 +28,7 @@ function startChat(chat, textbox, displayNumber) {
       }
   }
 
-  let hosting = false;
+  let tracking = false;
   const peerList = {};
   const connections = {};
   let client;
@@ -42,7 +42,7 @@ function startChat(chat, textbox, displayNumber) {
     });
 
     tracker.on("open", (id) => {
-      hosting = true;
+      tracking = true;
       // addNotification("running tracker");
       tracker.on("connection", (conn) => {
         // addNotification("tracker: got peer connection: " + conn.peer);
@@ -130,11 +130,12 @@ function startChat(chat, textbox, displayNumber) {
 
   setTimeout(() => { connectClient(); }, 1000);
 
+  displayNumber(Object.keys(connections).length);
   setInterval(() => { displayNumber(Object.keys(connections).length); }, 1000);
 
   let die = () => {
     let peerIds = Object.keys(connections)
-    if (hosting && peerIds.length) {
+    if (tracking && peerIds.length) {
       connections[peerIds[Math.floor(Math.random() * peerIds.length)]].send({ type: "change-host", peers: peerIds });
     }
     for (peer in connections) {
