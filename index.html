@@ -27,11 +27,13 @@ body {
   top: 50%;
   transform: translateY(-50%);
   mix-blend-mode: lighten;
+  box-shadow: inset 0 0 2px #000000;
 }
 
 #head {
   text-align: center;
   font-size: 70px;
+  text-shadow: 0 0 2px #000000;
 }
 
 #subhead {
@@ -73,14 +75,17 @@ body {
 
 #chat.minimized {
   height: 0;
+  opacity: 0;
 }
 
 #chat.minimized #chat-contents {
   height: 0;
+  opacity: 0;
 }
 
 #chat.minimized #chat-textbox {
   height: 0;
+  opacity: 0;
 }
 
 #chat {
@@ -93,7 +98,7 @@ body {
   height: 352px;
   word-wrap: break-word;
   overflow: hidden;
-  transition: height 0.5s;
+  transition: height 0.5s, opacity 0.5s;
 }
 
 #chat-contents {
@@ -102,7 +107,7 @@ body {
   scrollbar-color: rgba(255, 255, 255, 0.3) rgba(0, 0, 0, 0.3);
   padding: 10px 20px 0 20px;
   height: 266px;
-  transition: height 0.2s;
+  transition: height 0.5s, opacity 0.5s;
 }
 
 #chat-textbox {
@@ -111,7 +116,7 @@ body {
   width: calc(100% - 40px);
   padding: 20px 20px 20px 20px;
   background-color: rgba(0, 0, 0, 0.666);
-  transition: height 0.2s;
+  transition: height 0.5s, opacity 0.5s;
 }
 
 #chat-textbox textarea {
@@ -165,12 +170,16 @@ draw(canvas, `#version 300 es
 
   out vec4 outColor;
 
+  float fsin(float theta) {
+    return sin(theta) * smoothstep(6.2832, 0.01, fwidth(theta));
+  }
+
   float hash(vec2 v, float t) {
     return t * 1000000.0 * fract(v.x * v.y * 10000000.0);
   }
 
   float circle(float radius, vec2 p, float t) {
-    float r = radius * (1.0 + sin(t) + 0.02 * sin(100.0 * (1.0 + 0.15 * sin(t)) * t));
+    float r = radius * (1.0 + sin(t - 1.55) + 0.02 * sin(100.0 * (1.0 + 0.15 * sin(t)) * t));
     return length(p) - r;
   }
 
@@ -181,7 +190,7 @@ draw(canvas, `#version 300 es
   void main() {
     vec2 uv = (vec2(gl_FragCoord.x, (u_resolution.y - gl_FragCoord.y)) / u_resolution.xx) - vec2(0.5, 0.25);
     // uv += u_mouse * 0.01;
-    // uv = uv * rotate(u_time * 0.01 / pow(length(uv), 0.1));
+    uv = uv * rotate(u_time * 0.01 / pow(length(uv), 0.1));
     float t = 1.0 * u_time + length(uv) * 100.0;
     vec4 color = vec4(0.3 + 0.05 * sin(t), 0.6 + 0.1 * sin(t * 3.0), 0.7 + 0.12 * sin(t * 7.0), 1.0);
 
@@ -193,9 +202,9 @@ draw(canvas, `#version 300 es
         c += color * 0.001 / smoothstep(0.05, 6.0, pow(d, 0.45));
     }
 
-    // if (sin(hash(uv, u_time)) > 0.0) {
-    //   c *= 1.1 + 0.05 * sin(u_time);
-    // }
+    if (sin(hash(uv, u_time)) > 0.0) {
+      c *= 1.1 + 0.1 * sin(u_time * 0.5 - 1.55);
+    }
 
 
     outColor = c;
