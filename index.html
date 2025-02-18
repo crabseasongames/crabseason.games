@@ -18,6 +18,14 @@ body {
   z-index: -10;
 }
 
+#worms {
+  background-color: rgba(0, 0, 0, 0);
+  position: absolute;
+  left: 0;
+  top: 0;
+  z-index: -9;
+}
+
 #main-container {
   width: 700px;
   margin: 0 auto;
@@ -134,6 +142,14 @@ body {
   font-size: 16px;
 }
 
+.node {
+  width: 20px;
+  height: 20px;
+  position: absolute;
+  z-index: 100;
+/*  background-color: white;*/
+}
+
 </style>
 </head>
 <body>
@@ -145,21 +161,24 @@ body {
   </div>
 </div>
 <canvas id="background"></canvas>
+<canvas id="worms"></canvas>
 <div id="main-container">
   <div id="head">Crab Season Games</div>
 </div>
 <script src="draw.js"></script>
 <script>
-const canvas = document.querySelector("#background");
+const bg = document.querySelector("#background");
+const worms = document.querySelector("#worms");
 let resize = () => {
-  canvas.setAttribute("width", window.innerWidth);
-  canvas.setAttribute("height", window.innerHeight);
-
+  bg.setAttribute("width", window.innerWidth);
+  bg.setAttribute("height", window.innerHeight);
+  worms.setAttribute("width", window.innerWidth);
+  worms.setAttribute("height", window.innerHeight);
 }
 addEventListener("resize", resize);
 resize()
 
-draw(canvas, `#version 300 es
+draw(bg, `#version 300 es
   precision highp float;
 
   uniform vec2 u_resolution;
@@ -188,7 +207,7 @@ draw(canvas, `#version 300 es
   void main() {
     vec2 uv = (vec2(gl_FragCoord.x, (u_resolution.y - gl_FragCoord.y)) / u_resolution.xx) - vec2(0.5, 0.25);
     // uv += u_mouse * 0.01;
-    uv = uv * rotate(u_time * 0.01 / pow(length(uv), 0.1));
+    // uv = uv * rotate(u_time * 0.01 / pow(length(uv), 0.1));
     float t = 1.0 * u_time + length(uv) * 100.0;
     vec4 color = vec4(0.3 + 0.05 * sin(t), 0.6 + 0.1 * sin(t * 3.0), 0.7 + 0.12 * sin(t * 7.0), 1.0);
 
@@ -212,24 +231,162 @@ draw(canvas, `#version 300 es
 <script src="chat.js"></script>
 <script>
 
-const numberDisplay = document.getElementById("number");
-const chatContents = document.getElementById("chat-contents");
-const chatBox = document.getElementById("textbox");
-startChat(chatContents, chatBox, (n) => { numberDisplay.innerHTML = "<span id='chat-number'>" + n + " other people here</span>" });
+// const numberDisplay = document.getElementById("number");
+// const chatContents = document.getElementById("chat-contents");
+// const chatBox = document.getElementById("textbox");
+// startChat(chatContents, chatBox, (n) => { numberDisplay.innerHTML = "<span id='chat-number'>" + n + " other people here</span>" });
 
-addEventListener("resize", () => {
-  chat.scroll(0, Number.MAX_SAFE_INTEGER);
+// addEventListener("resize", () => {
+//   chat.scroll(0, Number.MAX_SAFE_INTEGER);
+// });
+
+// const chat = document.getElementById("chat");
+// const minimize = document.getElementById("minimize");
+// let minimized = false;
+// minimize.addEventListener("click", () => {
+//   minimized = !minimized;
+//   chat.classList[minimized ? "add" : "remove"]("minimized");
+//   minimize.classList[minimized ? "add" : "remove"]("minimized");
+// });
+
+// TODO: procedurally animated controllable avatars synchronized across peers
+function direction(fromP, toP) {
+  let dx = toP.x - fromP.x;
+  let dy = toP.y - fromP.y;
+  let r = Math.sqrt(dx * dx + dy * dy);
+  return {
+    x: dx / r,
+    y: dy / r
+  };
+}
+
+function rot(v, t) {
+  let theta = Math.atan(v.y / v.x);
+  if (v.x > 0) {
+    theta += Math.PI;
+  }
+  return {
+    x: Math.cos(theta + t),
+    y: Math.sin(theta + t),
+  };
+}
+
+const LEG_MIN_LENGTH = 50;
+const LEG_MAX_LENGTH = 3000;
+const NUM_SEGMENTS = 15;
+const SEGMENT_RADIUS = 15;
+const ARC_RADIUS = 55;
+const COLOR_SEED = Math.random() * Math.PI * 2;
+const COLOR = [200 * Math.sin(COLOR_SEED), 180 * Math.sin(COLOR_SEED + 2), 190 * Math.sin(COLOR_SEED + 3)];
+
+function moveChain(chain, p) {
+  chain.head.position.x = p.x;
+  chain.head.position.y = p.y;
+  if (p.llx) {
+    chain.head.position.llx = p.llx;
+    chain.head.position.lly = p.lly;
+    chain.head.position.rlx = p.rlx;
+    chain.head.position.rly = p.rly;
+  }
+
+  if (!chain.tail) {
+    return chain;
+  }
+
+  let d = direction(chain.head.position, chain.tail.head.position);
+
+  if ((chain.tail.head.position.llx - chain.tail.head.position.x) ** 2 + (chain.tail.head.position.lly - chain.tail.head.position.y) ** 2 > LEG_MAX_LENGTH) {
+    chain.tail.head.position.llx = chain.tail.head.position.x + rot(d, Math.PI / 3.5).x * LEG_MIN_LENGTH;
+    chain.tail.head.position.lly = chain.tail.head.position.y + rot(d, Math.PI / 3.5).y * LEG_MIN_LENGTH;
+  }
+
+  if ((chain.tail.head.position.rlx - chain.tail.head.position.x) ** 2 + (chain.tail.head.position.rly - chain.tail.head.position.y) ** 2 > LEG_MAX_LENGTH) {
+    chain.tail.head.position.rlx = chain.tail.head.position.x + rot(d, -Math.PI / 3.5).x * LEG_MIN_LENGTH;
+    chain.tail.head.position.rly = chain.tail.head.position.y + rot(d, -Math.PI / 3.5).y * LEG_MIN_LENGTH;
+  }
+
+  let nextPosition = {
+    x: chain.head.position.x + d.x * chain.head.radius,
+    y: chain.head.position.y + d.y * chain.head.radius,
+    llx: chain.tail.head.position.llx,
+    lly: chain.tail.head.position.lly,
+    rlx: chain.tail.head.position.rlx,
+    rly: chain.tail.head.position.rly
+  };
+
+  return {
+    head: chain.head,
+    tail: moveChain(chain.tail, nextPosition)
+  }
+}
+
+function initializeChain(N, R) {
+  const chain = {
+    root: true,
+    head: {}
+  };
+
+  let nextChain = chain;
+
+  for (let i = 0; i < N; i++) {
+    let x = 150;
+    let y = 50 * (i + 1);
+    nextChain.head.position = { x: x, y: y, llx: x - 50, lly: y, rlx: x + 50, rly: y };
+    nextChain.head.radius = R;
+    if (i < N - 1) {
+      nextChain.tail = { head: {} };
+      nextChain = nextChain.tail;
+    }
+  }
+
+  return chain;
+}
+
+const chain = initializeChain(NUM_SEGMENTS, ARC_RADIUS);
+
+console.log(chain);
+
+addEventListener("mousemove", (e) => {
+  moveChain(chain, { x: e.clientX, y: e.clientY });
 });
 
-const chat = document.getElementById("chat");
-const minimize = document.getElementById("minimize");
-let minimized = false;
-minimize.addEventListener("click", () => {
-  minimized = !minimized;
-  chat.classList[minimized ? "add" : "remove"]("minimized");
-  minimize.classList[minimized ? "add" : "remove"]("minimized");
-});
+let ctx = worms.getContext("2d");
+let drawWorm = () => {
+  ctx.reset();
+  let value;
+  let i = 0;
+  let next = chain;
+  while (next) {
+    // value = 200 - i++ * 15;
+    value = 1.2 - Math.cos(i++ * 1.5);
+    ctx.fillStyle = `rgb(${COLOR[0] * value}, ${COLOR[1] * value}, ${COLOR[2] * value})`;
+    ctx.beginPath();
+    ctx.arc(next.head.position.x - SEGMENT_RADIUS / 2, next.head.position.y - SEGMENT_RADIUS / 2, SEGMENT_RADIUS, 0, Math.PI * 2);
+    ctx.fill();
+    // ctx.fillRect(next.head.position.x - SEGMENT_RADIUS / 2, next.head.position.y - SEGMENT_RADIUS / 2, 20, 20);
 
+    ctx.strokeStyle = ctx.fillStyle;
+    ctx.lineWidth = 3;
+
+    if (i > 1) {
+      ctx.beginPath();
+      ctx.moveTo(next.head.position.x - SEGMENT_RADIUS / 2, next.head.position.y - SEGMENT_RADIUS / 2);
+      ctx.lineTo(next.head.position.llx, next.head.position.lly);
+      ctx.stroke();
+
+      ctx.beginPath();
+      ctx.moveTo(next.head.position.x - SEGMENT_RADIUS / 2, next.head.position.y - SEGMENT_RADIUS / 2);
+      ctx.lineTo(next.head.position.rlx, next.head.position.rly);
+      ctx.stroke();
+    }
+
+
+    next = next.tail;
+  }
+  requestAnimationFrame(drawWorm);
+};
+
+requestAnimationFrame(drawWorm);
 
 </script>
 </body>
