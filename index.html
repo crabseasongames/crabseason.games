@@ -231,23 +231,23 @@ draw(bg, `#version 300 es
 <script src="chat.js"></script>
 <script>
 
-// const numberDisplay = document.getElementById("number");
-// const chatContents = document.getElementById("chat-contents");
-// const chatBox = document.getElementById("textbox");
-// startChat(chatContents, chatBox, (n) => { numberDisplay.innerHTML = "<span id='chat-number'>" + n + " other people here</span>" });
+const numberDisplay = document.getElementById("number");
+const chatContents = document.getElementById("chat-contents");
+const chatBox = document.getElementById("textbox");
+startChat(chatContents, chatBox, (n) => { numberDisplay.innerHTML = "<span id='chat-number'>" + n + " other people here</span>" });
 
-// addEventListener("resize", () => {
-//   chat.scroll(0, Number.MAX_SAFE_INTEGER);
-// });
+addEventListener("resize", () => {
+  chat.scroll(0, Number.MAX_SAFE_INTEGER);
+});
 
-// const chat = document.getElementById("chat");
-// const minimize = document.getElementById("minimize");
-// let minimized = false;
-// minimize.addEventListener("click", () => {
-//   minimized = !minimized;
-//   chat.classList[minimized ? "add" : "remove"]("minimized");
-//   minimize.classList[minimized ? "add" : "remove"]("minimized");
-// });
+const chat = document.getElementById("chat");
+const minimize = document.getElementById("minimize");
+let minimized = false;
+minimize.addEventListener("click", () => {
+  minimized = !minimized;
+  chat.classList[minimized ? "add" : "remove"]("minimized");
+  minimize.classList[minimized ? "add" : "remove"]("minimized");
+});
 
 // TODO: procedurally animated controllable avatars synchronized across peers
 function direction(fromP, toP) {
