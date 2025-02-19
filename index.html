@@ -23,7 +23,7 @@ body {
   position: absolute;
   left: 0;
   top: 0;
-  z-index: -9;
+  z-index: -1;
 }
 
 #main-container {
@@ -35,6 +35,7 @@ body {
   top: 50%;
   transform: translateY(-50%);
   mix-blend-mode: lighten;
+  z-index: -5;
 }
 
 #head {
@@ -142,13 +143,6 @@ body {
   font-size: 16px;
 }
 
-.node {
-  width: 20px;
-  height: 20px;
-  position: absolute;
-  z-index: 100;
-/*  background-color: white;*/
-}
 
 </style>
 </head>
@@ -250,144 +244,217 @@ minimize.addEventListener("click", () => {
 });
 
 // TODO: procedurally animated controllable avatars synchronized across peers
-function direction(fromP, toP) {
-  let dx = toP.x - fromP.x;
-  let dy = toP.y - fromP.y;
-  let r = Math.sqrt(dx * dx + dy * dy);
-  return {
-    x: dx / r,
-    y: dy / r
-  };
-}
 
-function rot(v, t) {
-  let theta = Math.atan(v.y / v.x);
-  if (v.x > 0) {
-    theta += Math.PI;
-  }
-  return {
-    x: Math.cos(theta + t),
-    y: Math.sin(theta + t),
-  };
-}
 
-const LEG_MIN_LENGTH = 50;
-const LEG_MAX_LENGTH = 3000;
-const NUM_SEGMENTS = 15;
-const SEGMENT_RADIUS = 15;
-const ARC_RADIUS = 55;
-const COLOR_SEED = Math.random() * Math.PI * 2;
-const COLOR = [200 * Math.sin(COLOR_SEED), 180 * Math.sin(COLOR_SEED + 2), 190 * Math.sin(COLOR_SEED + 3)];
+let loaded = false;
+addEventListener("click", (e) => {
+  addEventListener("mousemove", () => {
+    if (loaded) { return; }
+    loaded = true;
 
-function moveChain(chain, p) {
-  chain.head.position.x = p.x;
-  chain.head.position.y = p.y;
-  if (p.llx) {
-    chain.head.position.llx = p.llx;
-    chain.head.position.lly = p.lly;
-    chain.head.position.rlx = p.rlx;
-    chain.head.position.rly = p.rly;
-  }
-
-  if (!chain.tail) {
-    return chain;
-  }
-
-  let d = direction(chain.head.position, chain.tail.head.position);
-
-  if ((chain.tail.head.position.llx - chain.tail.head.position.x) ** 2 + (chain.tail.head.position.lly - chain.tail.head.position.y) ** 2 > LEG_MAX_LENGTH) {
-    chain.tail.head.position.llx = chain.tail.head.position.x + rot(d, Math.PI / 3.5).x * LEG_MIN_LENGTH;
-    chain.tail.head.position.lly = chain.tail.head.position.y + rot(d, Math.PI / 3.5).y * LEG_MIN_LENGTH;
-  }
-
-  if ((chain.tail.head.position.rlx - chain.tail.head.position.x) ** 2 + (chain.tail.head.position.rly - chain.tail.head.position.y) ** 2 > LEG_MAX_LENGTH) {
-    chain.tail.head.position.rlx = chain.tail.head.position.x + rot(d, -Math.PI / 3.5).x * LEG_MIN_LENGTH;
-    chain.tail.head.position.rly = chain.tail.head.position.y + rot(d, -Math.PI / 3.5).y * LEG_MIN_LENGTH;
-  }
-
-  let nextPosition = {
-    x: chain.head.position.x + d.x * chain.head.radius,
-    y: chain.head.position.y + d.y * chain.head.radius,
-    llx: chain.tail.head.position.llx,
-    lly: chain.tail.head.position.lly,
-    rlx: chain.tail.head.position.rlx,
-    rly: chain.tail.head.position.rly
-  };
-
-  return {
-    head: chain.head,
-    tail: moveChain(chain.tail, nextPosition)
-  }
-}
-
-function initializeChain(N, R) {
-  const chain = {
-    root: true,
-    head: {}
-  };
-
-  let nextChain = chain;
-
-  for (let i = 0; i < N; i++) {
-    let x = 150;
-    let y = 50 * (i + 1);
-    nextChain.head.position = { x: x, y: y, llx: x - 50, lly: y, rlx: x + 50, rly: y };
-    nextChain.head.radius = R;
-    if (i < N - 1) {
-      nextChain.tail = { head: {} };
-      nextChain = nextChain.tail;
+    function direction(fromP, toP) {
+      let dx = toP.x - fromP.x;
+      let dy = toP.y - fromP.y;
+      let r = Math.sqrt(dx * dx + dy * dy);
+      return {
+        x: dx / r,
+        y: dy / r
+      };
     }
-  }
 
-  return chain;
-}
+    function rot(v, t) {
+      let theta = Math.atan(v.y / v.x);
+      if (v.x > 0) {
+        theta += Math.PI;
+      }
+      return {
+        x: Math.cos(theta + t),
+        y: Math.sin(theta + t),
+      };
+    }
 
-const chain = initializeChain(NUM_SEGMENTS, ARC_RADIUS);
+    const LEG_MIN_LENGTH = 30;
+    const LEG_MAX_LENGTH_SQ = 45 ** 2;
+    const NUM_SEGMENTS = 10;
+    const SEGMENT_RADIUS = 10;
+    const ARC_RADIUS = 30;
+    const LEG_WIDTH = 3;
+    const COLOR_SEED = Math.random() * Math.PI * 2;
+    const COLOR = [200 * Math.sin(COLOR_SEED), 240 * Math.sin(COLOR_SEED + 2), 220 * Math.sin(COLOR_SEED + 3)];
+    const SPEED = 5;
+    const VOLUME = 0.05;
+    const DURATION = 4095;
 
-console.log(chain);
+    const actx = new AudioContext();
 
-addEventListener("mousemove", (e) => {
-  moveChain(chain, { x: e.clientX, y: e.clientY });
+    function now() { return +(new Date); }
+    let t0 = now();
+    let t = t0;
+    function tap() {
+      if (now() - t0 < 100) { return; }
+      let t_ = now();
+      let dt = t_ - t;
+      t = t_;
+
+      let audio_buffer = actx.createBuffer(1, DURATION, 96000);
+      let buffer = audio_buffer.getChannelData(0);
+      let r = 1 + Math.random() * 0.1;
+      let v = 1 - Math.E ** (-dt * 0.03);
+      for (let i = 0; i < buffer.length; i++) {
+        buffer[i] = Math.sin(i * 0.02 * r) * VOLUME * v;
+      }
+      let source = actx.createBufferSource();
+      source.buffer = audio_buffer;
+      source.connect(actx.destination);
+      source.start();
+    }
+
+
+    // TODO:
+    // leg movement is broken, logic is non-isotropic i think
+    // backwards should also be reverse of forwards maybe
+    // i think knees are achievable
+
+    function moveChain(chain, p) {
+      chain.head.position.x = p.x;
+      chain.head.position.y = p.y;
+      if (p.llx) {
+        chain.head.position.llx = p.llx;
+        chain.head.position.lly = p.lly;
+        chain.head.position.rlx = p.rlx;
+        chain.head.position.rly = p.rly;
+      }
+
+      if (!chain.tail) {
+        return chain;
+      }
+
+      let d = direction(chain.head.position, chain.tail.head.position);
+
+      if ((chain.tail.head.position.llx - chain.tail.head.position.x) ** 2 + (chain.tail.head.position.lly - chain.tail.head.position.y) ** 2 > LEG_MAX_LENGTH_SQ) {
+        chain.tail.head.position.llx = chain.tail.head.position.x + rot(d, Math.PI / 4).x * LEG_MIN_LENGTH;
+        chain.tail.head.position.lly = chain.tail.head.position.y + rot(d, Math.PI / 4).y * LEG_MIN_LENGTH;
+        tap();
+      }
+
+      if ((chain.tail.head.position.rlx - chain.tail.head.position.x) ** 2 + (chain.tail.head.position.rly - chain.tail.head.position.y) ** 2 > LEG_MAX_LENGTH_SQ) {
+        chain.tail.head.position.rlx = chain.tail.head.position.x + rot(d, -Math.PI / 4).x * LEG_MIN_LENGTH;
+        chain.tail.head.position.rly = chain.tail.head.position.y + rot(d, -Math.PI / 4).y * LEG_MIN_LENGTH;
+        tap();
+      }
+
+      let nextPosition = {
+        x: chain.head.position.x + d.x * chain.head.radius,
+        y: chain.head.position.y + d.y * chain.head.radius,
+        llx: chain.tail.head.position.llx,
+        lly: chain.tail.head.position.lly,
+        rlx: chain.tail.head.position.rlx,
+        rly: chain.tail.head.position.rly
+      };
+
+      return {
+        head: chain.head,
+        tail: moveChain(chain.tail, nextPosition)
+      }
+    }
+
+    function initializeChain(N, R) {
+      const chain = {
+        root: true,
+        head: {}
+      };
+
+      let nextChain = chain;
+
+      for (let i = 0; i < N; i++) {
+        let x = e.clientX + 20 * SEGMENT_RADIUS * Math.sin(10 * i / ARC_RADIUS);
+        let y = e.clientY * (i + 1);
+        nextChain.head.position = { x: x, y: y, llx: x - 50, lly: y, rlx: x + 50, rly: y };
+        nextChain.head.radius = R;
+        if (i < N - 1) {
+          nextChain.tail = { head: {} };
+          nextChain = nextChain.tail;
+        }
+      }
+
+      return chain;
+    }
+
+    const chain = initializeChain(NUM_SEGMENTS, ARC_RADIUS);
+    let newPosition = chain.head.position;
+    addEventListener("mousemove", (e) => {
+      // moveChain(chain, { x: e.clientX, y: e.clientY });
+      newPosition = { x: e.clientX, y: e.clientY };
+    });
+
+    function modulateColor(i) {
+      let value = 1.2 - Math.cos(i * 1.5);
+      return `rgba(${COLOR[0] * value}, ${COLOR[1] * value}, ${COLOR[2] * value}, 50)`;
+    }
+
+    let ctx = worms.getContext("2d");
+    let drawWorm = () => {
+      let d = [newPosition.x - chain.head.position.x, newPosition.y - chain.head.position.y];
+      if (Math.abs(d[0]) < 4 && Math.abs(d[1]) < 4) {
+        requestAnimationFrame(drawWorm);
+        return;
+      }
+
+      let r = Math.sqrt(d[0] ** 2 + d[1] ** 2);
+      let c = (1 - Math.E ** (-r * 0.01)) * SPEED / r;
+      moveChain(chain, { x: chain.head.position.x + d[0] * c, y: chain.head.position.y + d[1] * c });
+
+      ctx.reset();
+      let value;
+      let i = 0;
+      let next = chain;
+      let lastCenter;
+      while (next) {
+        ctx.fillStyle = modulateColor(i++);
+        ctx.strokeStyle = ctx.fillStyle;
+        ctx.lineWidth = LEG_WIDTH;
+
+        let center = [next.head.position.x - SEGMENT_RADIUS / 2, next.head.position.y - SEGMENT_RADIUS / 2];
+
+        ctx.beginPath();
+        ctx.arc(center[0], center[1], SEGMENT_RADIUS, 0, Math.PI * 2);
+        ctx.fill();
+
+        if (i > 1) {
+          ctx.beginPath();
+          ctx.moveTo(next.head.position.x - SEGMENT_RADIUS / 2, next.head.position.y - SEGMENT_RADIUS / 2);
+          ctx.lineTo(next.head.position.llx, next.head.position.lly);
+          ctx.stroke();
+
+          ctx.beginPath();
+          ctx.moveTo(next.head.position.x - SEGMENT_RADIUS / 2, next.head.position.y - SEGMENT_RADIUS / 2);
+          ctx.lineTo(next.head.position.rlx, next.head.position.rly);
+          ctx.stroke();
+
+          const r = 1;// - (SEGMENT_RADIUS / ARC_RADIUS);
+          const d = [r * (lastCenter[0] - center[0]), r * (lastCenter[1] - center[1])];
+          const p = [center[0] + d[0], center[1] + d[1]];
+          const gradient = ctx.createLinearGradient(center[0], center[1], p[0], p[1]);
+          gradient.addColorStop(SEGMENT_RADIUS / ARC_RADIUS, ctx.fillStyle);
+          gradient.addColorStop(1 - (SEGMENT_RADIUS / ARC_RADIUS), modulateColor(i - 2));
+          ctx.strokeStyle = gradient;
+
+          ctx.lineWidth = SEGMENT_RADIUS * 1.2;
+          ctx.beginPath();
+          ctx.moveTo(center[0], center[1]);
+          ctx.lineTo(p[0], p[1]);
+          ctx.stroke();
+        }
+
+        next = next.tail;
+        lastCenter = center;
+      }
+      requestAnimationFrame(drawWorm);
+    };
+
+    requestAnimationFrame(drawWorm);
+  });
 });
-
-let ctx = worms.getContext("2d");
-let drawWorm = () => {
-  ctx.reset();
-  let value;
-  let i = 0;
-  let next = chain;
-  while (next) {
-    // value = 200 - i++ * 15;
-    value = 1.2 - Math.cos(i++ * 1.5);
-    ctx.fillStyle = `rgb(${COLOR[0] * value}, ${COLOR[1] * value}, ${COLOR[2] * value})`;
-    ctx.beginPath();
-    ctx.arc(next.head.position.x - SEGMENT_RADIUS / 2, next.head.position.y - SEGMENT_RADIUS / 2, SEGMENT_RADIUS, 0, Math.PI * 2);
-    ctx.fill();
-    // ctx.fillRect(next.head.position.x - SEGMENT_RADIUS / 2, next.head.position.y - SEGMENT_RADIUS / 2, 20, 20);
-
-    ctx.strokeStyle = ctx.fillStyle;
-    ctx.lineWidth = 3;
-
-    if (i > 1) {
-      ctx.beginPath();
-      ctx.moveTo(next.head.position.x - SEGMENT_RADIUS / 2, next.head.position.y - SEGMENT_RADIUS / 2);
-      ctx.lineTo(next.head.position.llx, next.head.position.lly);
-      ctx.stroke();
-
-      ctx.beginPath();
-      ctx.moveTo(next.head.position.x - SEGMENT_RADIUS / 2, next.head.position.y - SEGMENT_RADIUS / 2);
-      ctx.lineTo(next.head.position.rlx, next.head.position.rly);
-      ctx.stroke();
-    }
-
-
-    next = next.tail;
-  }
-  requestAnimationFrame(drawWorm);
-};
-
-requestAnimationFrame(drawWorm);
-
 </script>
 </body>
 

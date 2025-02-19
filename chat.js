@@ -81,7 +81,7 @@ function startChat(chat, textbox, displayNumber) {
   }
 
   function connectClient() {
-    client = new Peer("crab_" + Math.floor(Math.random() * 1000));
+    client = new Peer("bug_" + Math.floor(Math.random() * 1000));
     client.on("open", (id) => {
       // addNotification("client: " + client.id);
       let hostConn = client.connect(trackerId);
