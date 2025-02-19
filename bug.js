@@ -183,13 +183,9 @@ function inventBug(config, canvas) {
       let lastCenter;
       while (next) {
         let segmentColor = modulateColor(i++);
-        ctx.fillStyle = segmentColor;
-        ctx.strokeStyle = ctx.fillStyle;
-        ctx.lineWidth = config.leg_width;
-
         let center = [next.head.position.x - config.segment_radius, next.head.position.y - config.segment_radius];
 
-        drawCircle(ctx, center[0], center[1], config.segment_radius, 0, Math.PI * 2, segmentColor);
+        drawCircle(ctx, center[0], center[1], config.segment_radius, segmentColor);
 
         if (i > 1) {
           drawLine(
