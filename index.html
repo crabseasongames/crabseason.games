@@ -19,7 +19,7 @@ body {
   z-index: -10;
 }
 
-#worms {
+#bugs {
   background-color: rgba(0, 0, 0, 0);
   position: absolute;
   left: 0;
@@ -54,10 +54,10 @@ body {
   left: 10px;
   top: 10px;
   height: 30px;
-  width: 280px;
+  width: 270px;
   background-color: rgba(0, 0, 0, 0.666);
   color: #fff;
-  padding: 10px 10px 0 10px;
+  padding: 10px 10px 0 20px;
   z-index: 10;
 }
 
@@ -113,7 +113,7 @@ body {
   overflow-y: scroll;
   scrollbar-width: thin;
   scrollbar-color: rgba(255, 255, 255, 0.3) rgba(0, 0, 0, 0.3);
-  padding: 10px 20px 0 20px;
+  padding: 10px 20px 0 30px;
   height: 339px;
   transition: height 0.5s, opacity 0.5s;
 }
@@ -135,15 +135,23 @@ body {
 .id {
   font-size: 14px;
   font-weight: 900;
-  color: #000;
-  text-shadow: 0 0 8px rgba(255, 255, 255, 0.666);
+  color: var(--text-color);
 }
 
-.message {
+.chat-entry {
   text-indent: -10px;
   font-size: 16px;
 }
 
+.message {
+
+}
+
+.notif {
+  color: black;
+  font-weight: bold;
+  text-shadow: 0 0 6px white;
+}
 
 </style>
 </head>
@@ -156,23 +164,74 @@ body {
   </div>
 </div>
 <canvas id="background"></canvas>
-<canvas id="worms"></canvas>
+<canvas id="bugs"></canvas>
 <div id="main-container">
   <div id="head">Crab Season Games</div>
   <div id="subhead">bug chat simulator</div>
 </div>
 <script src="draw.js"></script>
+<script src="chat.js"></script>
+<script src="bug.js"></script>
 <script>
 const bg = document.querySelector("#background");
-const worms = document.querySelector("#worms");
-let resize = () => {
+const bugs = document.querySelector("#bugs");
+const numberDisplay = document.getElementById("number");
+const chatContents = document.getElementById("chat-contents");
+const chatBox = document.getElementById("textbox");
+const chat = document.getElementById("chat");
+const minimize = document.getElementById("minimize");
+
+function palette(t) {
+  return [
+    200 * (1 + 0.5 * Math.sin(t)),
+    240 * (1 + 0.5 * Math.sin(t + 1.5)),
+    220 * (1 + 0.5 * Math.sin(t + 4.6))
+  ];
+}
+
+const min_height = 475;
+function resize() {
   bg.setAttribute("width", window.innerWidth);
-  bg.setAttribute("height", window.innerHeight);
-  worms.setAttribute("width", window.innerWidth);
-  worms.setAttribute("height", window.innerHeight);
+  bg.setAttribute("height", Math.max(window.innerHeight, min_height));
+  bugs.setAttribute("width", window.innerWidth);
+  bugs.setAttribute("height", window.innerHeight);
+  chat.scroll(0, Number.MAX_SAFE_INTEGER);
 }
 addEventListener("resize", resize);
 resize()
+
+let minimized = false;
+minimize.addEventListener("click", () => {
+  minimized = !minimized;
+  chat.classList[minimized ? "add" : "remove"]("minimized");
+  minimize.classList[minimized ? "add" : "remove"]("minimized");
+});
+
+const chatIdRange = 1000;
+const chatUserId = Math.floor(Math.random() * chatIdRange);
+
+startChat(
+  chatContents,
+  chatBox,
+  (n) => { numberDisplay.innerHTML = "<span id='chat-number'>" + n + " other people here</span>" },
+  chatUserId,
+  chatIdRange,
+  palette
+);
+
+inventBug({
+  leg_min_length: 30,
+  leg_max_length: 45,
+  foot_size: 3,
+  num_segments: 7,
+  segment_radius: 10,
+  arc_radius: 30,
+  leg_width: 3,
+  color: palette(chatUserId * 2 * Math.PI / chatIdRange),
+  speed: 5,
+  volume: 0.05,
+  duration: 5512
+}, bugs);
 
 draw(bg, `#version 300 es
   precision highp float;
@@ -233,278 +292,6 @@ draw(bg, `#version 300 es
     outColor = c;
   }
 `);
-</script>
-<script src="chat.js"></script>
-<script>
-
-const numberDisplay = document.getElementById("number");
-const chatContents = document.getElementById("chat-contents");
-const chatBox = document.getElementById("textbox");
-startChat(chatContents, chatBox, (n) => { numberDisplay.innerHTML = "<span id='chat-number'>" + n + " other people here</span>" });
-
-addEventListener("resize", () => {
-  chat.scroll(0, Number.MAX_SAFE_INTEGER);
-});
-
-const chat = document.getElementById("chat");
-const minimize = document.getElementById("minimize");
-let minimized = false;
-minimize.addEventListener("click", () => {
-  minimized = !minimized;
-  chat.classList[minimized ? "add" : "remove"]("minimized");
-  minimize.classList[minimized ? "add" : "remove"]("minimized");
-});
-
-// TODO: procedurally animated controllable avatars synchronized across peers
-
-// TODO:
-// leg movement is broken, logic is non-isotropic i think
-// backwards should also be reverse of forwards maybe
-// i think knees are achievable
-// time to port orb simulator?
-
-
-function direction(fromP, toP) {
-  let dx = toP.x - fromP.x;
-  let dy = toP.y - fromP.y;
-  let r = Math.sqrt(dx * dx + dy * dy);
-  return {
-    x: dx / r,
-    y: dy / r
-  };
-}
-
-function rot(v, t) {
-  let theta = Math.atan(v.y / v.x);
-  if (v.x > 0) {
-    theta += Math.PI;
-  }
-  return {
-    x: Math.cos(theta + t),
-    y: Math.sin(theta + t),
-  };
-}
-
-function now() { return +(new Date); }
-
-function modulateColor(i) {
-  let value = 1.2 - Math.cos(i * 1.5);
-  return `rgba(${COLOR[0] * value}, ${COLOR[1] * value}, ${COLOR[2] * value}, 50)`;
-}
-
-const LEG_MIN_LENGTH = 30;
-const LEG_MAX_LENGTH_SQ = 45 ** 2;
-const FOOT_SIZE = 3;
-const NUM_SEGMENTS = 7;
-const SEGMENT_RADIUS = 10;
-const ARC_RADIUS = 30;
-const LEG_WIDTH = 3;
-const COLOR_SEED = Math.random() * Math.PI * 2;
-const COLOR = [200 * Math.sin(COLOR_SEED), 240 * Math.sin(COLOR_SEED + 2), 220 * Math.sin(COLOR_SEED + 3)];
-const SPEED = 5;
-const VOLUME = 0.05;
-const DURATION = 5512;
-
-const actx = new AudioContext();
-
-
-let newPosition = { x: 100, y: 100 };
-let started = false;
-let t;
-
-addEventListener("click", (e) => {
-  started = true;
-  t = now();
-  newPosition = { x: e.clientX, y: e.clientY };
-
-  const bug = initializeBug(NUM_SEGMENTS, ARC_RADIUS);
-  const ctx = worms.getContext("2d");
-  moveBug(bug, newPosition);
-
-  addEventListener("mousemove", (e) => {
-    // moveBug(Bug, { x: e.clientX, y: e.clientY });
-    newPosition = { x: e.clientX, y: e.clientY };
-  });
-
-  requestAnimationFrame(drawBug);
-
-  function tap() {
-    if (!started) { return; }
-    let t_ = now();
-    let dt = t_ - t;
-    t = t_;
-
-    let audio_buffer = actx.createBuffer(1, DURATION, 96000);
-    let buffer = audio_buffer.getChannelData(0);
-    let r = 1 + Math.random() * 0.1;
-    let v = 1 - Math.E ** (-dt * 0.03);
-    for (let i = 0; i < buffer.length; i++) {
-      buffer[i] = Math.sin(i * 0.03 * r) * VOLUME * v * Math.pow(2, -((i * 0.003) ** 2));
-    }
-    let source = actx.createBufferSource();
-    source.buffer = audio_buffer;
-    source.connect(actx.destination);
-    source.start();
-  }
-
-
-  function initializeBug(N, R) {
-    const bug = {
-      root: true,
-      head: {}
-    };
-
-    let nextBug = bug;
-
-    for (let i = 0; i < N; i++) {
-      let x = newPosition.x;
-      let y = newPosition.y + ARC_RADIUS * i;
-      nextBug.head.position = { x: x, y: y, llx: x - 50, lly: y, rlx: x + 50, rly: y };
-      nextBug.head.radius = R;
-      if (i < N - 1) {
-        nextBug.tail = { head: {} };
-        nextBug = nextBug.tail;
-      }
-    }
-
-    return bug;
-  }
-
-  function moveBug(bug, p) {
-    bug.head.position.x = p.x;
-    bug.head.position.y = p.y;
-    if (p.llx) {
-      bug.head.position.llx = p.llx;
-      bug.head.position.lly = p.lly;
-      bug.head.position.rlx = p.rlx;
-      bug.head.position.rly = p.rly;
-    }
-
-    if (!bug.tail) {
-      return bug;
-    }
-
-    let d = direction(bug.head.position, bug.tail.head.position);
-    let ldx = bug.tail.head.position.llx - bug.tail.head.position.x;
-    let ldy = bug.tail.head.position.lly - bug.tail.head.position.y;
-    let rdx = bug.tail.head.position.rlx - bug.tail.head.position.x;
-    let rdy = bug.tail.head.position.rly - bug.tail.head.position.y;
-
-    if (ldx ** 2 + ldy ** 2 > LEG_MAX_LENGTH_SQ) {
-      bug.tail.head.position.llx = bug.tail.head.position.x + rot(d, Math.PI / 4).x * LEG_MIN_LENGTH;
-      bug.tail.head.position.lly = bug.tail.head.position.y + rot(d, Math.PI / 4).y * LEG_MIN_LENGTH;
-      tap();
-    }
-
-    if (rdx ** 2 + rdy ** 2 > LEG_MAX_LENGTH_SQ) {
-      bug.tail.head.position.rlx = bug.tail.head.position.x + rot(d, -Math.PI / 4).x * LEG_MIN_LENGTH;
-      bug.tail.head.position.rly = bug.tail.head.position.y + rot(d, -Math.PI / 4).y * LEG_MIN_LENGTH;
-      tap();
-    }
-
-    let nextPosition = {
-      x: bug.head.position.x + d.x * bug.head.radius,
-      y: bug.head.position.y + d.y * bug.head.radius,
-      llx: bug.tail.head.position.llx,
-      lly: bug.tail.head.position.lly,
-      rlx: bug.tail.head.position.rlx,
-      rly: bug.tail.head.position.rly
-    };
-
-    return {
-      head: bug.head,
-      tail: moveBug(bug.tail, nextPosition)
-    }
-  }
-
-  function drawCircle(ctx, x, y, r, color) {
-      ctx.fillStyle = color;
-      ctx.beginPath();
-      ctx.arc(x, y, r, 0, Math.PI * 2);
-      ctx.fill();
-  }
-
-  function drawLine(ctx, x, y, u, v, r, color) {
-    ctx.lineWidth = r;
-    ctx.strokeStyle = color;
-    ctx.beginPath();
-    ctx.moveTo(x, y);
-    ctx.lineTo(u, v);
-    ctx.stroke();
-  }
-
-  function drawBug() {
-    ctx.reset();
-    let d = [newPosition.x - bug.head.position.x, newPosition.y - bug.head.position.y];
-    let r = Math.sqrt(d[0] ** 2 + d[1] ** 2);
-    let c = (1 - Math.E ** (-r * 0.01)) * SPEED / r;
-
-    if (Math.abs(d[0]) > 4 || Math.abs(d[1]) > 4) {
-      moveBug(bug, { x: bug.head.position.x + d[0] * c, y: bug.head.position.y + d[1] * c });
-    }
-
-    let value;
-    let i = 0;
-    let next = bug;
-    let lastCenter;
-    while (next) {
-      let segmentColor = modulateColor(i++);
-      ctx.fillStyle = segmentColor;
-      ctx.strokeStyle = ctx.fillStyle;
-      ctx.lineWidth = LEG_WIDTH;
-
-      let center = [next.head.position.x - SEGMENT_RADIUS, next.head.position.y - SEGMENT_RADIUS];
-
-      drawCircle(ctx, center[0], center[1], SEGMENT_RADIUS, 0, Math.PI * 2, segmentColor);
-
-      if (i > 1) {
-        drawLine(
-          ctx,
-          next.head.position.x - SEGMENT_RADIUS,
-          next.head.position.y - SEGMENT_RADIUS,
-          next.head.position.llx,
-          next.head.position.lly,
-          LEG_WIDTH,
-          segmentColor
-        );
-        drawLine(
-          ctx,
-          next.head.position.x - SEGMENT_RADIUS,
-          next.head.position.y - SEGMENT_RADIUS,
-          next.head.position.rlx,
-          next.head.position.rly,
-          LEG_WIDTH,
-          segmentColor
-        );
-
-        drawCircle(ctx, next.head.position.llx, next.head.position.lly, FOOT_SIZE, segmentColor);
-        drawCircle(ctx, next.head.position.rlx, next.head.position.rly, FOOT_SIZE, segmentColor);
-
-        const d = [lastCenter[0] - center[0], lastCenter[1] - center[1]];
-        const p = [center[0] + d[0], center[1] + d[1]];
-        const gradient = ctx.createLinearGradient(center[0], center[1], p[0], p[1]);
-        gradient.addColorStop(SEGMENT_RADIUS / ARC_RADIUS, ctx.fillStyle);
-        gradient.addColorStop(1 - (SEGMENT_RADIUS / ARC_RADIUS), modulateColor(i - 2));
-
-        drawLine(
-          ctx,
-          center[0],
-          center[1],
-          p[0],
-          p[1],
-          SEGMENT_RADIUS * 1.2,
-          gradient
-        );
-      }
-
-      next = next.tail;
-      lastCenter = center;
-    }
-    requestAnimationFrame(drawBug);
-  };
-
-}, { once: true });
-
 
 </script>
 </body>
