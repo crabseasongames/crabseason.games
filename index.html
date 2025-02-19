@@ -189,8 +189,18 @@ draw(bg, `#version 300 es
     return t * 1000000.0 * fract(v.x * v.y * 10000000.0);
   }
 
+  float fmod(float x, float m) {
+    return m * fract(x / m);
+  }
+
+  float saw(float theta) {
+    theta = fmod(theta, 3.1416);
+    return theta < 1.57 ? theta : 3.1416 - theta;
+  }
+
   float circle(float radius, vec2 p, float t) {
-    float r = radius * (1.0 + sin(t - 1.55) + 0.02 * sin(100.0 * (1.0 + 0.15 * sin(t)) * t));
+    float angle = atan(p.y / p.x) + (p.x > 0.0 ? 3.1416 : 0.0);
+    float r = radius * (1.0 + sin(t - 1.57) + 0.02 * sin(100.0 * (1.0 + 0.15 * sin(t)) * t));
     return length(p) - r;
   }
 
@@ -214,7 +224,7 @@ draw(bg, `#version 300 es
     }
 
     if (sin(hash(uv, u_time)) > 0.0) {
-      c *= 1.1 + 0.1 * sin(u_time * 0.5 - 1.55);
+      c *= 1.1 + 0.1 * sin(u_time * 0.5 - 1.57);
     }
 
 
@@ -247,7 +257,10 @@ minimize.addEventListener("click", () => {
 
 
 let loaded = false;
+let newPosition;
+
 addEventListener("click", (e) => {
+  newPosition = { x: e.clientX, y: e.clientY };
   addEventListener("mousemove", () => {
     if (loaded) { return; }
     loaded = true;
@@ -275,6 +288,7 @@ addEventListener("click", (e) => {
 
     const LEG_MIN_LENGTH = 30;
     const LEG_MAX_LENGTH_SQ = 45 ** 2;
+    const FOOT_SIZE = 3;
     const NUM_SEGMENTS = 10;
     const SEGMENT_RADIUS = 10;
     const ARC_RADIUS = 30;
@@ -314,6 +328,29 @@ addEventListener("click", (e) => {
     // leg movement is broken, logic is non-isotropic i think
     // backwards should also be reverse of forwards maybe
     // i think knees are achievable
+
+
+    function initializeChain(N, R) {
+      const chain = {
+        root: true,
+        head: {}
+      };
+
+      let nextChain = chain;
+
+      for (let i = 0; i < N; i++) {
+        let x = e.clientX;
+        let y = e.clientY + ARC_RADIUS * i;
+        nextChain.head.position = { x: x, y: y, llx: x - 50, lly: y, rlx: x + 50, rly: y };
+        nextChain.head.radius = R;
+        if (i < N - 1) {
+          nextChain.tail = { head: {} };
+          nextChain = nextChain.tail;
+        }
+      }
+
+      return chain;
+    }
 
     function moveChain(chain, p) {
       chain.head.position.x = p.x;
@@ -358,30 +395,8 @@ addEventListener("click", (e) => {
       }
     }
 
-    function initializeChain(N, R) {
-      const chain = {
-        root: true,
-        head: {}
-      };
-
-      let nextChain = chain;
-
-      for (let i = 0; i < N; i++) {
-        let x = e.clientX + 20 * SEGMENT_RADIUS * Math.sin(10 * i / ARC_RADIUS);
-        let y = e.clientY * (i + 1);
-        nextChain.head.position = { x: x, y: y, llx: x - 50, lly: y, rlx: x + 50, rly: y };
-        nextChain.head.radius = R;
-        if (i < N - 1) {
-          nextChain.tail = { head: {} };
-          nextChain = nextChain.tail;
-        }
-      }
-
-      return chain;
-    }
-
     const chain = initializeChain(NUM_SEGMENTS, ARC_RADIUS);
-    let newPosition = chain.head.position;
+    moveChain(chain, newPosition);
     addEventListener("mousemove", (e) => {
       // moveChain(chain, { x: e.clientX, y: e.clientY });
       newPosition = { x: e.clientX, y: e.clientY };
@@ -394,6 +409,7 @@ addEventListener("click", (e) => {
 
     let ctx = worms.getContext("2d");
     let drawWorm = () => {
+      ctx.reset();
       let d = [newPosition.x - chain.head.position.x, newPosition.y - chain.head.position.y];
       if (Math.abs(d[0]) < 4 && Math.abs(d[1]) < 4) {
         requestAnimationFrame(drawWorm);
@@ -404,7 +420,6 @@ addEventListener("click", (e) => {
       let c = (1 - Math.E ** (-r * 0.01)) * SPEED / r;
       moveChain(chain, { x: chain.head.position.x + d[0] * c, y: chain.head.position.y + d[1] * c });
 
-      ctx.reset();
       let value;
       let i = 0;
       let next = chain;
@@ -414,7 +429,7 @@ addEventListener("click", (e) => {
         ctx.strokeStyle = ctx.fillStyle;
         ctx.lineWidth = LEG_WIDTH;
 
-        let center = [next.head.position.x - SEGMENT_RADIUS / 2, next.head.position.y - SEGMENT_RADIUS / 2];
+        let center = [next.head.position.x - SEGMENT_RADIUS, next.head.position.y - SEGMENT_RADIUS];
 
         ctx.beginPath();
         ctx.arc(center[0], center[1], SEGMENT_RADIUS, 0, Math.PI * 2);
@@ -422,14 +437,22 @@ addEventListener("click", (e) => {
 
         if (i > 1) {
           ctx.beginPath();
-          ctx.moveTo(next.head.position.x - SEGMENT_RADIUS / 2, next.head.position.y - SEGMENT_RADIUS / 2);
+          ctx.moveTo(next.head.position.x - SEGMENT_RADIUS, next.head.position.y - SEGMENT_RADIUS);
           ctx.lineTo(next.head.position.llx, next.head.position.lly);
           ctx.stroke();
 
           ctx.beginPath();
-          ctx.moveTo(next.head.position.x - SEGMENT_RADIUS / 2, next.head.position.y - SEGMENT_RADIUS / 2);
+          ctx.arc(next.head.position.llx, next.head.position.lly, FOOT_SIZE, 0, Math.PI * 2);
+          ctx.fill();
+
+          ctx.beginPath();
+          ctx.moveTo(next.head.position.x - SEGMENT_RADIUS, next.head.position.y - SEGMENT_RADIUS);
           ctx.lineTo(next.head.position.rlx, next.head.position.rly);
           ctx.stroke();
+
+          ctx.beginPath();
+          ctx.arc(next.head.position.rlx, next.head.position.rly, FOOT_SIZE, 0, Math.PI * 2);
+          ctx.fill();
 
           const r = 1;// - (SEGMENT_RADIUS / ARC_RADIUS);
           const d = [r * (lastCenter[0] - center[0]), r * (lastCenter[1] - center[1])];
