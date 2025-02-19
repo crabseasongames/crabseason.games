@@ -55,7 +55,7 @@ function startChat(chat, textbox, displayNumber, chatUserId, chatIdRange, palett
   const connections = {};
   let client;
 
-  const trackerId = "static_tracker_id_15702293750198783";
+  const trackerId = "bug_tracker_931096";
 
   function startTracker(peerIds) {
     let tracker = new Peer(trackerId);
@@ -94,11 +94,11 @@ function startChat(chat, textbox, displayNumber, chatUserId, chatIdRange, palett
       }
     });
 
-    setInterval(() => {
-      for (peer in connections) {
-        connections[peer].send({ type: "heartbeat" });
-      }
-    }, 5000);
+    // setInterval(() => {
+    //   for (peer in connections) {
+    //     connections[peer].send({ type: "heartbeat" });
+    //   }
+    // }, 5000);
 
   }
 
@@ -122,7 +122,7 @@ function startChat(chat, textbox, displayNumber, chatUserId, chatIdRange, palett
             // addNotification("client: got peer_id: " + data.id);
             let peerConn = client.connect(data.id);
             peerConn.on("open", () => {
-              addNotification(data.id + " joined the chat");
+              addNotification(data.id + " joined");
               connections[data.id] = peerConn;
             });
           } else if (data.type == "change-host") {
@@ -131,6 +131,7 @@ function startChat(chat, textbox, displayNumber, chatUserId, chatIdRange, palett
         });
 
         conn.on("close", () => {
+          addNotification(conn.peer + " left");
           delete connections[conn.peer];
         });
       });
