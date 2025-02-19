@@ -38,7 +38,7 @@ function startChat(chat, textbox, displayNumber, chatUserId, chatIdRange, palett
     notification.classList.add("chat-entry");
     const notificationText = document.createElement("span");
     notificationText.classList.add("notif");
-    notificationText.innerText = ">>" + message;
+    notificationText.innerText = ">> " + message;
     notification.appendChild(notificationText);
     appendToChat(notification);
   }
