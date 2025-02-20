@@ -63,7 +63,7 @@ function startChat(userId, onReady, onNotification, onMessage, onData) {
   function connectClient() {
     client = new Peer(userId);
     client.on("open", (id) => {
-      // onNotification("client: " + client.id);
+      onNotification("client id: " + client.id);
       let hostConn = client.connect(trackerId);
       hostConn.on("open", () => {
         onNotification("welcome bug_" + client.id);
@@ -77,14 +77,14 @@ function startChat(userId, onReady, onNotification, onMessage, onData) {
       });
 
       client.on("connection", (conn) => {
-        // onNotification("client: receiving from " + conn.peer);
+        onNotification("client: receiving from " + conn.peer);
         conn.on("data", (data) => {
           if (data.type == "message") {
             onMessage(data.id, data.message);
           } else if (data.type == "data") {
             onData(data.data);
           } else if (data.type == "peer") {
-            // onNotification("client: got peer_id: " + data.id);
+            onNotification("client: got peer_id: " + data.id);
             let peerConn = client.connect(data.id);
             peerConn.on("open", () => {
               onNotification("bug_" + data.id + " joined");
