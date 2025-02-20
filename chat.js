@@ -71,6 +71,10 @@ function startChat(userId, onReady, onNotification, onMessage, onData) {
         hostConn.send(client.id);
       });
 
+      hostConn.on("error", (e) => {
+        onNotification("host error: " + e);
+      });
+
       client.on("connection", (conn) => {
         // onNotification("client: receiving from " + conn.peer);
         conn.on("data", (data) => {
@@ -86,6 +90,9 @@ function startChat(userId, onReady, onNotification, onMessage, onData) {
               connections[data.id] = peerConn;
               peerConn.send({ type: "data", data: { type: "newPeer", data: userId } });
             });
+            peerConn.on("error", (e) => {
+              onNotification("outbound connection error: " + e);
+            });
           } else if (data.type == "change-host") {
             startTracker(data.peers);
           }
@@ -96,9 +103,18 @@ function startChat(userId, onReady, onNotification, onMessage, onData) {
           delete connections[conn.peer];
           onData({ type: "removePeer", data: conn.peer });
         });
+
+        conn.on("error", (e) => {
+          onNotification("inbound connection error: " + e);
+        });
       });
     });
+
+    client.on("error", (e) => {
+      onNotification("client error: " + e);
+    });
   }
+
 
   startTracker();
 

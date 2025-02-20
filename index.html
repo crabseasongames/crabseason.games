@@ -77,7 +77,11 @@ body {
   font-weight: 900;
 }
 
-#minimize.minimized {
+#number-display.minimized {
+  opacity: 0.02;
+}
+
+#number-display.minimized #minimize {
   transform: rotate(180deg);
 }
 
@@ -156,18 +160,16 @@ body {
 </style>
 </head>
 <body>
-<div style="display: none">
-  <div id="number-display">
-    <div id="number">
-      <span id='chat-number'>0 other people here</span>
-    </div>
-    <div id="minimize">^</div>
+<div id="number-display" class="minimized">
+  <div id="number">
+    <span id='chat-number'>0 other people here</span>
   </div>
-  <div id="chat">
-    <div id="chat-contents"></div>
-    <div id="chat-textbox">
-      <textarea id="textbox" spellcheck="false" disabled></textarea>
-    </div>
+  <div id="minimize">^</div>
+</div>
+<div id="chat" class="minimized">
+  <div id="chat-contents"></div>
+  <div id="chat-textbox">
+    <textarea id="textbox" spellcheck="false" disabled></textarea>
   </div>
 </div>
 <canvas id="background"></canvas>
@@ -182,11 +184,12 @@ body {
 <script>
 const bg = document.querySelector("#background");
 const bugs = document.querySelector("#bugs");
+const numberDisplayContainer = document.getElementById("number-display");
 const numberDisplay = document.getElementById("number");
+const minimize = document.getElementById("minimize");
 const chatContents = document.getElementById("chat-contents");
 const chatBox = document.getElementById("textbox");
 const chatContainer = document.getElementById("chat");
-const minimize = document.getElementById("minimize");
 
 function palette(t) {
   return [
@@ -222,7 +225,7 @@ let minimized = false;
 minimize.addEventListener("click", () => {
   minimized = !minimized;
   chatContainer.classList[minimized ? "add" : "remove"]("minimized");
-  minimize.classList[minimized ? "add" : "remove"]("minimized");
+  numberDisplayContainer.classList[minimized ? "add" : "remove"]("minimized");
 });
 
 function appendToChat(entry) {
@@ -254,7 +257,6 @@ function addNotification(message) {
   notification.appendChild(notificationText);
   appendToChat(notification);
 }
-
 
 function updateData(data) {
   if (data.type == "newPeer") {
