@@ -72,6 +72,7 @@ function startChat(userId, onReady, onNotification, onMessage, onData) {
       });
 
       hostConn.on("error", (e) => {
+        console.log(e);
         onNotification("host error: " + e);
       });
 
@@ -91,6 +92,7 @@ function startChat(userId, onReady, onNotification, onMessage, onData) {
               peerConn.send({ type: "data", data: { type: "newPeer", data: userId } });
             });
             peerConn.on("error", (e) => {
+              console.log(e);
               onNotification("outbound connection error: " + e);
             });
           } else if (data.type == "change-host") {
@@ -105,12 +107,14 @@ function startChat(userId, onReady, onNotification, onMessage, onData) {
         });
 
         conn.on("error", (e) => {
+          console.log(e);
           onNotification("inbound connection error: " + e);
         });
       });
     });
 
     client.on("error", (e) => {
+      console.log(e);
       onNotification("client error: " + e);
     });
   }
