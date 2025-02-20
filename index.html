@@ -156,11 +156,16 @@ body {
 </style>
 </head>
 <body>
-<div id="number-display"><div id="number"></div><div id="minimize">^</div></div>
+<div id="number-display">
+  <div id="number">
+    <span id='chat-number'>0 other people here</span>
+  </div>
+  <div id="minimize">^</div>
+</div>
 <div id="chat">
   <div id="chat-contents"></div>
   <div id="chat-textbox">
-    <textarea id="textbox" spellcheck="false"></textarea>
+    <textarea id="textbox" spellcheck="false" disabled></textarea>
   </div>
 </div>
 <canvas id="background"></canvas>
@@ -178,7 +183,7 @@ const bugs = document.querySelector("#bugs");
 const numberDisplay = document.getElementById("number");
 const chatContents = document.getElementById("chat-contents");
 const chatBox = document.getElementById("textbox");
-const chat = document.getElementById("chat");
+const chatContainer = document.getElementById("chat");
 const minimize = document.getElementById("minimize");
 
 function palette(t) {
@@ -189,13 +194,24 @@ function palette(t) {
   ];
 }
 
+function textColor(color) {
+  const c = 255 - Math.max(Math.max(color[0], color[1]), color[2]);
+  return `rgba(${color[0] + c}, ${color[1] + c}, ${color[2] + c}, 255)`;
+}
+
+const bugList = {};
+
 const min_height = 475;
 function resize() {
   bg.setAttribute("width", window.innerWidth);
   bg.setAttribute("height", Math.max(window.innerHeight, min_height));
   bugs.setAttribute("width", window.innerWidth);
   bugs.setAttribute("height", window.innerHeight);
-  chat.scroll(0, Number.MAX_SAFE_INTEGER);
+  for (b in bugList) {
+    bugList[b].canvas.setAttribute("width", window.innerWidth);
+    bugList[b].canvas.setAttribute("height", window.innerHeight);
+  }
+  chatContainer.scroll(0, Number.MAX_SAFE_INTEGER);
 }
 addEventListener("resize", resize);
 resize()
@@ -203,23 +219,97 @@ resize()
 let minimized = false;
 minimize.addEventListener("click", () => {
   minimized = !minimized;
-  chat.classList[minimized ? "add" : "remove"]("minimized");
+  chatContainer.classList[minimized ? "add" : "remove"]("minimized");
   minimize.classList[minimized ? "add" : "remove"]("minimized");
 });
+
+function appendToChat(entry) {
+  chatContents.appendChild(entry);
+  chatContents.scroll(0, Number.MAX_SAFE_INTEGER);
+}
+
+function addMessage(id, text) {
+  const message = document.createElement("div");
+  message.classList.add("chat-entry");
+  const idText = document.createElement("span");
+  idText.classList.add("id");
+  idText.style.color = textColor(palette(2 * Math.PI * parseInt(id) / chatIdRange));
+  idText.innerText = id + ": ";
+  const messageText = document.createElement("span");
+  messageText.classList.add("message");
+  messageText.innerText = text;
+  message.appendChild(idText);
+  message.appendChild(messageText);
+  appendToChat(message);
+}
+
+function addNotification(message) {
+  const notification = document.createElement("div");
+  notification.classList.add("chat-entry");
+  const notificationText = document.createElement("span");
+  notificationText.classList.add("notif");
+  notificationText.innerText = ">> " + message;
+  notification.appendChild(notificationText);
+  appendToChat(notification);
+}
+
+
+function updateData(data) {
+  if (data.type == "newPeer") {
+    const newBug = document.createElement("canvas");
+    newBug.style.position = "absolute";
+    newBug.style.top = 0;
+    newBug.style.left = 0;
+    newBug.style.backgroundColor = "transparent";
+    newBug.style.zIndex = -2;
+    document.body.appendChild(newBug);
+    bugList[data.data] = {
+      bug: inventBug(
+        bugConfig,
+        palette(2 * Math.PI * parseInt(data.data) / chatIdRange),
+        newBug,
+        true
+      ),
+      canvas: newBug
+    };
+    resize();
+  } else if (data.type == "removePeer") {
+    document.body.removeChild(bugList[data.data].canvas);
+    delete bugList[data.id];
+  } else if (data.type == "peerCount") {
+    numberDisplay.innerHTML = "<span id='chat-number'>" + data.data + " other people here</span>";
+  } else if (data.type == "position") {
+    if (bugList[data.data.id]) {
+      bugList[data.data.id].bug.update(data.data.position);
+    }
+  }
+}
 
 const chatIdRange = 1000;
 const chatUserId = Math.floor(Math.random() * chatIdRange);
 
-startChat(
-  chatContents,
-  chatBox,
-  (n) => { numberDisplay.innerHTML = "<span id='chat-number'>" + n + " other people here</span>" },
+const chat = startChat(
   chatUserId,
-  chatIdRange,
-  palette
+  () => {
+    textbox.addEventListener("keydown", (e) => {
+      if (e.keyCode == 13) {
+        let text = textbox.value.trim();
+        if (text.length) {
+          chat.sendMessage(textbox.value);
+        }
+        textbox.value = "";
+        e.preventDefault();
+      }
+    });
+    textbox.focus();
+    textbox.disabled = false;
+  },
+  addNotification,
+  addMessage,
+  updateData
 );
 
-inventBug({
+const bugConfig = {
   leg_min_length: 30,
   leg_max_length: 45,
   foot_size: 3,
@@ -227,11 +317,24 @@ inventBug({
   segment_radius: 10,
   arc_radius: 30,
   leg_width: 3,
-  color: palette(chatUserId * 2 * Math.PI / chatIdRange),
   speed: 5,
   volume: 0.05,
   duration: 5512
-}, bugs);
+};
+
+const bug = inventBug(bugConfig, palette(2 * Math.PI * chatUserId / chatIdRange), bugs);
+
+let p = { x: 0, y: 0 };
+let t = 0;
+addEventListener("mousemove", (e) => {
+  const newPosition = { x: e.clientX, y: e.clientY };
+  bug.update(newPosition);
+  if (new Date - t > 1000 && ((newPosition.x - p.x) > 4 || (newPosition.y - p.y) > 4)) {
+    p = newPosition;
+    t = new Date;
+    chat.sendData({ type: "position", data: { id: chatUserId, position: p } });
+  }
+});
 
 draw(bg, `#version 300 es
   precision highp float;
@@ -289,7 +392,8 @@ draw(bg, `#version 300 es
     }
 
 
-    outColor = c;
+    // outColor = c;
+    outColor = vec4(0.0, 0.0, 0.0, 1.0);
   }
 `);
 
