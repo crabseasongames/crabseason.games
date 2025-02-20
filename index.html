@@ -156,23 +156,25 @@ body {
 </style>
 </head>
 <body>
-<div id="number-display">
-  <div id="number">
-    <span id='chat-number'>0 other people here</span>
+<div style="display: none">
+  <div id="number-display">
+    <div id="number">
+      <span id='chat-number'>0 other people here</span>
+    </div>
+    <div id="minimize">^</div>
   </div>
-  <div id="minimize">^</div>
-</div>
-<div id="chat">
-  <div id="chat-contents"></div>
-  <div id="chat-textbox">
-    <textarea id="textbox" spellcheck="false" disabled></textarea>
+  <div id="chat">
+    <div id="chat-contents"></div>
+    <div id="chat-textbox">
+      <textarea id="textbox" spellcheck="false" disabled></textarea>
+    </div>
   </div>
 </div>
 <canvas id="background"></canvas>
 <canvas id="bugs"></canvas>
 <div id="main-container">
   <div id="head">Crab Season Games</div>
-  <div id="subhead">bug chat simulator</div>
+  <!-- <div id="subhead">bug chat simulator</div> -->
 </div>
 <script src="draw.js"></script>
 <script src="chat.js"></script>
@@ -322,16 +324,22 @@ const bugConfig = {
   duration: 5512
 };
 
-const bug = inventBug(bugConfig, palette(2 * Math.PI * chatUserId / chatIdRange), bugs);
+let bug;
+addEventListener("click", () => {
+  if (bug) { return; }
+  bug = inventBug(bugConfig, palette(2 * Math.PI * chatUserId / chatIdRange), bugs);
+});
 
 let p = { x: 0, y: 0 };
 let t = 0;
+const debounce = 100;
 addEventListener("mousemove", (e) => {
+  if (!bug) { return; }
   const newPosition = { x: e.clientX, y: e.clientY };
   bug.update(newPosition);
-  if (new Date - t > 1000 && ((newPosition.x - p.x) > 4 || (newPosition.y - p.y) > 4)) {
-    p = newPosition;
+  if (new Date - t > debounce && ((newPosition.x - p.x) > 4 || (newPosition.y - p.y) > 4)) {
     t = new Date;
+    p = newPosition;
     chat.sendData({ type: "position", data: { id: chatUserId, position: p } });
   }
 });
@@ -392,8 +400,7 @@ draw(bg, `#version 300 es
     }
 
 
-    // outColor = c;
-    outColor = vec4(0.0, 0.0, 0.0, 1.0);
+    outColor = c;
   }
 `);
 
