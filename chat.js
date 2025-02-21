@@ -60,6 +60,8 @@ function startChat(userId, onReady, onNotification, onMessage, onData) {
 
   }
 
+  let connected = false;
+
   function connectClient() {
     client = new Peer(userId);
     client.on("open", (id) => {
@@ -67,6 +69,7 @@ function startChat(userId, onReady, onNotification, onMessage, onData) {
       let hostConn = client.connect(trackerId);
       hostConn.on("open", () => {
         onNotification("welcome bug_" + client.id);
+        connected = true;
         onReady();
         hostConn.send(client.id);
       });
@@ -119,10 +122,13 @@ function startChat(userId, onReady, onNotification, onMessage, onData) {
     });
   }
 
-
   startTracker();
 
   setTimeout(() => { connectClient(); }, 1000);
+
+  setInterval(() => {
+    if (!connected) { connectClient(); }
+  }, 1000);
 
   setInterval(() => {
     sendData({ type: "peerCount", data: Object.keys(connections).length });
