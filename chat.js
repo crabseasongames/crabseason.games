@@ -125,11 +125,11 @@ function startChat(userId, onReady, onNotification, onMessage, onData) {
 
   startTracker();
 
-  setTimeout(() => { connectClient(); }, 5000);
+  setTimeout(() => { connectClient(); }, 2000);
 
   setInterval(() => {
     if (!connected) { connectClient(); }
-  }, 1000);
+  }, 5000);
 
   setInterval(() => {
     sendData({ type: "peerCount", data: Object.keys(connections).length });
