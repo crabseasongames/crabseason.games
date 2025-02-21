@@ -127,9 +127,9 @@ function startChat(userId, onReady, onNotification, onMessage, onData) {
 
   setTimeout(() => { connectClient(); }, 2000);
 
-  setInterval(() => {
-    if (!connected) { connectClient(); }
-  }, 5000);
+  // setInterval(() => {
+  //   if (!connected) { connectClient(); }
+  // }, 5000);
 
   setInterval(() => {
     sendData({ type: "peerCount", data: Object.keys(connections).length });
