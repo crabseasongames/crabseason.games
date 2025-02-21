@@ -63,6 +63,7 @@ function startChat(userId, onReady, onNotification, onMessage, onData) {
   let connected = false;
 
   function connectClient() {
+    if (client) { client.destroy(); }
     client = new Peer(userId);
     client.on("open", (id) => {
       onNotification("client id: " + client.id);
