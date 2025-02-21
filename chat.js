@@ -125,7 +125,7 @@ function startChat(userId, onReady, onNotification, onMessage, onData) {
 
   startTracker();
 
-  setTimeout(() => { connectClient(); }, 1000);
+  setTimeout(() => { connectClient(); }, 5000);
 
   setInterval(() => {
     if (!connected) { connectClient(); }
