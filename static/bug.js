@@ -21,7 +21,7 @@ function inventBug(config, color, canvas, muted = false) {
     };
   }
 
-  function rot(v, t) {
+  function rotate(v, t) {
     let theta = Math.atan(v.y / v.x);
     if (v.x > 0) {
       theta += Math.PI;
@@ -108,14 +108,14 @@ function inventBug(config, color, canvas, muted = false) {
     let rdy = bug.tail.head.position.rly - bug.tail.head.position.y;
 
     if (ldx ** 2 + ldy ** 2 > config.leg_max_length ** 2) {
-      bug.tail.head.position.llx = bug.tail.head.position.x + rot(d, Math.PI / 4).x * config.leg_min_length;
-      bug.tail.head.position.lly = bug.tail.head.position.y + rot(d, Math.PI / 4).y * config.leg_min_length;
+      bug.tail.head.position.llx = bug.tail.head.position.x + rotate(d, Math.PI / 4).x * config.leg_min_length;
+      bug.tail.head.position.lly = bug.tail.head.position.y + rotate(d, Math.PI / 4).y * config.leg_min_length;
       tap();
     }
 
     if (rdx ** 2 + rdy ** 2 > config.leg_max_length ** 2) {
-      bug.tail.head.position.rlx = bug.tail.head.position.x + rot(d, -Math.PI / 4).x * config.leg_min_length;
-      bug.tail.head.position.rly = bug.tail.head.position.y + rot(d, -Math.PI / 4).y * config.leg_min_length;
+      bug.tail.head.position.rlx = bug.tail.head.position.x + rotate(d, -Math.PI / 4).x * config.leg_min_length;
+      bug.tail.head.position.rly = bug.tail.head.position.y + rotate(d, -Math.PI / 4).y * config.leg_min_length;
       tap();
     }
 

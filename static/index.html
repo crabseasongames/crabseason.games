@@ -239,7 +239,7 @@ function addMessage(id, text) {
   const idText = document.createElement("span");
   idText.classList.add("id");
   idText.style.color = textColor(palette(2 * Math.PI * parseInt(id) / chatIdRange));
-  idText.innerText = id + ": ";
+  idText.innerText = "bug_" + id + ": ";
   const messageText = document.createElement("span");
   messageText.classList.add("message");
   messageText.innerText = text;
@@ -259,29 +259,9 @@ function addNotification(message) {
 }
 
 function updateData(data) {
-  if (data.type == "newPeer") {
-    const newBug = document.createElement("canvas");
-    newBug.style.position = "absolute";
-    newBug.style.top = 0;
-    newBug.style.left = 0;
-    newBug.style.backgroundColor = "transparent";
-    newBug.style.zIndex = -2;
-    document.body.appendChild(newBug);
-    bugList[data.data] = {
-      bug: inventBug(
-        bugConfig,
-        palette(2 * Math.PI * parseInt(data.data) / chatIdRange),
-        newBug,
-        true
-      ),
-      canvas: newBug
-    };
-    resize();
-  } else if (data.type == "removePeer") {
+  if (data.type == "removePeer") {
     document.body.removeChild(bugList[data.data].canvas);
     delete bugList[data.id];
-  } else if (data.type == "peerCount") {
-    numberDisplay.innerHTML = "<span id='chat-number'>" + data.data + " other people here</span>";
   } else if (data.type == "position") {
     if (bugList[data.data.id]) {
       bugList[data.data.id].bug.update(data.data.position);
@@ -289,12 +269,30 @@ function updateData(data) {
   }
 }
 
-const chatIdRange = 1000;
-const chatUserId = Math.floor(Math.random() * chatIdRange);
+function addBug(id) {
+  const newBug = document.createElement("canvas");
+  newBug.style.position = "absolute";
+  newBug.style.top = 0;
+  newBug.style.left = 0;
+  newBug.style.backgroundColor = "transparent";
+  newBug.style.zIndex = -2;
+  document.body.appendChild(newBug);
+  bugList[id] = {
+    bug: inventBug(
+      bugConfig,
+      palette(2 * Math.PI * parseInt(id) / chatIdRange),
+      newBug,
+      true
+    ),
+    canvas: newBug
+  };
+  resize();
+}
+
+const chatIdRange = 10e9;
 
 const chat = startChat(
-  chatUserId,
-  () => {
+  (users) => {
     textbox.addEventListener("keydown", (e) => {
       if (e.keyCode == 13) {
         let text = textbox.value.trim();
@@ -307,10 +305,18 @@ const chat = startChat(
     });
     textbox.focus();
     textbox.disabled = false;
+    users.forEach((id) => {
+      if (id != chat.id) {
+        addBug(id);
+      }
+    });
   },
   addNotification,
   addMessage,
-  updateData
+  updateData,
+  (count) => {
+    numberDisplay.innerHTML = `<span id='chat-number'>${count - 1} other people here</span>`;
+  }
 );
 
 const bugConfig = {
@@ -329,7 +335,7 @@ const bugConfig = {
 let bug;
 addEventListener("click", () => {
   if (bug) { return; }
-  bug = inventBug(bugConfig, palette(2 * Math.PI * chatUserId / chatIdRange), bugs);
+  bug = inventBug(bugConfig, palette(2 * Math.PI * chat.id / chatIdRange), bugs);
 });
 
 let p = { x: 0, y: 0 };
@@ -342,7 +348,7 @@ addEventListener("mousemove", (e) => {
   if (new Date - t > debounce && ((newPosition.x - p.x) > 4 || (newPosition.y - p.y) > 4)) {
     t = new Date;
     p = newPosition;
-    chat.sendData({ type: "position", data: { id: chatUserId, position: p } });
+    chat.sendData({ type: "position", data: { id: chat.id, position: p } });
   }
 });
 

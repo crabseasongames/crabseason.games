@@ -1,0 +1,76 @@
+<html>
+<head>
+</head>
+<body>
+<textarea id="chatTextarea" disabled></textarea>
+<script>
+
+const chatTextarea = document.getElementById("chatTextarea");
+chatTextarea.addEventListener("keydown", (e) => {
+  if (e.key == "Enter") {
+    send("broadcast", {
+      type: "chat",
+      data: chatTextarea.value
+    });
+    chatTextarea.value = "";
+    e.preventDefault();
+  }
+});
+
+function appendToChat(messageText) {
+  const message = document.createElement("p");
+  message.innerText = messageText;
+  document.body.appendChild(message);
+}
+
+const ws = new WebSocket("ws://localhost:3000");
+const send = (type, data) => {
+  ws.send(JSON.stringify({
+    type: type,
+    data: data
+  }));
+};
+
+const userId = localStorage["userId"] || Math.floor(Math.random() * 10e9);
+localStorage["userId"] = userId;
+
+ws.addEventListener("open", (event) => {
+  console.log("websocket connection opened");
+  console.log(event);
+  send("register", userId);
+});
+
+ws.addEventListener("message", (event) => {
+  console.log("got message");
+  console.log(event);
+
+  let message;
+  try {
+    message = JSON.parse(event.data);
+  } catch (e) {
+    send("error", `Error parsing: ${event.data}`);
+  }
+  if (message.type == "registered") {
+    console.log(`registered as ${userId}`);
+    chatTextarea.disabled = false;
+  } else if (message.type == "peerMessage") {
+    console.log("got peer message:");
+    console.log(message.data);
+    if (message.data.type == "chat") {
+      appendToChat(message.data.data);
+    }
+  }
+});
+
+ws.addEventListener("close", (event) => {
+  console.log("websocket connection closed");
+  console.log(event);
+});
+
+ws.addEventListener("error", (event) => {
+  console.log("websocket error");
+  console.log(event);
+});
+
+</script>
+</body>
