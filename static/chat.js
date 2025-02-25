@@ -170,7 +170,8 @@
 
 function startChat(onReady, onNotification, onMessage, onData, updatePeers) {
   // const ws = new WebSocket("ws://localhost:3000");
-  const ws = new WebSocket("wss://crabseason-games-3cf54d5c76c6.herokuapp.com");
+  const url = location.search.slice(1) == "LOCAL" ? "ws://localhost:3000" : "wss://crabseason-games-3cf54d5c76c6.herokuapp.com";
+  const ws = new WebSocket(url);
 
   const send = (type, data) => {
     ws.send(JSON.stringify({
