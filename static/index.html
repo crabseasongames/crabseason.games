@@ -358,7 +358,7 @@ addEventListener("load", () => {
     if (!bug) { return; }
     const newPosition = { x: e.clientX, y: e.clientY };
     bug.update(newPosition);
-    if (new Date - t > debounce && ((newPosition.x - p.x) > 4 || (newPosition.y - p.y) > 4)) {
+    if (new Date - t > debounce && (newPosition.x != p.x || newPosition.y != p.y)) {
       t = new Date;
       p = newPosition;
       chat.sendData({ type: "position", data: {
