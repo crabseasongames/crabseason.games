@@ -155,7 +155,7 @@ function inventBug(config, color, canvas, muted = false) {
     ctx.reset();
     let t = now();
     let dt = (t - lastDraw) / 16.67;
-    lastDraw = t;
+    t = lastDraw;
     let d = [newPosition.x - bug.head.position.x, newPosition.y - bug.head.position.y];
     let r = Math.sqrt(d[0] ** 2 + d[1] ** 2) * dt;
     let c = (1 - Math.E ** (-r * 0.01)) * config.speed / r;
