@@ -40,7 +40,7 @@ function inventBug(config, color, canvas, muted = false) {
   }
 
   let newPosition;
-  let t = now();
+  let lastTap = now();
 
   const actx = new AudioContext();
   let bug;
@@ -48,9 +48,9 @@ function inventBug(config, color, canvas, muted = false) {
 
   function tap() {
     if (muted) { return; }
-    let t_ = now();
-    let dt = t_ - t;
-    t = t_;
+    let t = now();
+    let dt = t - lastTap;
+    lastTap = t;
 
     let audio_buffer = actx.createBuffer(1, config.duration, 96000);
     let buffer = audio_buffer.getChannelData(0);
@@ -150,10 +150,14 @@ function inventBug(config, color, canvas, muted = false) {
     ctx.stroke();
   }
 
+  let lastDraw;
   function drawBug() {
     ctx.reset();
+    let t = now();
+    let dt = (t - lastDraw) / 16.67;
+    lastDraw = t;
     let d = [newPosition.x - bug.head.position.x, newPosition.y - bug.head.position.y];
-    let r = Math.sqrt(d[0] ** 2 + d[1] ** 2);
+    let r = Math.sqrt(d[0] ** 2 + d[1] ** 2) * dt;
     let c = (1 - Math.E ** (-r * 0.01)) * config.speed / r;
 
     if (Math.abs(d[0]) > 4 || Math.abs(d[1]) > 4) {
@@ -222,6 +226,7 @@ function inventBug(config, color, canvas, muted = false) {
       if (!bug) {
         bug = initializeBug(config.num_segments, config.arc_radius, newPosition);
         moveBug(bug, newPosition);
+        lastDraw = now();
         requestAnimationFrame(drawBug);
       }
     }
