@@ -184,6 +184,9 @@ body {
 <script>
 
 addEventListener("load", () => {
+  if (document.hidden) {
+    return;
+  }
   const bg = document.querySelector("#background");
   const bugs = document.querySelector("#bugs");
   const numberDisplayContainer = document.getElementById("number-display");
