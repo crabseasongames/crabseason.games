@@ -182,255 +182,252 @@ body {
 <script src="chat.js"></script>
 <script src="bug.js"></script>
 <script>
-const bg = document.querySelector("#background");
-const bugs = document.querySelector("#bugs");
-const numberDisplayContainer = document.getElementById("number-display");
-const numberDisplay = document.getElementById("number");
-const minimize = document.getElementById("minimize");
-const chatContents = document.getElementById("chat-contents");
-const chatBox = document.getElementById("textbox");
-const chatContainer = document.getElementById("chat");
 
-function palette(t) {
-  return [
-    200 * (1 + 0.5 * Math.sin(t)),
-    240 * (1 + 0.5 * Math.sin(t + 0.7)),
-    220 * (1 + 0.5 * Math.sin(t + 2.5))
-  ];
-}
+addEventListener("load", () => {
+  const bg = document.querySelector("#background");
+  const bugs = document.querySelector("#bugs");
+  const numberDisplayContainer = document.getElementById("number-display");
+  const numberDisplay = document.getElementById("number");
+  const minimize = document.getElementById("minimize");
+  const chatContents = document.getElementById("chat-contents");
+  const chatBox = document.getElementById("textbox");
+  const chatContainer = document.getElementById("chat");
 
-function textColor(color) {
-  const c = 255 - Math.max(Math.max(color[0], color[1]), color[2]);
-  return `rgba(${color[0] + c}, ${color[1] + c}, ${color[2] + c}, 255)`;
-}
-
-const bugList = {};
-
-const min_height = 475;
-function resize() {
-  bg.setAttribute("width", window.innerWidth);
-  bg.setAttribute("height", Math.max(window.innerHeight, min_height));
-  bugs.setAttribute("width", window.innerWidth);
-  bugs.setAttribute("height", window.innerHeight);
-  for (b in bugList) {
-    bugList[b].canvas.setAttribute("width", window.innerWidth);
-    bugList[b].canvas.setAttribute("height", window.innerHeight);
+  function palette(t) {
+    return [
+      200 * (1 + 0.5 * Math.sin(t)),
+      240 * (1 + 0.5 * Math.sin(t + 0.7)),
+      220 * (1 + 0.5 * Math.sin(t + 2.5))
+    ];
   }
-  chatContainer.scroll(0, Number.MAX_SAFE_INTEGER);
-}
-addEventListener("resize", resize);
-resize();
 
-let minimized = false;
-minimize.addEventListener("click", () => {
-  minimized = !minimized;
-  chatContainer.classList[minimized ? "add" : "remove"]("minimized");
-  numberDisplayContainer.classList[minimized ? "add" : "remove"]("minimized");
-});
+  function textColor(color) {
+    const c = 255 - Math.max(Math.max(color[0], color[1]), color[2]);
+    return `rgba(${color[0] + c}, ${color[1] + c}, ${color[2] + c}, 255)`;
+  }
 
-function appendToChat(entry) {
-  chatContents.appendChild(entry);
-  chatContents.scroll(0, Number.MAX_SAFE_INTEGER);
-}
+  const bugList = {};
 
-function addMessage(id, text) {
-  const message = document.createElement("div");
-  message.classList.add("chat-entry");
-  const idText = document.createElement("span");
-  idText.classList.add("id");
-  idText.style.color = textColor(palette(2 * Math.PI * parseInt(id) / chatIdRange));
-  idText.innerText = "bug_" + id + ": ";
-  const messageText = document.createElement("span");
-  messageText.classList.add("message");
-  messageText.innerText = text;
-  message.appendChild(idText);
-  message.appendChild(messageText);
-  appendToChat(message);
-}
-
-function addNotification(message) {
-  const notification = document.createElement("div");
-  notification.classList.add("chat-entry");
-  const notificationText = document.createElement("span");
-  notificationText.classList.add("notif");
-  notificationText.innerText = ">> " + message;
-  notification.appendChild(notificationText);
-  appendToChat(notification);
-}
-
-function updateData(data) {
-  if (data.type == "position") {
-    if (bugList[data.data.id]) {
-      bugList[data.data.id].bug.update({
-        x: data.data.position.x * window.innerWidth,
-        y: data.data.position.y * window.innerHeight
-      });
+  const min_height = 475;
+  function resize() {
+    bg.setAttribute("width", window.innerWidth);
+    bg.setAttribute("height", Math.max(window.innerHeight, min_height));
+    bugs.setAttribute("width", window.innerWidth);
+    bugs.setAttribute("height", window.innerHeight);
+    for (b in bugList) {
+      bugList[b].canvas.setAttribute("width", window.innerWidth);
+      bugList[b].canvas.setAttribute("height", window.innerHeight);
     }
+    chatContainer.scroll(0, Number.MAX_SAFE_INTEGER);
   }
-}
-
-function addBug(id) {
-  const newBug = document.createElement("canvas");
-  newBug.style.position = "absolute";
-  newBug.style.top = 0;
-  newBug.style.left = 0;
-  newBug.style.backgroundColor = "transparent";
-  newBug.style.zIndex = -2;
-  document.body.appendChild(newBug);
-  bugList[id] = {
-    bug: inventBug(
-      bugConfig,
-      palette(2 * Math.PI * parseInt(id) / chatIdRange),
-      newBug,
-      true
-    ),
-    canvas: newBug
-  };
+  addEventListener("resize", resize);
   resize();
-}
 
-const chatIdRange = 10e9;
+  let minimized = false;
+  minimize.addEventListener("click", () => {
+    minimized = !minimized;
+    chatContainer.classList[minimized ? "add" : "remove"]("minimized");
+    numberDisplayContainer.classList[minimized ? "add" : "remove"]("minimized");
+  });
 
-const chat = startChat(
-  (users) => {
-    textbox.addEventListener("keydown", (e) => {
-      if (e.keyCode == 13) {
-        let text = textbox.value.trim();
-        if (text.length) {
-          chat.sendMessage(textbox.value);
+  function appendToChat(entry) {
+    chatContents.appendChild(entry);
+    chatContents.scroll(0, Number.MAX_SAFE_INTEGER);
+  }
+
+  function addMessage(id, text) {
+    const message = document.createElement("div");
+    message.classList.add("chat-entry");
+    const idText = document.createElement("span");
+    idText.classList.add("id");
+    idText.style.color = textColor(palette(2 * Math.PI * parseInt(id) / chatIdRange));
+    idText.innerText = "bug_" + id + ": ";
+    const messageText = document.createElement("span");
+    messageText.classList.add("message");
+    messageText.innerText = text;
+    message.appendChild(idText);
+    message.appendChild(messageText);
+    appendToChat(message);
+  }
+
+  function addNotification(message) {
+    const notification = document.createElement("div");
+    notification.classList.add("chat-entry");
+    const notificationText = document.createElement("span");
+    notificationText.classList.add("notif");
+    notificationText.innerText = ">> " + message;
+    notification.appendChild(notificationText);
+    appendToChat(notification);
+  }
+
+  function updateData(data) {
+    if (data.type == "position") {
+      if (bugList[data.data.id]) {
+        bugList[data.data.id].bug.update(data.data.position);
+      }
+    }
+  }
+
+  function addBug(id) {
+    const newBug = document.createElement("canvas");
+    newBug.style.position = "absolute";
+    newBug.style.top = 0;
+    newBug.style.left = 0;
+    newBug.style.backgroundColor = "transparent";
+    newBug.style.zIndex = -2;
+    document.body.appendChild(newBug);
+    bugList[id] = {
+      bug: inventBug(
+        bugConfig,
+        palette(2 * Math.PI * parseInt(id) / chatIdRange),
+        newBug,
+        true
+      ),
+      canvas: newBug
+    };
+    resize();
+  }
+
+  const chatIdRange = 10e9;
+
+  const chat = startChat(
+    (users) => {
+      textbox.addEventListener("keydown", (e) => {
+        if (e.keyCode == 13) {
+          let text = textbox.value.trim();
+          if (text.length) {
+            chat.sendMessage(textbox.value);
+          }
+          textbox.value = "";
+          e.preventDefault();
         }
-        textbox.value = "";
-        e.preventDefault();
+      });
+      textbox.focus();
+      textbox.disabled = false;
+      users.forEach((id) => {
+        if (id != chat.id) {
+          addBug(id);
+        }
+      });
+      addNotification(`welcome bug_${chat.id}`);
+    },
+    addNotification,
+    addMessage,
+    updateData,
+    (peers) => {
+      peers.forEach((id) => {
+        if (id != chat.id && !bugList[id]) {
+          addBug(id);
+          addNotification(`bug_${id} joined`);
+        }
+      });
+      for (id in bugList) {
+        if (!peers.includes(id)) {
+          document.body.removeChild(bugList[id].canvas);
+          delete bugList[id];
+          addNotification(`bug_${id} left`);
+        }
       }
-    });
-    textbox.focus();
-    textbox.disabled = false;
-    users.forEach((id) => {
-      if (id != chat.id) {
-        addBug(id);
-      }
-    });
-    addNotification(`welcome bug_${chat.id}`);
-  },
-  addNotification,
-  addMessage,
-  updateData,
-  (peers) => {
-    peers.forEach((id) => {
-      if (id != chat.id && !bugList[id]) {
-        addBug(id);
-        addNotification(`bug_${id} joined`);
-      }
-    });
-    for (id in bugList) {
-      if (!peers.includes(id)) {
-        document.body.removeChild(bugList[id].canvas);
-        delete bugList[id];
-        addNotification(`bug_${id} left`);
-      }
+      numberDisplay.innerHTML = `<span id='chat-number'>${Object.keys(bugList).length} other people here</span>`;
     }
-    numberDisplay.innerHTML = `<span id='chat-number'>${Object.keys(bugList).length} other people here</span>`;
-  }
-);
+  );
 
-const bugConfig = {
-  leg_min_length: 30,
-  leg_max_length: 45,
-  foot_size: 3,
-  num_segments: 7,
-  segment_radius: 10,
-  arc_radius: 30,
-  leg_width: 3,
-  speed: 5,
-  volume: 0.05,
-  duration: 5512
-};
+  const bugConfig = {
+    leg_min_length: 30,
+    leg_max_length: 45,
+    foot_size: 3,
+    num_segments: 7,
+    segment_radius: 10,
+    arc_radius: 30,
+    leg_width: 3,
+    speed: 5,
+    volume: 0.05,
+    duration: 5512
+  };
 
-let bug;
-addEventListener("click", () => {
-  if (bug) { return; }
-  bug = inventBug(bugConfig, palette(2 * Math.PI * chat.id / chatIdRange), bugs);
+  let bug;
+  addEventListener("click", () => {
+    if (bug) { return; }
+    bug = inventBug(bugConfig, palette(2 * Math.PI * chat.id / chatIdRange), bugs);
+  });
+
+  let p = { x: 0, y: 0 };
+  let t = 0;
+  const debounce = 100;
+  addEventListener("mousemove", (e) => {
+    if (!bug) { return; }
+    const newPosition = { x: e.clientX, y: e.clientY };
+    bug.update(newPosition);
+    if (new Date - t > debounce && ((newPosition.x - p.x) > 4 || (newPosition.y - p.y) > 4)) {
+      t = new Date;
+      p = newPosition;
+      chat.sendData({ type: "position", data: {
+        id: chat.id,
+        position: p
+      }});
+    }
+  });
+
+  draw(bg, `#version 300 es
+    precision highp float;
+
+    uniform vec2 u_resolution;
+    uniform float u_time;
+    uniform vec2 u_mouse;
+
+    out vec4 outColor;
+
+    float fsin(float theta) {
+      return sin(theta) * smoothstep(6.2832, 0.01, fwidth(theta));
+    }
+
+    float hash(vec2 v, float t) {
+      return t * 1000000.0 * fract(v.x * v.y * 10000000.0);
+    }
+
+    float fmod(float x, float m) {
+      return m * fract(x / m);
+    }
+
+    float saw(float theta) {
+      theta = fmod(theta, 3.1416);
+      return theta < 1.57 ? theta : 3.1416 - theta;
+    }
+
+    float circle(float radius, vec2 p, float t) {
+      float angle = atan(p.y / p.x) + (p.x > 0.0 ? 3.1416 : 0.0);
+      float r = radius * (1.0 + sin(t - 1.57) + 0.02 * sin(100.0 * (1.0 + 0.15 * sin(t)) * t));
+      return length(p) - r;
+    }
+
+    mat2 rotate(float theta) {
+      return mat2(vec2(cos(theta), sin(theta)), vec2(-sin(theta), cos(theta)));
+    }
+
+    void main() {
+      vec2 uv = (vec2(gl_FragCoord.x, (u_resolution.y - gl_FragCoord.y)) / u_resolution.xx) - vec2(0.5, 0.25);
+      // uv += u_mouse * 0.01;
+      // uv = uv * rotate(u_time * 0.01 / pow(length(uv), 0.1));
+      float t = 1.0 * u_time + length(uv) * 100.0;
+      vec4 color = vec4(0.3 + 0.05 * sin(t), 0.6 + 0.1 * sin(t * 3.0), 0.7 + 0.12 * sin(t * 7.0), 1.0);
+
+      float d;
+      vec4 c = vec4(0.0);
+      int octaves = 2 + int(10.0 * (1.0 - cos(u_time * 0.08)));
+      for (int i = 0; i < octaves; i++) {
+          d = abs(circle(0.1, fract(pow(2.0, float(i)) * uv) - 0.5, u_time * 0.5));
+          c += color * 0.001 / smoothstep(0.05, 6.0, pow(d, 0.45));
+      }
+
+      if (sin(hash(uv, u_time)) > 0.0) {
+        c *= 1.1 + 0.1 * sin(u_time * 0.5 - 1.57);
+      }
+
+
+      outColor = c;
+    }
+  `);
 });
-
-let p = { x: 0, y: 0 };
-let t = 0;
-const debounce = 100;
-addEventListener("mousemove", (e) => {
-  if (!bug) { return; }
-  const newPosition = { x: e.clientX, y: e.clientY };
-  bug.update(newPosition);
-  if (new Date - t > debounce && ((newPosition.x - p.x) > 4 || (newPosition.y - p.y) > 4)) {
-    t = new Date;
-    p = newPosition;
-    chat.sendData({ type: "position", data: {
-      id: chat.id,
-      position: {
-        x: p.x / window.innerWidth,
-        y: p.y / window.innerHeight
-      }
-    }});
-  }
-});
-
-draw(bg, `#version 300 es
-  precision highp float;
-
-  uniform vec2 u_resolution;
-  uniform float u_time;
-  uniform vec2 u_mouse;
-
-  out vec4 outColor;
-
-  float fsin(float theta) {
-    return sin(theta) * smoothstep(6.2832, 0.01, fwidth(theta));
-  }
-
-  float hash(vec2 v, float t) {
-    return t * 1000000.0 * fract(v.x * v.y * 10000000.0);
-  }
-
-  float fmod(float x, float m) {
-    return m * fract(x / m);
-  }
-
-  float saw(float theta) {
-    theta = fmod(theta, 3.1416);
-    return theta < 1.57 ? theta : 3.1416 - theta;
-  }
-
-  float circle(float radius, vec2 p, float t) {
-    float angle = atan(p.y / p.x) + (p.x > 0.0 ? 3.1416 : 0.0);
-    float r = radius * (1.0 + sin(t - 1.57) + 0.02 * sin(100.0 * (1.0 + 0.15 * sin(t)) * t));
-    return length(p) - r;
-  }
-
-  mat2 rotate(float theta) {
-    return mat2(vec2(cos(theta), sin(theta)), vec2(-sin(theta), cos(theta)));
-  }
-
-  void main() {
-    vec2 uv = (vec2(gl_FragCoord.x, (u_resolution.y - gl_FragCoord.y)) / u_resolution.xx) - vec2(0.5, 0.25);
-    // uv += u_mouse * 0.01;
-    // uv = uv * rotate(u_time * 0.01 / pow(length(uv), 0.1));
-    float t = 1.0 * u_time + length(uv) * 100.0;
-    vec4 color = vec4(0.3 + 0.05 * sin(t), 0.6 + 0.1 * sin(t * 3.0), 0.7 + 0.12 * sin(t * 7.0), 1.0);
-
-    float d;
-    vec4 c = vec4(0.0);
-    int octaves = 2 + int(10.0 * (1.0 - cos(u_time * 0.08)));
-    for (int i = 0; i < octaves; i++) {
-        d = abs(circle(0.1, fract(pow(2.0, float(i)) * uv) - 0.5, u_time * 0.5));
-        c += color * 0.001 / smoothstep(0.05, 6.0, pow(d, 0.45));
-    }
-
-    if (sin(hash(uv, u_time)) > 0.0) {
-      c *= 1.1 + 0.1 * sin(u_time * 0.5 - 1.57);
-    }
-
-
-    outColor = c;
-  }
-`);
 
 </script>
 </body>
