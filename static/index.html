@@ -325,7 +325,7 @@ const chat = startChat(
         addNotification(`bug_${id} left`);
       }
     }
-    numberDisplay.innerHTML = `<span id='chat-number'>${Object.keys(bugList.length).length - 1} other people here</span>`;
+    numberDisplay.innerHTML = `<span id='chat-number'>${Object.keys(bugList).length - 1} other people here</span>`;
   }
 );
 
