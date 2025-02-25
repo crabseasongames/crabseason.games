@@ -168,7 +168,7 @@
 
 
 
-function startChat(onReady, onNotification, onMessage, onData, updateCount) {
+function startChat(onReady, onNotification, onMessage, onData, updatePeers) {
   // const ws = new WebSocket("ws://localhost:3000");
   const ws = new WebSocket("wss://crabseason-games-3cf54d5c76c6.herokuapp.com");
 
@@ -202,7 +202,7 @@ function startChat(onReady, onNotification, onMessage, onData, updateCount) {
       console.log(`registered as ${userId}`);
       onReady(message.data);
     } else if (message.type == "peers") {
-      updateCount(message.data.length);
+      updatePeers(message.data);
     } else if (message.type == "peerMessage") {
       // console.log("got peer message:");
       // console.log(message.data);

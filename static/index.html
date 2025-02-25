@@ -259,10 +259,7 @@ function addNotification(message) {
 }
 
 function updateData(data) {
-  if (data.type == "removePeer") {
-    document.body.removeChild(bugList[data.data].canvas);
-    delete bugList[data.id];
-  } else if (data.type == "position") {
+  if (data.type == "position") {
     if (bugList[data.data.id]) {
       bugList[data.data.id].bug.update(data.data.position);
     }
@@ -314,8 +311,21 @@ const chat = startChat(
   addNotification,
   addMessage,
   updateData,
-  (count) => {
-    numberDisplay.innerHTML = `<span id='chat-number'>${count - 1} other people here</span>`;
+  (peers) => {
+    peers.forEach((id) => {
+      if (id != chat.id && !bugList[id]) {
+        addBug(id);
+        addNotification(`bug_${id} joined`);
+      }
+    });
+    for (id in bugList) {
+      if (!peers.contains(id)) {
+        document.body.removeChild(bugList[id].canvas);
+        delete bugList[id];
+        addNotification(`bug_${id} left`);
+      }
+    }
+    numberDisplay.innerHTML = `<span id='chat-number'>${Object.keys(bugList.length).length - 1} other people here</span>`;
   }
 );
 
