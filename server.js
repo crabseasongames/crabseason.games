@@ -42,9 +42,7 @@ const Router = {
     };
     conn.send(WsResponse("registered", Object.keys(users)));
     conn["__userId"] = id;
-    for (id in users) {
-      users[id].connection.send(WsResponse("peers", Object.keys(users)));
-    }
+    updateUsers();
   },
   broadcast: (conn, message) => {
     for (id in users) {
@@ -55,6 +53,12 @@ const Router = {
     }
   }
 };
+
+function updateUsers() {
+  for (id in users) {
+    users[id].connection.send(WsResponse("peers", Object.keys(users)));
+  }
+}
 
 const port = process.env.PORT || 3000;
 
@@ -88,6 +92,7 @@ app.ws("/", (ws, req) => {
     if (ws["__userId"]) {
       delete users[ws["__userId"]];
     }
+    updateUsers();
   });
 
   ws.on("error", (event) => {
