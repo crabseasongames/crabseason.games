@@ -157,8 +157,8 @@ function inventBug(config, color, canvas, muted = false) {
     let dt = (t - lastDraw) / 16.67;
     lastDraw = t;
     let d = [newPosition.x - bug.head.position.x, newPosition.y - bug.head.position.y];
-    let r = Math.sqrt(d[0] ** 2 + d[1] ** 2) * dt;
-    let c = (1 - Math.E ** (-r * 0.01)) * config.speed / r;
+    let r = Math.sqrt(d[0] ** 2 + d[1] ** 2);
+    let c = (1 - Math.E ** (-r * 0.01)) * config.speed * dt / r;
 
     if (Math.abs(d[0]) > 4 || Math.abs(d[1]) > 4) {
       moveBug(bug, { x: bug.head.position.x + d[0] * c, y: bug.head.position.y + d[1] * c });
