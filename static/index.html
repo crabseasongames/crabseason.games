@@ -319,7 +319,7 @@ const chat = startChat(
       }
     });
     for (id in bugList) {
-      if (!peers.contains(id)) {
+      if (!peers.includes(id)) {
         document.body.removeChild(bugList[id].canvas);
         delete bugList[id];
         addNotification(`bug_${id} left`);
