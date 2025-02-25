@@ -166,7 +166,7 @@ body {
   </div>
   <div id="minimize">^</div>
 </div>
-<div id="chat" class="minimized">
+<div id="chat">
   <div id="chat-contents"></div>
   <div id="chat-textbox">
     <textarea id="textbox" spellcheck="false" disabled></textarea>
@@ -176,7 +176,7 @@ body {
 <canvas id="bugs"></canvas>
 <div id="main-container">
   <div id="head">Crab Season Games</div>
-  <!-- <div id="subhead">bug chat simulator</div> -->
+  <div id="subhead">bug chat simulator</div>
 </div>
 <script src="draw.js"></script>
 <script src="chat.js"></script>
@@ -219,7 +219,7 @@ function resize() {
   chatContainer.scroll(0, Number.MAX_SAFE_INTEGER);
 }
 addEventListener("resize", resize);
-resize()
+resize();
 
 let minimized = false;
 minimize.addEventListener("click", () => {
