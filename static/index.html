@@ -261,7 +261,10 @@ function addNotification(message) {
 function updateData(data) {
   if (data.type == "position") {
     if (bugList[data.data.id]) {
-      bugList[data.data.id].bug.update(data.data.position);
+      bugList[data.data.id].bug.update({
+        x: data.data.position.x * window.innerWidth,
+        y: data.data.position.y * window.innerHeight
+      });
     }
   }
 }
@@ -358,7 +361,13 @@ addEventListener("mousemove", (e) => {
   if (new Date - t > debounce && ((newPosition.x - p.x) > 4 || (newPosition.y - p.y) > 4)) {
     t = new Date;
     p = newPosition;
-    chat.sendData({ type: "position", data: { id: chat.id, position: p } });
+    chat.sendData({ type: "position", data: {
+      id: chat.id,
+      position: {
+        x: p.x / window.innerWidth,
+        y: p.y / window.innerHeight
+      }
+    }});
   }
 });
 
