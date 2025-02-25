@@ -187,8 +187,7 @@ function startChat(onReady, onNotification, onMessage, onData, updatePeers) {
     console.log("websocket connection opened");
     console.log(event);
     send("register", userId);
-    onNotification("registering");
-    onNotification(document.hidden ? "hidden" : "not hidden");
+    send("broadcast", { type: "chat", data: document.hidden ? "hidden" : "not hidden" });
   });
 
   ws.addEventListener("message", (event) => {
