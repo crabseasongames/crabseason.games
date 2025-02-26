@@ -167,21 +167,13 @@
 // }
 
 
+let userId
+let ws;
 
-function startChat(onReady, onNotification, onMessage, onData, updatePeers) {
-  // const ws = new WebSocket("ws://localhost:3000");
-  const url = location.search.slice(1) == "LOCAL" ? "ws://localhost:3000" : "wss://crabseason-games-3cf54d5c76c6.herokuapp.com";
-  const ws = new WebSocket(url);
-
-  const send = (type, data) => {
-    ws.send(JSON.stringify({
-      type: type,
-      data: data
-    }));
-  };
-
-  const userId = localStorage["userId"] || Math.floor(Math.random() * 10e9);
+function initialize(onReady, onNotification, onMessage, onData, updatePeers) {
+  userId = localStorage["userId"] || Math.floor(Math.random() * 10e9);
   localStorage["userId"] = userId;
+  ws = new WebSocket(location.search.slice(1) == "LOCAL" ? "ws://localhost:3000" : "wss://crabseason-games-3cf54d5c76c6.herokuapp.com");
 
   ws.addEventListener("open", (event) => {
     console.log("websocket connection opened");
@@ -221,13 +213,24 @@ function startChat(onReady, onNotification, onMessage, onData, updatePeers) {
     console.log("websocket connection closed");
     console.log(event);
     onNotification("disconnected");
-    location.reload();
+    initialize(onReady, onNotification, onMessage, onData, updatePeers);
   });
 
   ws.addEventListener("error", (event) => {
     console.log("websocket error");
     console.log(event);
   });
+}
+
+function send(type, data) {
+  ws.send(JSON.stringify({
+    type: type,
+    data: data
+  }));
+}
+
+function startChat(onReady, onNotification, onMessage, onData, updatePeers) {
+  initialize(onReady, onNotification, onMessage, onData, updatePeers);
 
   return {
     id: userId,
