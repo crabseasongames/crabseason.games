@@ -85,6 +85,7 @@ app.ws("/", (ws, req) => {
 
   ws.on("close", (event) => {
     console.log(`websocket connection closed: ${event}`);
+    console.log(event);
     if (ws["__userId"]) {
       delete users[ws["__userId"]];
     }
