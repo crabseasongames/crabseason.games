@@ -170,7 +170,7 @@
 let userId
 let ws;
 
-function initialize(onReady, onNotification, onMessage, onData, updatePeers) {
+function initialize(onReady, onNotification, onMessage, onData, updatePeers, reconnect = false) {
   userId = localStorage["userId"] || Math.floor(Math.random() * 10e9);
   localStorage["userId"] = userId;
   ws = new WebSocket(location.search.slice(1) == "LOCAL" ? "ws://localhost:3000" : "wss://crabseason-games-3cf54d5c76c6.herokuapp.com");
@@ -195,7 +195,11 @@ function initialize(onReady, onNotification, onMessage, onData, updatePeers) {
     }
     if (message.type == "registered") {
       console.log(`registered as ${userId}`);
-      onReady(message.data);
+      if (reconnect) {
+        onNotification("reconnected");
+      } else {
+        onReady(message.data);
+      }
     } else if (message.type == "peers") {
       updatePeers(message.data);
     } else if (message.type == "peerMessage") {
@@ -213,7 +217,7 @@ function initialize(onReady, onNotification, onMessage, onData, updatePeers) {
     console.log("websocket connection closed");
     console.log(event);
     onNotification("disconnected");
-    initialize(onReady, onNotification, onMessage, onData, updatePeers);
+    initialize(onReady, onNotification, onMessage, onData, updatePeers, true);
   });
 
   ws.addEventListener("error", (event) => {
