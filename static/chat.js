@@ -220,6 +220,8 @@ function startChat(onReady, onNotification, onMessage, onData, updatePeers) {
   ws.addEventListener("close", (event) => {
     console.log("websocket connection closed");
     console.log(event);
+    onNotification("disconnected");
+    location.reload();
   });
 
   ws.addEventListener("error", (event) => {
