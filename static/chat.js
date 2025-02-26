@@ -187,16 +187,7 @@ function startChat(onReady, onNotification, onMessage, onData, updatePeers) {
     console.log("websocket connection opened");
     console.log(event);
     send("register", userId);
-    send("broadcast", { type: "chat", data: pagePrerendered() });
   });
-
-  function pagePrerendered() {
-    return (
-      document.prerendering ||
-      self.performance?.getEntriesByType?.("navigation")[0]?.activationStart > 0
-    );
-  }
-
 
   ws.addEventListener("message", (event) => {
     // console.log("got message");
