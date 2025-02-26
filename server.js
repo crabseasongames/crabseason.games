@@ -51,6 +51,9 @@ const Router = {
         message: message
       }));
     }
+  },
+  ping: (conn) => {
+    conn.send(WsResponse("pong"));
   }
 };
 
@@ -85,7 +88,6 @@ app.ws("/", (ws, req) => {
 
   ws.on("close", (event) => {
     console.log(`websocket connection closed: ${event}`);
-    console.log(event);
     if (ws["__userId"]) {
       delete users[ws["__userId"]];
     }
