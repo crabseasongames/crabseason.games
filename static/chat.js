@@ -167,6 +167,10 @@
 // }
 
 
+// TODO:
+//  - wait for user input to reconnect when disconnected
+
+
 let userId
 let ws;
 

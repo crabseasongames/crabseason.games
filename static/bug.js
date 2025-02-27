@@ -10,6 +10,27 @@ function inventBug(config, color, canvas, muted = false) {
   // i think knees are achievable
   // time to port orb simulator?
 
+  // knees are circle intersections
+  // x position of intersection of unit circle with radius R circle at (A, B) is the solution of
+  // x^2(4A^2 + 4B^2) + x(-8AB^2 - 4AC) + C^2 - 4B^2(R^2 - A^2) = 0
+  // where C := 1 - R^2 - B^2 + A^2
+  // both legs are the same length so we can set R = 1 => C = A^2 - B^2
+  // x^2(4A^2 + 4B^2) + x(-8AB^2 - 4A(A^2 - B^2)) + (A^2 - B^2)^2 - 4B^2(1 - A^2) = 0
+
+  function intersect(A, B) {
+    let a = 4 * (A ** 2 + B ** 2),
+      b = -8 * A * B ** 2 - 4 * A * (A ** 2 - B ** 2),
+      c = (A ** 2 - B ** 2) ** 2 - 4 * (B ** 2)(1 - A ** 2);
+
+    if (4 * a * c > b ** 2) { return false; }
+    return [
+      (-b + Math.sqrt(b ** 2 - 4 * a * c)) / (2 * a),
+      (-b - Math.sqrt(b ** 2 - 4 * a * c)) / (2 * a)
+    ];
+  }
+
+  // 
+
 
   function direction(fromP, toP) {
     let dx = toP.x - fromP.x;
@@ -154,7 +175,7 @@ function inventBug(config, color, canvas, muted = false) {
   function drawBug() {
     ctx.reset();
     let t = now();
-    let dt = (t - lastDraw) / 16.67;
+    let dt = Math.min((t - lastDraw) / 16.67, 2);
     lastDraw = t;
     let d = [newPosition.x - bug.head.position.x, newPosition.y - bug.head.position.y];
     let r = Math.sqrt(d[0] ** 2 + d[1] ** 2);

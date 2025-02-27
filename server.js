@@ -54,6 +54,7 @@ const Router = {
   },
   ping: (conn) => {
     conn.send(WsResponse("pong"));
+    console.log("pong");
   }
 };
 
