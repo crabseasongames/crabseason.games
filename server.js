@@ -5,6 +5,8 @@ const path = require("path"),
 
 const now = () => { return +(new Date); };
 
+const START = now();
+
 const WsResponse = (type, body) => {
   const res = {
     type: type,
@@ -111,7 +113,7 @@ const server = app.listen(port, () => {
 
 function report() {
   Object.keys(users).forEach((id) => {
-    console.log(`user ${id} last seen at ${users[id].last}`);
+    console.log(`user ${id} last seen at t=${Math.floor((users[id].last - START) / 1000)} seconds`);
   });
 }
 
