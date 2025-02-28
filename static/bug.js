@@ -13,7 +13,7 @@ function inventBug(config, color, canvas, muted = false) {
   function intersect(A, B) {
 
     // intersection of { p : |p| = 1 } with { p : |p - (A, B)| = 1 }
-    // general circle intersection of unit circle with radius R circle at (A, B):
+    // general intersection of unit circle with radius R circle at (A, B):
     //   x^2(4A^2 + 4B^2) + x(-8AB^2 - 4A(1 - R^2 - B^2 + A^2)) + (1 - R^2 - B^2 + A^2)^2 - 4B^2(1 - A^2) = 0
     // taking R = 1
     //   x^2(4A^2 + 4B^2) + x(-8AB^2 - 4A(A^2 - B^2)) + (A^2 - B^2)^2 - 4B^2(1 - A^2) = 0
@@ -152,12 +152,12 @@ function inventBug(config, color, canvas, muted = false) {
         y: y,
         lf: { x: x - 50, y: y},
         rf: { x: x + 50, y: y },
-        lk: { x: x, y: y },
-        rk: { x: x, y: y }
+        lk: { x: x - 25, y: y + 15 },
+        rk: { x: x + 25, y: y + 15 }
       };
       nextBug.head.radius = R;
       if (i < N - 1) {
-        nextBug.tail = { head: {} };
+        nextBug.tail = { forehead: nextBug.head, head: {} };
         nextBug = nextBug.tail;
       }
     }
@@ -186,14 +186,14 @@ function inventBug(config, color, canvas, muted = false) {
     let rdy = bug.tail.head.position.rf.y - bug.tail.head.position.y;
 
     if (ldx ** 2 + ldy ** 2 > config.leg_max_length ** 2) {
-      bug.tail.head.position.lf.x = bug.tail.head.position.x + rotate(d, Math.PI / 4).x * config.leg_min_length;
-      bug.tail.head.position.lf.y = bug.tail.head.position.y + rotate(d, Math.PI / 4).y * config.leg_min_length;
+      bug.tail.head.position.lf.x = bug.tail.head.position.x + rotate(d, Math.PI / 3.5).x * config.footfall_distance;
+      bug.tail.head.position.lf.y = bug.tail.head.position.y + rotate(d, Math.PI / 3.5).y * config.footfall_distance;
       tap();
     }
 
     if (rdx ** 2 + rdy ** 2 > config.leg_max_length ** 2) {
-      bug.tail.head.position.rf.x = bug.tail.head.position.x + rotate(d, -Math.PI / 4).x * config.leg_min_length;
-      bug.tail.head.position.rf.y = bug.tail.head.position.y + rotate(d, -Math.PI / 4).y * config.leg_min_length;
+      bug.tail.head.position.rf.x = bug.tail.head.position.x + rotate(d, -Math.PI / 3.5).x * config.footfall_distance;
+      bug.tail.head.position.rf.y = bug.tail.head.position.y + rotate(d, -Math.PI / 3.5).y * config.footfall_distance;
       tap();
     }
 
@@ -209,8 +209,8 @@ function inventBug(config, color, canvas, muted = false) {
       bug.tail.head.position.lf,
       bug.tail.head.position.lk
     ) || {
-      x: bugtail.head.position.x,
-      y: bugtail.head.position.y
+      x: bug.tail.head.position.x,
+      y: bug.tail.head.position.y
     };
 
     const RK = knee(
@@ -218,8 +218,8 @@ function inventBug(config, color, canvas, muted = false) {
       bug.tail.head.position.rf,
       bug.tail.head.position.rk
     ) || {
-      x: bugtail.head.position.x,
-      y: bugtail.head.position.y
+      x: bug.tail.head.position.x,
+      y: bug.tail.head.position.y
     };
 
     nextPosition.lk = LK;

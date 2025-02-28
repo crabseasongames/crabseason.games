@@ -297,30 +297,17 @@ addEventListener("load", () => {
 
 
   const bugConfig = {
-    leg_min_length: 30,
+    footfall_distance: 40,
     leg_max_length: 45,
     foot_size: 3,
     num_segments: 7,
-    segment_radius: 10,
+    segment_radius: 8,
     arc_radius: 30,
     leg_width: 3,
     speed: 5,
     volume: 0.05,
     duration: 5512
   };
-
-  // const bugConfig = {
-  //   leg_min_length: 50,
-  //   leg_max_length: 70,
-  //   foot_size: 8,
-  //   num_segments: 3,
-  //   segment_radius: 5,
-  //   arc_radius: 100,
-  //   leg_width: 3,
-  //   speed: 5,
-  //   volume: 0.05,
-  //   duration: 5512
-  // };
 
   let bug;
   let chat;
@@ -435,11 +422,13 @@ addEventListener("load", () => {
       // uv += u_mouse * 0.01;
       // uv = uv * rotate(u_time * 0.01 / pow(length(uv), 0.1));
       float t = 1.0 * u_time + length(uv) * 100.0;
-      vec4 color = vec4(0.3 + 0.05 * sin(t), 0.6 + 0.1 * sin(t * 3.0), 0.7 + 0.12 * sin(t * 7.0), 1.0);
+      vec4 color = vec4(0.3 + 0.05 * 0.1 * sin(1.0 * t), 0.6 + 0.1 * 0.1 * sin(1.0 * t * 3.0), 0.7 + 0.12 * 0.1 * sin(1.0 * t * 7.0), 1.0);
 
       float d;
+      float s = 0.08;
       vec4 c = vec4(0.0);
-      int octaves = 2 + int(10.0 * (1.0 - cos(u_time * 0.08)));
+      int octaves = 2 + int(4.0 * (1.0 - cos(u_time * s)));
+      // int octaves = 2 + min(32, int(0.2 * pow(tan(0.1 * u_time), 2.0)));
       for (int i = 0; i < octaves; i++) {
           d = abs(circle(0.1, fract(pow(2.0, float(i)) * uv) - 0.5, u_time * 0.5));
           c += color * 0.001 / smoothstep(0.05, 6.0, pow(d, 0.45));
