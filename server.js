@@ -3,6 +3,8 @@ const path = require("path"),
   app = express(),
   expressWs = require("express-ws")(app);
 
+const now = () => { return +(new Date); };
+
 const WsResponse = (type, body) => {
   const res = {
     type: type,
@@ -38,7 +40,8 @@ const Router = {
       users[id].connection.close();
     }
     users[id] = {
-      connection: conn
+      connection: conn,
+      last: now()
     };
     conn.send(WsResponse("registered", Object.keys(users)));
     conn["__userId"] = id;
@@ -54,7 +57,6 @@ const Router = {
   },
   ping: (conn) => {
     conn.send(WsResponse("pong"));
-    console.log("pong");
   }
 };
 
@@ -85,6 +87,9 @@ app.ws("/", (ws, req) => {
         ws.send(RouterError(message.type));
       }
     }
+    if (ws["__userId"] && users[ws["__userId"]]) {
+      users[ws["__userId"]].last = now();
+    }
   });
 
   ws.on("close", (event) => {
@@ -103,3 +108,11 @@ app.ws("/", (ws, req) => {
 const server = app.listen(port, () => {
   console.log(`running on port ${port}`);
 });
+
+function report() {
+  Object.keys(users).forEach((id) => {
+    console.log(`user ${id} last seen at ${users[id].last}`);
+  });
+}
+
+setInterval(report, 10000);
