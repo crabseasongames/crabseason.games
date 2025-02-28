@@ -304,6 +304,19 @@ addEventListener("load", () => {
     duration: 5512
   };
 
+  // const bugConfig = {
+  //   leg_min_length: 50,
+  //   leg_max_length: 70,
+  //   foot_size: 8,
+  //   num_segments: 3,
+  //   segment_radius: 5,
+  //   arc_radius: 100,
+  //   leg_width: 3,
+  //   speed: 5,
+  //   volume: 0.05,
+  //   duration: 5512
+  // };
+
   let bug;
   let chat;
   let p;
@@ -376,7 +389,7 @@ addEventListener("load", () => {
     p = { x: e.clientX, y: e.clientY };
   }, { once: true });
 
-
+  return;
   draw(bg, `#version 300 es
     precision highp float;
 
