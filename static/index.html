@@ -157,9 +157,13 @@ body {
   text-shadow: 0 0 6px white;
 }
 
+.hidden {
+  visibility: hidden;
+}
+
 </style>
 </head>
-<body>
+<body class="hidden">
 <div id="number-display">
   <div id="number">
     <span id='chat-number'>0 other people here</span>
@@ -219,6 +223,7 @@ addEventListener("load", () => {
       bugList[b].canvas.setAttribute("height", window.innerHeight);
     }
     chatContainer.scroll(0, Number.MAX_SAFE_INTEGER);
+    document.body.classList.remove("hidden");
   }
   addEventListener("resize", resize);
   resize();

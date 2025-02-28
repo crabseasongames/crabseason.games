@@ -112,9 +112,11 @@ const server = app.listen(port, () => {
 });
 
 function report() {
+  console.log("======== ACTIVE USERS ========");
   Object.keys(users).forEach((id) => {
     console.log(`user ${id} last seen at t=${Math.floor((users[id].last - START) / 1000)} seconds`);
   });
+  console.log("==============================");
 }
 
 setInterval(report, 10000);
