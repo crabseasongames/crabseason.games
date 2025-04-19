@@ -1,0 +1,319 @@
+<html>
+<head>
+<style>
+
+body {
+  margin: 0;
+}
+
+.container {
+  display: inline-block;
+  vertical-align: top;
+  width: 200px;
+  min-height: 200px;
+  border: 1px solid black;
+  padding: 10px;
+  margin: 10px 0 0 10px;
+}
+
+.button {
+  display: block;
+  margin: 10px;
+}
+
+.hidden {
+  visibility: hidden;
+}
+
+</style>
+</head>
+<body>
+
+<div id="buttons" class="container"></div>
+<div id="resources" class="container"></div>
+
+<script>
+
+const RES_TYPES = [
+  "wood",
+  "rocks",
+  "dirt",
+  "milk",
+  "renown",
+  "enemies",
+  "acolytes",
+  "choppers",
+  "diggers",
+  "chuckers",
+  "priests",
+  "barns",
+  "idols",
+  "orbs",
+  "cows",
+  "greater cows"
+];
+
+const res = {};
+
+const ui = { buttons: {} };
+
+const requirements = {};
+
+function button(name, action, conditions) {
+  const b = document.createElement("button");
+  b.classList.add("button");
+  b.innerText = name;
+  b.addEventListener("click", action);
+  buttons.appendChild(b);
+  ui.buttons[name] = b;
+  if (conditions) {
+    requirements[name] = conditions;
+  }
+}
+
+function add(type, n) {
+  res[type] = (res[type] || 0) + n;
+  localStorage[type] = res[type];
+  display();
+}
+
+function maybe(p, action) {
+  Math.random() < p ? action() : null;
+}
+
+function display() {
+  ui.resources.innerText = Object.keys(res).filter((k) => {
+    return res[k] > 0;
+  }).map((k) => {
+    return `${k}: ${res[k]}`;
+  }).join("\n");
+
+  Object.keys(requirements).forEach((k) => {
+    let met = true;
+    requirements[k].forEach((req) => {
+      met = met && res[req.type] >= req.n;
+    });
+    ui.buttons[k].classList[met ? "remove" : "add"]("hidden");
+  });
+}
+
+function work(type, action) {
+  if (res[type]) {
+    for (let i = 0; i < res[type]; i++) {
+      action();
+    }
+  }
+}
+
+
+function init() {
+
+  ["buttons", "resources"].forEach((k) => {
+    ui[k] = document.getElementById(k);
+  });
+
+  button("chop", () => {
+    add("wood", 1);
+  });
+
+  button("dig", () => {
+    add("dirt", 5);
+    add("rocks", 2);
+  });
+
+  button("wallow", () => {
+    add("dirt", -1);
+    add("renown", 1);
+  }, [{ type: "dirt", n: 1 }]);
+
+  button("chuck", () => {
+    add("rocks", -1);
+    maybe(0.1, () => {
+      add("enemies", 1);
+    });
+  }, [{ type: "rocks", n: 1 }]);
+
+  button("raise", () => {
+    add("barns", 1);
+    add("wood", -500);
+    maybe(0.1, () => {
+      add("acolytes", -1);
+    });
+  }, [
+    { type: "acolytes", n: 10 },
+    { type: "wood", n: 500 }
+  ]);
+
+  button("exhault", () => {
+    add("idols", 1);
+    add("rocks", -100);
+    maybe(0.1, () => {
+      add("acolytes", -1);
+    });
+  }, [
+    { type: "acolytes", n: 10 },
+    { type: "rocks", n: 100 }
+  ]);
+
+  button("appease", () => {
+    add("wood", -2);
+    maybe(0.5, () => {
+      add("enemies", -1);
+    });
+  }, [
+    { type: "enemies", n: 1 },
+    { type: "wood", n: 2 }
+  ]);
+
+  button("convert", () => {
+    add("wood", -1);
+    maybe(0.05, () => {
+      add("enemies", -1);
+      add("acolytes", 1);
+    });
+  }, [
+    { type: "renown", n: 100 },
+    { type: "wood", n: 1 },
+    { type: "enemies", n: 1 }
+  ]);
+
+  button("command", () => {
+    add("choppers", 1);
+    add("acolytes", -1);
+  }, [{ type: "acolytes", n: 1 }]);
+
+  button("condemn", () => {
+    add("diggers", 1);
+    add("acolytes", -1);
+  }, [{ type: "acolytes", n: 1 }]);
+
+  button("conscript", () => {
+    add("chuckers", 1);
+    add("acolytes", -1);
+  }, [
+    { type: "acolytes", n: 1 }
+  ]);
+
+  button("ordain", () => {
+    add("priests", 1);
+    add("acolytes", -1);
+    add("idols", -1);
+  }, [
+    { type: "acolytes", n: 1 },
+    { type: "idols", n: 1 }
+  ]);
+
+  button("morph", () => {
+    add("cows", 1);
+    add("acolytes", -1);
+    add("orbs", -1);
+  }, [
+    { type: "acolytes", n: 1 },
+    { type: "orbs", n: 1 },
+    { type: "barns", n: 1 }
+  ]);
+
+  button("empower", () => {
+    add("orbs", -10);
+    add("cows", -5);
+    maybe(0.5, () => {
+      add("greater cows");
+    });
+  }, [
+    { type: "orbs", n: 10 },
+    { type: "cows", n: 5 }
+  ]);
+
+  button("revel", () => {
+    add("enemies", -res.enemies);
+    add("acolytes", -res.acolytes);
+    add("choppers", -res.choppers);
+    add("diggers", -res.diggers);
+    add("chuckers", -res.chuckers);
+    add("priests", -res.priests);
+    add("barns", -res.barns);
+    add("cows", -res.cows);
+    add("greater cows", -res["greater cows"]);
+    add("milk", -10e6);
+  }, [
+    { type: "acolytes", n: 100 },
+    { type: "milk", n: 10e6 }
+  ]);
+
+  RES_TYPES.forEach((k) => {
+    if (localStorage[k]) {
+      res[k] = parseInt(localStorage[k]);
+    }
+  });
+
+  display();
+
+  setInterval(() => {
+
+    if (res["renown"] > 0) {
+      maybe(0.1, () => {
+        add("renown", -1);
+      });
+    }
+
+    if (res.cows > res.barns * 20) {
+      maybe(0.1, () => {
+        add("cows", -1);
+      });
+    }
+
+    work("choppers", () => {
+      add("wood", 1);
+    });
+
+    work("diggers", () => {
+      add("rocks", 1);
+      add("dirt", 2);
+    });
+
+    work("chuckers", () => {
+      maybe(0.01, () => {
+        add("enemies", 1);
+      })
+    });
+
+    work("priests", () => {
+      if (res.enemies) {
+        maybe(0.01, () => {
+          add("acolytes", 1);
+          add("enemies", -1);
+        });
+      }
+    });
+
+    work("idols", () => {
+      maybe(0.01, () => {
+        add("orbs", 1);
+      });
+    });
+
+    work("enemies", () => {
+      if (res.wood >= 5) {
+        maybe(0.1, () => {
+          add("wood", -5);
+        });
+      }
+    });
+
+    work("cows", () => {
+      add("milk", 1);
+    });
+
+    work("greater cows", () => {
+      add("milk", 100);
+    });
+
+  }, 1000);
+}
+
+init();
+
+</script>
+
+</body>
+</html>
