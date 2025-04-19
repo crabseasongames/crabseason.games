@@ -10,7 +10,7 @@ body {
   display: inline-block;
   vertical-align: top;
   width: 200px;
-  min-height: 200px;
+  height: 487px;
   border: 1px solid black;
   padding: 10px;
   margin: 10px 0 0 10px;
@@ -18,7 +18,15 @@ body {
 
 .button {
   display: block;
-  margin: 10px;
+  margin-bottom: 10px;
+}
+
+.message {
+  margin-bottom: 5px;
+}
+
+.scroll {
+  overflow: hidden scroll;
 }
 
 .hidden {
@@ -31,6 +39,7 @@ body {
 
 <div id="buttons" class="container"></div>
 <div id="resources" class="container"></div>
+<div id="log" class="container scroll"></div>
 
 <script>
 
@@ -77,8 +86,12 @@ function add(type, n) {
   display();
 }
 
-function maybe(p, action) {
-  Math.random() < p ? action() : null;
+function maybe(p, action, otherwise) {
+  if (Math.random() < p) {
+    action()
+  } else if (otherwise) {
+    otherwise();
+  }
 }
 
 function display() {
@@ -97,6 +110,10 @@ function display() {
   });
 }
 
+function log(text) {
+  ui.log.innerHTML = `<div class="message">${text}</div>` + ui.log.innerHTML;
+}
+
 function work(type, action) {
   if (res[type]) {
     for (let i = 0; i < res[type]; i++) {
@@ -108,7 +125,7 @@ function work(type, action) {
 
 function init() {
 
-  ["buttons", "resources"].forEach((k) => {
+  ["buttons", "resources", "log"].forEach((k) => {
     ui[k] = document.getElementById(k);
   });
 
@@ -129,6 +146,7 @@ function init() {
   button("chuck", () => {
     add("rocks", -1);
     maybe(0.1, () => {
+      log("wow great job you hit somebody");
       add("enemies", 1);
     });
   }, [{ type: "rocks", n: 1 }]);
@@ -137,6 +155,7 @@ function init() {
     add("barns", 1);
     add("wood", -500);
     maybe(0.1, () => {
+      log("an acolyte was lethally bonked by a falling beam");
       add("acolytes", -1);
     });
   }, [
@@ -148,6 +167,7 @@ function init() {
     add("idols", 1);
     add("rocks", -100);
     maybe(0.1, () => {
+      log("an acolyte was fatally pelted by a tumbling stone");
       add("acolytes", -1);
     });
   }, [
@@ -158,6 +178,7 @@ function init() {
   button("appease", () => {
     add("wood", -2);
     maybe(0.5, () => {
+      log("the fiend seems to be pacified");
       add("enemies", -1);
     });
   }, [
@@ -168,6 +189,7 @@ function init() {
   button("convert", () => {
     add("wood", -1);
     maybe(0.05, () => {
+      log("the fiend has accepted your ways");
       add("enemies", -1);
       add("acolytes", 1);
     });
@@ -217,7 +239,9 @@ function init() {
     add("orbs", -10);
     add("cows", -5);
     maybe(0.5, () => {
-      add("greater cows");
+      add("greater cows", 1);
+    }, () => {
+      log("the bloody ritual has failed");
     });
   }, [
     { type: "orbs", n: 10 },
@@ -234,10 +258,11 @@ function init() {
     add("barns", -res.barns);
     add("cows", -res.cows);
     add("greater cows", -res["greater cows"]);
-    add("milk", -10e6);
+    add("milk", -1e6);
+    log("good job");
   }, [
     { type: "acolytes", n: 100 },
-    { type: "milk", n: 10e6 }
+    { type: "milk", n: 1e6 }
   ]);
 
   RES_TYPES.forEach((k) => {
@@ -258,6 +283,7 @@ function init() {
 
     if (res.cows > res.barns * 20) {
       maybe(0.1, () => {
+        log("a cow has perished due to overcrowding");
         add("cows", -1);
       });
     }
@@ -294,8 +320,9 @@ function init() {
 
     work("enemies", () => {
       if (res.wood >= 5) {
-        maybe(0.1, () => {
+        maybe(0.01, () => {
           add("wood", -5);
+          log("a fiend has absconed with an armful of logs");
         });
       }
     });
