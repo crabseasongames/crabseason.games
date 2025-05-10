@@ -19,72 +19,145 @@ body {
 <body>
 <canvas id="canvas" width="800" height="800"></canvas>
 <script>
-  /// Initialize the canvas
-  const canvas = document.getElementById('canvas');
-  const ctx = canvas.getContext('2d');
-  const lightSquare = '#becee3';
-  const darkSquare = '#49484a';
-  const highlightedColor = '#ef4141';
-  const tuggColor = '#fcad1e';
-  const oofColor = '#5a3d09';
-  /// empty = 0, ORock = 1, Oguy = 2, TRock = 3, TGuy = 4
-  const startingBoard = [
-    [3, 3, 3, 4, 3, 3, 3, 3], 
-    [3, 3, 3, 3, 3, 3, 3, 3], 
-    [0, 0, 0, 0, 0, 0, 0, 0], 
-    [0, 0, 0, 0, 0, 0, 0, 0], 
-    [0, 0, 0, 0, 0, 0, 0, 0], 
-    [0, 0, 0, 0, 0, 0, 0, 0], 
-    [1, 1, 1, 1, 1, 1, 1, 1], 
-    [1, 1, 1, 2, 1, 1, 1, 1]
-  ];
-  let board = startingBoard;
-  let moveMode = false;
 
-  function drawBoard(highlighted) {
-    for (let j = 0; j < 8; j++){
-      for (let i = 0; i < 8; i++){
-        let color = (i + j) % 2 == 0 ? lightSquare : darkSquare
-        ctx.fillStyle = color 
-        ctx.fillRect((i * 100), (j * 100), 100, 100)
-        
-        if (highlighted && i == highlighted[0] && j == highlighted[1]){
-          ctx.fillStyle = highlightedColor;
-          ctx.fillRect((i * 100), (j * 100), 100, 100)
-          ctx.fillStyle = color;
-          ctx.fillRect((i * 100) + 10, (j * 100) + 10, 80, 80)
-        }
-        let piece = board[j][i];
-        if (piece){
-          (drawPiece([j, i], piece))
-        }
+const canvas = document.getElementById('canvas');
+const ctx = canvas.getContext('2d');
+const lightSquare = '#becee3';
+const darkSquare = '#49484a';
+const highlightedColor = '#ef4141';
+const tuggColor = '#fcad1e';
+const oofColor = '#5a3d09';
+/// empty = 0, ORock = 1, Oguy = 2, TRock = 3, TGuy = 4
+const startingBoard = [
+  [3, 3, 3, 4, 3, 3, 3, 3],
+  [3, 3, 3, 3, 3, 3, 3, 3],
+  [0, 0, 0, 0, 0, 0, 0, 0],
+  [0, 0, 0, 0, 0, 0, 0, 0],
+  [0, 0, 0, 0, 0, 0, 0, 0],
+  [0, 0, 0, 0, 0, 0, 0, 0],
+  [1, 1, 1, 1, 1, 1, 1, 1],
+  [1, 1, 1, 2, 1, 1, 1, 1]
+];
+
+const empty = () => { return [ [], [], [], [], [], [], [], [] ]; };
+
+let highlightedSquares = empty();
+let allowedMoves = empty();
+let activePiece = false;
+
+let board = startingBoard;
+let moveMode = false;
+
+function drawBoard() {
+  for (let i = 0; i < 8; i++) {
+    for (let j = 0; j < 8; j++) {
+      let color = (i + j) % 2 == 0 ? lightSquare : darkSquare;
+      ctx.fillStyle = color ;
+      ctx.fillRect(i * 100, j * 100, 100, 100);
+
+      if (highlightedSquares[i][j] || allowedMoves[i][j]) {
+        ctx.fillStyle = highlightedColor;
+        ctx.fillRect(i * 100, j * 100, 100, 100);
+        ctx.fillStyle = color;
+        ctx.fillRect(i * 100 + 10, j * 100 + 10, 80, 80);
+      }
+
+      let piece = board[j][i];
+      if (piece){
+        drawPiece([i, j], piece);
       }
     }
   }
+}
 
-  function getPosition(x, y) {
-    return([Math.floor(x / 100), Math.floor(y / 100)])
+function drawPiece(positon, piece) {
+  let pieceColor = (piece == 1 || piece == 2) ? oofColor : tuggColor
+  if (piece == 1 || piece == 3){
+    ctx.beginPath();
+    ctx.arc(100*positon[0] + 50, 100*positon[1] + 50, 33, 0, 2*Math.PI)
+    ctx.fillStyle = pieceColor;
+    ctx.fill()
   }
+}
 
-  canvas.addEventListener("mousemove", (e)=>{
-    let position = getPosition(e.offsetX, e.offsetY);
-    if(!moveMode) {
-      drawBoard(position)
-    }
-  })
+function getPosition(x, y) {
+  return([Math.floor(x / 100), Math.floor(y / 100)]);
+}
 
-  function drawPiece(positon, piece) {
-    let pieceColor = (piece == 1 || piece == 2) ? oofColor : tuggColor
-    if (piece == 1 || piece == 3){
-      ctx.beginPath();
-      ctx.arc(100*positon[0] + 50, 100*positon[1] + 50, 33, 0, 2*Math.PI)
-      ctx.fillStyle = pieceColor;
-      ctx.fill()
-      console.log(positon)
+function isOpposing(pa, pb) {
+  return (
+    (board[pa[1]][pa[0]] == 1 || board[pa[1]][pa[0]] == 2) &&
+    (board[pb[1]][pb[0]] == 3 || board[pb[1]][pb[0]] == 4)
+  ) || (
+    (board[pa[1]][pa[0]] == 3 || board[pa[1]][pa[0]] == 4) &&
+    (board[pb[1]][pb[0]] == 1 || board[pb[1]][pb[0]] == 2)
+  );
+}
+
+function getAllowedMoves(position) {
+    let allowedMoves = empty();
+    let i = position[0];
+    while (++i < 8 && !board[position[1]][i]) {
+      allowedMoves[i][position[1]] = true;
     }
+    if (i < 8 && isOpposing(position, [i, position[1]]))  {
+      allowedMoves[i][position[1]] = true;
+    }
+    i = position[0];
+    while (--i >= 0 && !board[position[1]][i]) {
+      allowedMoves[i][position[1]] = true;
+    }
+    if (i >= 0 && isOpposing(position, [i, position[1]])) {
+      allowedMoves[i][position[1]] = true;
+    }
+    i = position[1];
+    while (++i < 8 && !board[i][position[0]]) {
+      allowedMoves[position[0]][i] = true;
+    }
+    if (i < 8 && isOpposing(position, [position[0], i])) {
+      allowedMoves[position[0]][i] = true;
+    }
+    i = position[1];
+    while (--i >= 0 && !board[i][position[0]]) {
+      allowedMoves[position[0]][i] = true;
+    }
+    if (i >= 0 && isOpposing(position, [position[0], i])) {
+      allowedMoves[position[0]][i] = true;
+    }
+    return allowedMoves;
+}
+
+canvas.addEventListener("mousemove", (e)=>{
+  let position = getPosition(e.offsetX, e.offsetY);
+  if (!moveMode) {
+    highlightedSquares = empty();
+    highlightedSquares[position[0]][position[1]] = true;
+    drawBoard();
   }
+});
 
-  drawBoard()
+canvas.addEventListener("click", (e) => {
+  let position = getPosition(e.offsetX, e.offsetY);
+  let piece = board[position[1]][position[0]];
+  if (!moveMode && piece) {
+    moveMode = true;
+    highlightedSquares = empty();
+    allowedMoves = getAllowedMoves(position);
+    activePiece = position;
+  } else if (moveMode) {
+    if (allowedMoves[position[0]][position[1]]) {
+      board[position[1]][position[0]] = board[activePiece[1]][activePiece[0]];
+      board[activePiece[1]][activePiece[0]] = 0;
+    }
+    highlightedSquares = empty();
+    allowedMoves = empty();
+    moveMode = false;
+  }
+  drawBoard();
+});
+
+drawBoard()
+
 </script>
 </body>
 </html>
