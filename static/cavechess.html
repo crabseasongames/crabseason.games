@@ -1,0 +1,90 @@
+<html>
+<head>
+<style>
+
+body {
+  margin: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* canvas {
+  border: 4px solid black;
+} */
+
+</style>
+
+</head>
+<body>
+<canvas id="canvas" width="800" height="800"></canvas>
+<script>
+  /// Initialize the canvas
+  const canvas = document.getElementById('canvas');
+  const ctx = canvas.getContext('2d');
+  const lightSquare = '#becee3';
+  const darkSquare = '#49484a';
+  const highlightedColor = '#ef4141';
+  const tuggColor = '#fcad1e';
+  const oofColor = '#5a3d09';
+  /// empty = 0, ORock = 1, Oguy = 2, TRock = 3, TGuy = 4
+  const startingBoard = [
+    [3, 3, 3, 4, 3, 3, 3, 3], 
+    [3, 3, 3, 3, 3, 3, 3, 3], 
+    [0, 0, 0, 0, 0, 0, 0, 0], 
+    [0, 0, 0, 0, 0, 0, 0, 0], 
+    [0, 0, 0, 0, 0, 0, 0, 0], 
+    [0, 0, 0, 0, 0, 0, 0, 0], 
+    [1, 1, 1, 1, 1, 1, 1, 1], 
+    [1, 1, 1, 2, 1, 1, 1, 1]
+  ];
+  let board = startingBoard;
+  let moveMode = false;
+
+  function drawBoard(highlighted) {
+    for (let j = 0; j < 8; j++){
+      for (let i = 0; i < 8; i++){
+        let color = (i + j) % 2 == 0 ? lightSquare : darkSquare
+        ctx.fillStyle = color 
+        ctx.fillRect((i * 100), (j * 100), 100, 100)
+        
+        if (highlighted && i == highlighted[0] && j == highlighted[1]){
+          ctx.fillStyle = highlightedColor;
+          ctx.fillRect((i * 100), (j * 100), 100, 100)
+          ctx.fillStyle = color;
+          ctx.fillRect((i * 100) + 10, (j * 100) + 10, 80, 80)
+        }
+        let piece = board[j][i];
+        if (piece){
+          (drawPiece([j, i], piece))
+        }
+      }
+    }
+  }
+
+  function getPosition(x, y) {
+    return([Math.floor(x / 100), Math.floor(y / 100)])
+  }
+
+  canvas.addEventListener("mousemove", (e)=>{
+    let position = getPosition(e.offsetX, e.offsetY);
+    if(!moveMode) {
+      drawBoard(position)
+    }
+  })
+
+  function drawPiece(positon, piece) {
+    let pieceColor = (piece == 1 || piece == 2) ? oofColor : tuggColor
+    if (piece == 1 || piece == 3){
+      ctx.beginPath();
+      ctx.arc(100*positon[0] + 50, 100*positon[1] + 50, 33, 0, 2*Math.PI)
+      ctx.fillStyle = pieceColor;
+      ctx.fill()
+      console.log(positon)
+    }
+  }
+
+  drawBoard()
+</script>
+</body>
+</html>
