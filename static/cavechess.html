@@ -22,11 +22,11 @@ body {
 
 const canvas = document.getElementById('canvas');
 const ctx = canvas.getContext('2d');
-const lightSquare = '#becee3';
-const darkSquare = '#49484a';
+const lightSquare = '#c1861a';
+const darkSquare = '#956205';
 const highlightedColor = '#ef4141';
-const tuggColor = '#fcad1e';
-const oofColor = '#5a3d09';
+const tuggColor = '#fff';
+const oofColor = '#000';
 /// empty = 0, ORock = 1, Oguy = 2, TRock = 3, TGuy = 4
 const startingBoard = [
   [3, 3, 3, 4, 3, 3, 3, 3],
@@ -70,13 +70,26 @@ function drawBoard() {
   }
 }
 
-function drawPiece(positon, piece) {
+function drawPiece(position, piece) {
   let pieceColor = (piece == 1 || piece == 2) ? oofColor : tuggColor
   if (piece == 1 || piece == 3){
     ctx.beginPath();
-    ctx.arc(100*positon[0] + 50, 100*positon[1] + 50, 33, 0, 2*Math.PI)
+    ctx.arc(100*position[0] + 50, 100*position[1] + 50, 33, 0, 2*Math.PI)
     ctx.fillStyle = pieceColor;
     ctx.fill()
+  } else {
+    ctx.beginPath();
+    ctx.arc(100*position[0] + 50, 100*position[1] + 50, 15, 0, 2*Math.PI)
+    ctx.moveTo(100 * position[0] + 10 , 100 * position[1] + 10);
+    ctx.lineTo(100 * position[0] + 50, 100 * position[1] + 50);
+    ctx.lineTo(100 * position[0] + 10, 100 * position[1] + 90);
+    ctx.lineTo(100 * position[0] + 90, 100 * position[1] + 90);
+    ctx.lineTo(100 * position[0] + 50, 100 * position[1] + 50);
+    ctx.lineTo(100 * position[0] + 90, 100 * position[1] + 10);
+    ctx.lineTo(100 * position[0] + 100, 100 * position[1] + 10);
+    ctx.fillStyle = pieceColor;
+    ctx.fill()
+    ctx.closePath();
   }
 }
 
