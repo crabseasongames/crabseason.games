@@ -248,7 +248,6 @@ canvas.addEventListener("mousemove", (e)=>{
 canvas.addEventListener("click", (e) => {
   let position = getPosition(e.offsetX, e.offsetY);
   let piece = getPiece(position);
-  console.log (moveMode, "move mode", isOofPiece(position), 'is oof piece')
   if (!moveMode && piece && (isOofPiece(position) && oofTurn || !isOofPiece(position) && !oofTurn)) {
     moveMode = true;
     highlightedSquares = empty();
