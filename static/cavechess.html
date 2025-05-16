@@ -56,6 +56,7 @@ const startingBoard = [
 const empty = () => { return [ [], [], [], [], [], [], [], [] ]; };
 
 let highlightedSquares = empty();
+let highlightedEndzone = empty();
 let allowedMoves = empty();
 let activePiece = false;
 
@@ -63,9 +64,12 @@ let board = startingBoard;
 let moveMode = false;
 let oofTurn = true;
 let throwRockAllowed = false;
+const squareSize = 100;
 let lives = 3;
 
 function drawBoard() {
+  ctx.clearRect(0, 0, 800, 100);
+  ctx.clearRect(0, 800, 800, 100);
   for (let i = 0; i < 8; i++) {
     for (let j = 0; j < 8; j++) {
       let color = (i + j) % 2 == 0 ? lightSquare : darkSquare;
@@ -83,6 +87,19 @@ function drawBoard() {
       if (piece){
         drawPiece([i, j], piece);
       }
+    }
+  }
+  for (let i = 0; i < 8; i++) {
+    if(oofTurn && highlightedEndzone[i][0]) {
+      ctx.beginPath();
+      ctx.arc(100*i + 50, 50, 33, 0, 2*Math.PI)
+      ctx.fillStyle = highlightedColor;
+      ctx.fill()
+    } else if (!oofTurn && highlightedEndzone[i][1]) {
+      ctx.beginPath();
+      ctx.arc(100*i + 50, 850, 33, 0, 2*Math.PI)
+      ctx.fillStyle = highlightedColor;
+      ctx.fill()
     }
   }
 }
@@ -154,25 +171,26 @@ function getAllowedRockMoves(position) {
   }
 
   i = position[1];
-  while (++i < 8 && !getPiece([position[0], 1])) {
+  while (++i < 8 && !getPiece([position[0], i])) {
     allowedMoves[position[0]][i] = true;
   }
   if (i < 8) {
     allowedMoves[position[0]][i] = isOpposing(position, [position[0], i]);
   } else if (!isOofPiece(position)) {
     throwRockAllowed = true;
+    highlightedEndzone[position[0]][oofTurn ? 0 : 1] = true;
   }
 
   i = position[1];
-  while (--i >= 0 && !getPiece([position[0], 1])) {
+  while (--i >= 0 && !getPiece([position[0], i])) {
     allowedMoves[position[0]][i] = true;
   }
   if (i >= 0) {
     allowedMoves[position[0]][i] = isOpposing(position, [position[0], i]);
   } else if (isOofPiece(position)) {
     throwRockAllowed = true;
+    highlightedEndzone[position[0]][oofTurn ? 0 : 1] = true;
   }
-
   return allowedMoves;
 }
 
@@ -233,7 +251,8 @@ function changeTurn() {
 }
 
 function throwRock () {
-  console.log('outch')
+  console.log('outch');
+  board[activePiece[1]][activePiece[0]] = 0;
 }
 
 canvas.addEventListener("mousemove", (e)=>{
@@ -251,6 +270,7 @@ canvas.addEventListener("click", (e) => {
   if (!moveMode && piece && (isOofPiece(position) && oofTurn || !isOofPiece(position) && !oofTurn)) {
     moveMode = true;
     highlightedSquares = empty();
+    highlightedEndzone = empty();
     allowedMoves = getAllowedMoves(position);
     activePiece = position;
   } else if (moveMode) {
@@ -258,11 +278,12 @@ canvas.addEventListener("click", (e) => {
       board[position[1]][position[0]] = board[activePiece[1]][activePiece[0]];
       board[activePiece[1]][activePiece[0]] = 0;
       changeTurn()
-    } else if(throwRockAllowed && (position[0] == -1 && oofTurn || position[0] == 8 && oofTurn)){
+    } else if(throwRockAllowed && (position[1] == -1 && oofTurn || position[1] == 8 && !oofTurn)){
       throwRock()
       changeTurn()
     }
     highlightedSquares = empty();
+    highlightedEndzone = empty();
     allowedMoves = empty();
     moveMode = false;
   }
