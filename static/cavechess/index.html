@@ -28,7 +28,8 @@ body {
 }
 
 
-#oofTurn {
+#font {
+  position: absolute;
   font-family: dinotopia;
   visibility: hidden;
 }
@@ -38,10 +39,9 @@ body {
 
 </head>
 <body>
-<div id="oofTurn">Oof Turn</div>
-<div id="tuggTurn" class="hidden">Tugg Turn</div>
-<canvas id="board" width="640" height="800"></canvas>
-<canvas id="info" width="350" height="800"></canvas>
+<canvas id="board" width="560" height="700"></canvas>
+<canvas id="info" width="350" height="700"></canvas>
+<div id="font">sup</div>
 <script>
 
 const boardCanvas = document.getElementById('board');
@@ -53,6 +53,9 @@ const darkSquare = '#c1861a';
 const highlightedColor = '#ef4141';
 const tuggColor = '#000';
 const oofColor = '#fff';
+const squareSize = 70;
+const lifeSize = 70;
+const maxHp = 3;
 /// empty = 0, ORock = 1, Oguy = 2, TRock = 3, TGuy = 4
 const startingBoard = [
   [3, 3, 3, 4, 3, 3, 3, 3],
@@ -70,19 +73,47 @@ const empty = () => { return [ [], [], [], [], [], [], [], [] ]; };
 let highlightedSquares = empty();
 let highlightedEndzone = empty();
 let allowedMoves = empty();
-let activePiece = false;
+let activePosition = false;
 
 let board = startingBoard;
 let moveMode = false;
 let oofTurn = true;
 let throwRockAllowed = false;
-const squareSize = 80;
-let lives = 3;
+let oofHp = maxHp;
+let tuggHp = maxHp;
 
-document.fonts.ready.then( ()=>{
+let state = {
+  board: startingBoard,
+  oofHp: maxHp,
+  tuggHp: maxHp,
+  throwRockAllowed: false,
+  allowedMoves: empty()
+};
+
+function send(type, data) {
+  ws.send(JSON.stringify({
+    type: type,
+    data: data
+  }));
+}
+
+const ws = new WebSocket(location.search.slice(1) == "LOCAL" ? "ws://localhost:3000" : "wss://crabseason-games-3cf54d5c76c6.herokuapp.com");
+
+// ws.addEventListener("open", (event) => {
+//   console.log("websocket connection opened");
+//   console.log(event);
+//   send("register", userId);
+
+// });
+
+// ws.addEventListener("message", (event) => {
+
+// });
+
+document.fonts.ready.then(()=>{
   function drawBoard() {
-    ctx.clearRect(0, 0, 800, squareSize);
-    ctx.clearRect(0, 800, 800, squareSize);
+    ctx.clearRect(0, 0, 8 * squareSize, squareSize);
+    ctx.clearRect(0, 9 * squareSize, 8 * squareSize, squareSize);
     for (let i = 0; i < 8; i++) {
       for (let j = 0; j < 8; j++) {
         let color = (i + j) % 2 == 0 ? lightSquare : darkSquare;
@@ -110,7 +141,7 @@ document.fonts.ready.then( ()=>{
         ctx.fill()
       } else if (!oofTurn && highlightedEndzone[i][1]) {
         ctx.beginPath();
-        ctx.arc(squareSize*i + squareSize * .5, squareSize * 8.5, squareSize * .33, 0, 2*Math.PI)
+        ctx.arc(squareSize*i + squareSize * .5, squareSize * 9.5, squareSize * .33, 0, 2*Math.PI)
         ctx.fillStyle = highlightedColor;
         ctx.fill()
       }
@@ -143,8 +174,54 @@ document.fonts.ready.then( ()=>{
   }
 
   function drawInfo() {
-    infoCtx.font = "30px dinotopia";
-    infoCtx.fillText("Hello World",10,80);
+    infoCtx.clearRect(0, 0, 350, 10 * squareSize);
+    const leftMargin = 20;
+    const topMargin = 20;
+    const fontSize = 30;
+    infoCtx.textBaseline = "top";
+    infoCtx.font = `${fontSize}px dinotopia`;
+
+    infoCtx.fillStyle = !oofTurn ? "red" : "black";
+    infoCtx.strokeStyle = !oofTurn ? "red" : "black";
+    infoCtx.fillText("Tugg", leftMargin, topMargin);
+    for (let i = 0; i < maxHp; i++) {
+      (i < tuggHp ? drawLife : drawDeath)(leftMargin + lifeSize * i, topMargin * 2 + fontSize);
+    }
+
+    infoCtx.fillStyle = oofTurn ? "red" : "black";
+    infoCtx.strokeStyle = oofTurn ? "red" : "black";
+    infoCtx.fillText("Oof", leftMargin, (10 * squareSize) - topMargin - fontSize);
+    for (let i = 0; i < maxHp; i++) {
+      (i < oofHp ? drawLife : drawDeath)(leftMargin + lifeSize * i, (10 * squareSize) - (topMargin + fontSize) * 2);
+    }
+  }
+
+  function drawLife(x, y) {
+    infoCtx.beginPath();
+    infoCtx.arc(x + 25, y + 15, 30, 0, Math.PI * 2, true); // Outer circle
+    infoCtx.moveTo(x + 44, y + 20);
+    infoCtx.arc(x + 25, y + 20, 20, 0, Math.PI, false);  // Mouth (clockwise)
+    infoCtx.moveTo(x + 15, y + 5);
+    infoCtx.arc(x + 10, y + 5, 5, 0, Math.PI * 2, true);  // Left eye
+    infoCtx.moveTo(x + 45, y + 5);
+    infoCtx.arc(x + 40, y + 5, 5, 0, Math.PI * 2, true);  // Right eye
+    infoCtx.stroke();
+  }
+
+  function drawDeath(x, y) {
+    infoCtx.beginPath();
+    infoCtx.arc(x + 25, y + 15, 30, 0, Math.PI * 2, true); // Outer circle
+    infoCtx.moveTo(x + 40, y + 30);
+    infoCtx.arc(x + 25, y + 30, 15, 0, Math.PI, true);  // Mouth (clockwise)
+    infoCtx.moveTo(x + 10, y);
+    infoCtx.lineTo(x + 20, y + 10);
+    infoCtx.moveTo(x + 10, y + 10);
+    infoCtx.lineTo(x + 20, y);
+    infoCtx.moveTo(x + 30, y + 10);
+    infoCtx.lineTo(x + 40, y + 20);
+    infoCtx.moveTo(x + 40, y + 10);
+    infoCtx.lineTo(x + 30, y + 20);
+    infoCtx.stroke();
   }
 
   function draw(){
@@ -167,6 +244,8 @@ document.fonts.ready.then( ()=>{
   }
 
   function getAllowedMoves(position) {
+    highlightedSquares = empty();
+    highlightedEndzone = empty();
     if(getPiece(position) == 2 || getPiece(position) == 4) {
       return getAllowedGuyMoves(position)
     } else {
@@ -262,23 +341,67 @@ document.fonts.ready.then( ()=>{
     }
   }
 
+  function setPiece(position, piece) {
+    board[position[1]][position[0]] = piece;
+  }
+
   function changeTurn() {
     oofTurn = !oofTurn
-    if (!oofTurn) {
-      document.getElementById("tuggTurn").classList.remove("hidden")
-      document.getElementById("oofTurn").classList.add("hidden")
+    // if (!oofTurn) {
+    //   document.getElementById("tuggTurn").classList.remove("hidden")
+    //   document.getElementById("oofTurn").classList.add("hidden")
+    // } else {
+    //   document.getElementById("tuggTurn").classList.add("hidden")
+    //   document.getElementById("oofTurn").classList.remove("hidden")
+    // }
+  }
+
+  function movePiece(position) {
+    let movingPiece = getPiece(activePosition);
+    let targetPiece = getPiece(position);
+    if (targetPiece == 2 || targetPiece == 4) {
+      endGame();
     } else {
-      document.getElementById("tuggTurn").classList.add("hidden")
-      document.getElementById("oofTurn").classList.remove("hidden")
+      setPiece(position, movingPiece);
+      setPiece(activePosition, 0); 
     }
+    leaveMoveMode();
+    changeTurn();
   }
 
   function throwRock () {
     console.log('outch');
-    board[activePiece[1]][activePiece[0]] = 0;
+    setPiece(activePosition, 0);
+    if (oofTurn) {
+      tuggHp -= 1;
+    } else {
+      oofHp -= 1;
+    }
+    if (tuggHp <= 0 || oofHp <= 0) {
+      endGame();
+    }
+    leaveMoveMode();
+    changeTurn();
   }
 
-  boardCanvas.addEventListener("mousemove", (e)=>{
+  function endGame() {
+    document.write(`you win (${oofTurn ? 'Oof' : 'Tugg'} win)`);
+  }
+
+  function enterMoveMode(position) {
+    moveMode = true;
+    allowedMoves = getAllowedMoves(position);
+    activePosition = position;
+  }
+
+  function leaveMoveMode() {
+    highlightedSquares = empty();
+    highlightedEndzone = empty();
+    allowedMoves = empty();
+    moveMode = false;
+  }
+
+  boardCanvas.addEventListener("mousemove", (e) => {
     let position = getPosition(e.offsetX, e.offsetY);
     if (!moveMode) {
       highlightedSquares = empty();
@@ -291,24 +414,15 @@ document.fonts.ready.then( ()=>{
     let position = getPosition(e.offsetX, e.offsetY);
     let piece = getPiece(position);
     if (!moveMode && piece && (isOofPiece(position) && oofTurn || !isOofPiece(position) && !oofTurn)) {
-      moveMode = true;
-      highlightedSquares = empty();
-      highlightedEndzone = empty();
-      allowedMoves = getAllowedMoves(position);
-      activePiece = position;
+      enterMoveMode(position);
     } else if (moveMode) {
       if (piece >= 0 && allowedMoves[position[0]][position[1]]) {
-        board[position[1]][position[0]] = board[activePiece[1]][activePiece[0]];
-        board[activePiece[1]][activePiece[0]] = 0;
-        changeTurn()
+        movePiece(position);
       } else if(throwRockAllowed && (position[1] == -1 && oofTurn || position[1] == 8 && !oofTurn)){
-        throwRock()
-        changeTurn()
+        throwRock();
+      } else {
+        leaveMoveMode();
       }
-      highlightedSquares = empty();
-      highlightedEndzone = empty();
-      allowedMoves = empty();
-      moveMode = false;
     }
     draw();
   });
