@@ -58,14 +58,14 @@ const lifeSize = 70;
 const maxHp = 3;
 /// empty = 0, ORock = 1, Oguy = 2, TRock = 3, TGuy = 4
 const startingBoard = [
-  [4, 4, 4, 4, 4, 4, 4, 4],
-  [4, 4, 4, 4, 4, 4, 4, 4],
+  [3, 3, 3, 4, 3, 3, 3, 3],
+  [3, 3, 3, 3, 3, 3, 3, 3],
   [0, 0, 0, 0, 0, 0, 0, 0],
   [0, 0, 0, 0, 0, 0, 0, 0],
   [0, 0, 0, 0, 0, 0, 0, 0],
   [0, 0, 0, 0, 0, 0, 0, 0],
-  [2, 2, 2, 2, 2, 2, 2, 2],
-  [2, 2, 2, 2, 2, 2, 2, 2]
+  [1, 1, 1, 1, 1, 1, 1, 1],
+  [1, 1, 1, 2, 1, 1, 1, 1]
 ];
 
 const empty = () => { return [ [], [], [], [], [], [], [], [] ]; };
@@ -359,7 +359,7 @@ document.fonts.ready.then(()=>{
   function movePiece(position) {
     let movingPiece = getPiece(activePosition);
     let targetPiece = getPiece(position);
-    if (false){//targetPiece == 2 || targetPiece == 4) {
+    if (targetPiece == 2 || targetPiece == 4) {
       endGame();
     } else {
       setPiece(position, movingPiece);
