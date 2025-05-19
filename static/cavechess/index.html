@@ -313,13 +313,13 @@ document.fonts.ready.then(()=>{
     i = position[1] + 1;
 
     if (i < 8) {
-      allowedMoves[position[0]][i] = !getPiece([position[0], 1]) || isOpposing(position, [position[0], i]);
+      allowedMoves[position[0]][i] = !getPiece([position[0], i]) || isOpposing(position, [position[0], i]);
     }
 
     i = position[1] - 1;
 
     if (i >= 0) {
-      allowedMoves[position[0]][i] = !getPiece([position[0], 1]) || isOpposing(position, [position[0], i]);
+      allowedMoves[position[0]][i] = !getPiece([position[0], i]) || isOpposing(position, [position[0], i]);
     }
 
     return allowedMoves;
