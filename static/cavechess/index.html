@@ -359,7 +359,7 @@ document.fonts.ready.then(()=>{
   function movePiece(position) {
     let movingPiece = getPiece(activePosition);
     let targetPiece = getPiece(position);
-    if (targetPiece == 2 || targetPiece == 4) {
+    if (false){//targetPiece == 2 || targetPiece == 4) {
       endGame();
     } else {
       setPiece(position, movingPiece);
