@@ -8,6 +8,7 @@ body {
   justify-content: space-evenly;
   align-items: center;
   flex-direction: row;
+  font-family: monospace;
 }
 
  canvas {
@@ -34,17 +35,49 @@ body {
   visibility: hidden;
 }
 
+.button {
+  cursor: pointer;
+  background-color: #999;
+  font-size: 30px;
+  margin: 10px;
+  padding: 10px;
+  display: inline-block;
+}
+
+.button:hover {
+  background-color: #666;
+}
+
+#gameCodeLabel {
+  font-size: 30px;
+}
 
 </style>
 
 </head>
 <body>
-<canvas id="board" width="560" height="700"></canvas>
-<canvas id="info" width="350" height="700"></canvas>
+<div id="menu" class="hidden">
+  <div id="title">
+  </div>
+  <div id="controls">
+    <div class="button" id="newGame">new game</div>
+    <div class="button" id="joinGame">join game</div>
+    <input type="text" id="gameCode" placeholder="enter code...">
+  </div>
+</div>
+<div id="game" class="hidden">
+  <canvas id="board" width="560" height="700"></canvas>
+  <canvas id="info" width="350" height="700"></canvas>
+</div>
 <div id="font">sup</div>
 <script>
 
+const menuSection = document.getElementById("menu");
+const gameSection = document.getElementById("game");
 const boardCanvas = document.getElementById('board');
+const newGame = document.getElementById("newGame");
+const joinGame = document.getElementById("joinGame");
+const gameCode = document.getElementById("gameCode");
 const ctx = boardCanvas.getContext('2d');
 const infoCanvas = document.getElementById('info');
 const infoCtx = infoCanvas.getContext('2d');
@@ -55,7 +88,7 @@ const tuggColor = '#000';
 const oofColor = '#fff';
 const squareSize = 70;
 const lifeSize = 70;
-const maxHp = 2;
+
 /// empty = 0, ORock = 1, Oguy = 2, TRock = 3, TGuy = 4
 const startingBoard = [
   [3, 3, 3, 4, 3, 3, 3, 3],
@@ -76,42 +109,88 @@ let highlightedEndzone = empty();
 let allowedMoves = empty();
 let activePosition = false;
 
-let board = startingBoard;
+// let board = startingBoard;
 let moveMode = false;
-let oofTurn = true;
+// let oofTurn = true;
 let throwRockAllowed = false;
-let oofHp = maxHp;
-let tuggHp = maxHp;
+// let oofHp = maxHp;
+// let tuggHp = maxHp;
+let isOof;
 
-let state = {
-  board: startingBoard,
-  oofHp: maxHp,
-  tuggHp: maxHp,
-  throwRockAllowed: false,
-  allowedMoves: empty()
-};
+let game;
 
-function send(type, data) {
-  ws.send(JSON.stringify({
-    type: type,
-    data: data
-  }));
-}
-
-const ws = new WebSocket(location.search.slice(1) == "LOCAL" ? "ws://localhost:3000" : "wss://crabseason-games-3cf54d5c76c6.herokuapp.com");
-
-// ws.addEventListener("open", (event) => {
-//   console.log("websocket connection opened");
-//   console.log(event);
-//   send("register", userId);
-
-// });
-
-// ws.addEventListener("message", (event) => {
-
-// });
 
 document.fonts.ready.then(()=>{
+
+  function send(type, data) {
+    ws.send(JSON.stringify({
+      type: type,
+      data: data
+    }));
+  }
+
+  const userId = localStorage["userId"] || Math.floor(Math.random() * 10e9);
+  const ws = new WebSocket(location.search.slice(1) == "LOCAL" ? "ws://localhost:3000" : "wss://crabseason-games-3cf54d5c76c6.herokuapp.com");
+
+
+  ws.addEventListener("open", (event) => {
+    console.log("websocket connection opened");
+    console.log(event);
+    send("register", userId);
+  });
+
+  ws.addEventListener("message", (event) => {
+    // console.log(event);
+    let message;
+    try {
+      message = JSON.parse(event.data);
+    } catch (e) {
+      return send("error", `Error parsing: ${event.data}`);
+    }
+
+    if (message.type == "registered") {
+      console.log(`registered as ${userId}`);
+      menuSection.classList.remove("hidden");
+    } else if (message.type == "gameStarted") {
+      menuSection.classList.add("hidden");
+      gameSection.classList.remove("hidden");
+      isOof = true;
+      game = message.data;
+    } else if (message.type == "joinedGame") {
+      menuSection.classList.add("hidden");
+      gameSection.classList.remove("hidden");
+      isOof = false;
+      game = message.data;
+    } else if (message.type == "moved") {
+      game = message.data;
+      allowedMoves = empty();
+      highlightedSquares = empty();
+      highlightedEndzone = empty();
+      console.log("got move");
+      console.log(game);
+    } else if (message.type == "error") {
+      console.log("error");
+      console.log(message.data);
+    }
+    draw();
+  });
+
+  newGame.addEventListener("click", (e) => {
+    send("newGame");
+  });
+
+  joinGame.addEventListener("click", (e) => {
+    const code = gameCode.value;
+    if (!code || !(code.length == 4)) { return; }
+    send("joinGame", code);
+  });
+
+  function draw(){
+    if (!game) { return; }
+    drawBoard();
+    drawInfo();
+  }
+
   function drawBoard() {
     ctx.clearRect(0, 0, 8 * squareSize, squareSize);
     ctx.clearRect(0, 9 * squareSize, 8 * squareSize, squareSize);
@@ -135,12 +214,12 @@ document.fonts.ready.then(()=>{
       }
     }
     for (let i = 0; i < 8; i++) {
-      if(oofTurn && highlightedEndzone[i][0]) {
+      if (game.state.oofTurn && highlightedEndzone[i][0]) {
         ctx.beginPath();
         ctx.arc(squareSize*i + squareSize * .5, squareSize * .5, squareSize * .33, 0, 2*Math.PI)
         ctx.fillStyle = highlightedColor;
         ctx.fill()
-      } else if (!oofTurn && highlightedEndzone[i][1]) {
+      } else if (!game.state.oofTurn && highlightedEndzone[i][1]) {
         ctx.beginPath();
         ctx.arc(squareSize*i + squareSize * .5, squareSize * 9.5, squareSize * .33, 0, 2*Math.PI)
         ctx.fillStyle = highlightedColor;
@@ -182,19 +261,22 @@ document.fonts.ready.then(()=>{
     infoCtx.textBaseline = "top";
     infoCtx.font = `${fontSize}px dinotopia`;
 
-    infoCtx.fillStyle = !oofTurn ? "red" : "black";
-    infoCtx.strokeStyle = !oofTurn ? "red" : "black";
+    infoCtx.fillStyle = !game.state.oofTurn ? "red" : "black";
+    infoCtx.strokeStyle = !game.state.oofTurn ? "red" : "black";
     infoCtx.fillText("Tugg", leftMargin, topMargin);
-    for (let i = 0; i < maxHp; i++) {
-      (i < tuggHp ? drawLife : drawDeath)(leftMargin + lifeSize * i, topMargin * 2 + fontSize);
+    for (let i = 0; i < game.state.maxHp; i++) {
+      (i < game.state.tuggHp ? drawLife : drawDeath)(leftMargin + lifeSize * i, topMargin * 2 + fontSize);
     }
 
-    infoCtx.fillStyle = oofTurn ? "red" : "black";
-    infoCtx.strokeStyle = oofTurn ? "red" : "black";
+    infoCtx.fillStyle = game.state.oofTurn ? "red" : "black";
+    infoCtx.strokeStyle = game.state.oofTurn ? "red" : "black";
     infoCtx.fillText("Oof", leftMargin, (10 * squareSize) - topMargin - fontSize);
-    for (let i = 0; i < maxHp; i++) {
-      (i < oofHp ? drawLife : drawDeath)(leftMargin + lifeSize * i, (10 * squareSize) - (topMargin + fontSize) * 2);
+    for (let i = 0; i < game.state.maxHp; i++) {
+      (i < game.state.oofHp ? drawLife : drawDeath)(leftMargin + lifeSize * i, (10 * squareSize) - (topMargin + fontSize) * 2);
     }
+
+    infoCtx.fillStyle = "black";
+    infoCtx.fillText(game.code, leftMargin, 5 * squareSize);
   }
 
   function drawLife(x, y) {
@@ -223,11 +305,6 @@ document.fonts.ready.then(()=>{
     infoCtx.moveTo(x + 40, y + 10);
     infoCtx.lineTo(x + 30, y + 20);
     infoCtx.stroke();
-  }
-
-  function draw(){
-    drawBoard()
-    drawInfo()
   }
 
   function getPosition(x, y) {
@@ -281,7 +358,7 @@ document.fonts.ready.then(()=>{
       allowedMoves[position[0]][i] = isOpposing(position, [position[0], i]);
     } else if (!isOofPiece(position)) {
       throwRockAllowed = true;
-      highlightedEndzone[position[0]][oofTurn ? 0 : 1] = true;
+      highlightedEndzone[position[0]][game.state.oofTurn ? 0 : 1] = true;
     }
 
     i = position[1];
@@ -292,7 +369,7 @@ document.fonts.ready.then(()=>{
       allowedMoves[position[0]][i] = isOpposing(position, [position[0], i]);
     } else if (isOofPiece(position)) {
       throwRockAllowed = true;
-      highlightedEndzone[position[0]][oofTurn ? 0 : 1] = true;
+      highlightedEndzone[position[0]][game.state.oofTurn ? 0 : 1] = true;
     }
     return allowedMoves;
   }
@@ -338,36 +415,32 @@ document.fonts.ready.then(()=>{
     if (position[1] == -1 || position[1] == 8) {
       return -1
     } else {
-      return board[position[1]][position[0]];
+      return game.state.board[position[1]][position[0]];
     }
   }
 
   function setPiece(position, piece) {
-    board[position[1]][position[0]] = piece;
+    game.state.board[position[1]][position[0]] = piece;
   }
 
   function changeTurn() {
     oofTurn = !oofTurn
-    // if (!oofTurn) {
-    //   document.getElementById("tuggTurn").classList.remove("hidden")
-    //   document.getElementById("oofTurn").classList.add("hidden")
-    // } else {
-    //   document.getElementById("tuggTurn").classList.add("hidden")
-    //   document.getElementById("oofTurn").classList.remove("hidden")
-    // }
   }
 
   function movePiece(position) {
     let movingPiece = getPiece(activePosition);
     let targetPiece = getPiece(position);
-    if (targetPiece == 2 || targetPiece == 4) {
-      endGame();
-    } else {
-      setPiece(position, movingPiece);
-      setPiece(activePosition, 0); 
-    }
-    leaveMoveMode();
-    changeTurn();
+
+    send("move", [activePosition, position]);
+
+    // if (targetPiece == 2 || targetPiece == 4) {
+    //   endGame();
+    // } else {
+    //   setPiece(position, movingPiece);
+    //   setPiece(activePosition, 0);
+    // }
+    // leaveMoveMode();
+    // changeTurn();
   }
 
   function throwRock () {
@@ -407,19 +480,19 @@ document.fonts.ready.then(()=>{
     if (!moveMode) {
       highlightedSquares = empty();
       highlightedSquares[position[0]][position[1]] = true;
-      drawBoard();
+      draw();
     }
   });
 
   boardCanvas.addEventListener("click", (e) => {
     let position = getPosition(e.offsetX, e.offsetY);
     let piece = getPiece(position);
-    if (!moveMode && piece && (isOofPiece(position) && oofTurn || !isOofPiece(position) && !oofTurn)) {
+    if (!moveMode && (piece > 0) && game.state.oofTurn == isOof && isOofPiece(position) == isOof) {
       enterMoveMode(position);
     } else if (moveMode) {
       if (piece >= 0 && allowedMoves[position[0]][position[1]]) {
         movePiece(position);
-      } else if(throwRockAllowed && (position[1] == -1 && oofTurn || position[1] == 8 && !oofTurn)){
+      } else if(throwRockAllowed && (position[1] == -1 && game.state.oofTurn || position[1] == 8 && !game.state.oofTurn)){
         throwRock();
       } else {
         leaveMoveMode();
