@@ -28,10 +28,20 @@ body {
   src: url(dinopia-font/DinopiaRegular-mLrO9.otf);
 }
 
+@font-face {
+  font-family: smilin-john;
+  src: url(smilin-john-font/SmilinJohn-KzX.ttf);
+}
 
 #font {
   position: absolute;
   font-family: dinotopia;
+  visibility: hidden;
+}
+
+#font2 {
+  position: absolute;
+  font-family: smilin-john;
   visibility: hidden;
 }
 
@@ -68,8 +78,7 @@ body {
 <div id="game" class="hidden">
   <canvas id="board" width="560" height="700"></canvas>
   <canvas id="info" width="350" height="700"></canvas>
-</div>
-<div id="font">sup</div>
+</div><div id="font">sup</div><div id="font2">sup</div>
 <script>
 
 const menuSection = document.getElementById("menu");
@@ -108,15 +117,12 @@ let highlightedSquares = empty();
 let highlightedEndzone = empty();
 let allowedMoves = empty();
 let activePosition = false;
-
-// let board = startingBoard;
 let moveMode = false;
-// let oofTurn = true;
-let throwRockAllowed = false;
-// let oofHp = maxHp;
-// let tuggHp = maxHp;
-let isOof;
 
+let throwRockAllowed = false;
+
+let opponentConnected = false;
+let isOof;
 let game;
 
 
@@ -160,7 +166,10 @@ document.fonts.ready.then(()=>{
       menuSection.classList.add("hidden");
       gameSection.classList.remove("hidden");
       isOof = false;
+      opponentConnected = true;
       game = message.data;
+    } else if (message.type == "opponentJoinedGame") {
+      opponentConnected = true;
     } else if (message.type == "moved") {
       game = message.data;
       allowedMoves = empty();
@@ -168,6 +177,8 @@ document.fonts.ready.then(()=>{
       highlightedEndzone = empty();
       console.log("got move");
       console.log(game);
+    } else if (message.type == "disconnect") {
+      opponentConnected = false;
     } else if (message.type == "error") {
       console.log("error");
       console.log(message.data);
@@ -261,22 +272,32 @@ document.fonts.ready.then(()=>{
     infoCtx.textBaseline = "top";
     infoCtx.font = `${fontSize}px dinotopia`;
 
-    infoCtx.fillStyle = !game.state.oofTurn ? "red" : "black";
-    infoCtx.strokeStyle = !game.state.oofTurn ? "red" : "black";
-    infoCtx.fillText("Tugg", leftMargin, topMargin);
+    let color = !game.state.oofTurn && !game.state.winner ? "red" : "black";
+    infoCtx.fillStyle = color;
+    infoCtx.strokeStyle = color;
+    let tuggText = "Tugg" + (opponentConnected || !isOof ? "" : " (waiting for enemy)");
+    infoCtx.fillText(tuggText, leftMargin, topMargin);
     for (let i = 0; i < game.state.maxHp; i++) {
       (i < game.state.tuggHp ? drawLife : drawDeath)(leftMargin + lifeSize * i, topMargin * 2 + fontSize);
     }
 
-    infoCtx.fillStyle = game.state.oofTurn ? "red" : "black";
-    infoCtx.strokeStyle = game.state.oofTurn ? "red" : "black";
-    infoCtx.fillText("Oof", leftMargin, (10 * squareSize) - topMargin - fontSize);
+    color = game.state.oofTurn && !game.state.winner ? "red" : "black";
+    infoCtx.fillStyle = color;
+    infoCtx.strokeStyle = color;
+    let oofText = "Oof" + (opponentConnected || isOof ? "" : " (waiting for enemy)");
+    infoCtx.fillText(oofText, leftMargin, (10 * squareSize) - topMargin - fontSize);
     for (let i = 0; i < game.state.maxHp; i++) {
       (i < game.state.oofHp ? drawLife : drawDeath)(leftMargin + lifeSize * i, (10 * squareSize) - (topMargin + fontSize) * 2);
     }
 
     infoCtx.fillStyle = "black";
-    infoCtx.fillText(game.code, leftMargin, 5 * squareSize);
+    infoCtx.font = `65px smilin-john`;
+    if (game.state.winner) {
+      infoCtx.fillText(game.state.winner == 1 ? "OOF" : "TUGG", leftMargin, 4.5 * squareSize);
+      infoCtx.fillText("WIN", leftMargin, 5.5 * squareSize);
+    } else {
+      infoCtx.fillText(game.code, leftMargin, 5 * squareSize);
+    }
   }
 
   function drawLife(x, y) {
@@ -476,6 +497,7 @@ document.fonts.ready.then(()=>{
   }
 
   boardCanvas.addEventListener("mousemove", (e) => {
+    if (!opponentConnected || game.state.winner) { return; }
     let position = getPosition(e.offsetX, e.offsetY);
     if (!moveMode) {
       highlightedSquares = empty();
@@ -485,6 +507,7 @@ document.fonts.ready.then(()=>{
   });
 
   boardCanvas.addEventListener("click", (e) => {
+    if (!opponentConnected || game.state.winner) { return; }
     let position = getPosition(e.offsetX, e.offsetY);
     let piece = getPiece(position);
     if (!moveMode && (piece > 0) && game.state.oofTurn == isOof && isOofPiece(position) == isOof) {

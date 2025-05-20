@@ -151,10 +151,17 @@ module.exports = {
         oofTurn: true,
         oofHp: MAX_HP,
         tuggHp: MAX_HP,
-        maxHp: MAX_HP
+        maxHp: MAX_HP,
+        winner: false
       },
       move: (player, move) => {
         if (allowed(game.state, player, move)) {
+          let targetPiece = getPiece(game.state.board, move[1]);
+          if (targetPiece == 4) {
+            game.state.winner = 1;
+          } else if (targetPiece == 2) {
+            game.state.winner = 2;
+          }
           setPiece(game.state.board, move[1], getPiece(game.state.board, move[0]));
           setPiece(game.state.board, move[0], 0);
           game.state.oofTurn = !game.state.oofTurn;

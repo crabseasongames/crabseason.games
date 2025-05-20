@@ -81,11 +81,20 @@ const Router = {
 
     const c = code.toUpperCase();
 
-    if (!games[c] || games[c].opponent) {
+    if (!games[c]) {
       return conn.send(WsError("CodeError", "invalid game code"));
     }
 
-    games[c].opponent = conn["__userId"];
+    if (games[c].opponent) {
+      if (games[c].host != conn["__userId"] && games[c].opponent != conn["__userId"]) {
+        return conn.send(WsError("CodeError", "invalid game code"));
+      }
+      let peer = games[c].host == conn["__userId"] ? users[games[c].opponent] : users[games[c].host];
+      peer.connection.send(WsResponse("opponentJoinedGame"));
+    } else {
+      games[c].opponent = conn["__userId"];
+      users[games[c].host].connection.send(WsResponse("opponentJoinedGame"));
+    }
     users[conn["__userId"]].activeGame = c;
     conn.send(WsResponse("joinedGame", games[c]));
   },
@@ -111,6 +120,9 @@ const Router = {
 
     users[game.host].connection.send(WsResponse("moved", games[user.activeGame]));
     users[game.opponent].connection.send(WsResponse("moved", games[user.activeGame]));
+    if (game.state.winner) {
+      delete games[user.activeGame];
+    }
   }
 };
 
@@ -160,13 +172,18 @@ app.ws("/", (ws, req) => {
 
   ws.on("close", (event) => {
     console.log(`websocket connection closed: (code: ${event}, user: ${ws["__userId"]})`);
-    if (ws["__userId"]) {
-      delete users[ws["__userId"]];
-      Object.keys(games).forEach((code) => {
-        if (games[code].host == ws["__userId"]) {
-          delete games[code];
+    let id = ws["__userId"];
+    if (users[id]) {
+      let game = games[users[id].activeGame];
+      if (game) {
+        let peer = game.host == id ? users[game.opponent] : users[game.host];
+        if (!peer) {
+          delete games[users[id].activeGame];
+        } else {
+          peer.connection.send(WsResponse("disconnect"));
         }
-      });
+      }
+      delete users[id];
     }
     updateUsers();
   });
