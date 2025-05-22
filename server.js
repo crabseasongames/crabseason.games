@@ -198,13 +198,16 @@ const server = app.listen(port, () => {
 });
 
 function report() {
-  // console.log("======== ACTIVE USERS ========");
-  // Object.keys(users).forEach((id) => {
-  //   console.log(`user ${id} last seen at t=${Math.floor((users[id].last - START) / 1000)} seconds`);
-  // });
-  // console.log("==============================");
-  console.log(users);
-  console.log(games);
+  console.log("======== ACTIVE USERS ========");
+  Object.keys(users).forEach((id) => {
+    console.log(`user ${id} last seen at t=${Math.floor((users[id].last - START) / 1000)} seconds`);
+  });
+  console.log("==============================");
+  console.log("======== ACTIVE GAMES ========");
+  Object.keys(games).forEach((id) => {
+    console.log(id, games[id]);
+  });
+  console.log("==============================");
 }
 
-setInterval(report, 10000);
+setInterval(report, 20000);

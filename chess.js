@@ -8,22 +8,26 @@ function allowed(state, player, move) {
     return false;
   }
   const allowedMoves = getAllowedMoves(state.board, move[0]);
-  return allowedMoves[move[1][0]][move[1][1]];
+  if (move[1][1] == -1 && state.oofTurn || move[1][1] == 8 && !state.oofTurn) {
+    return allowedMoves[1][move[1][0]];
+  } else {
+    return allowedMoves[0][move[1][0]][move[1][1]];
+  }
 }
 
 function getAllowedMoves(board, position) {
   highlightedSquares = empty();
   highlightedEndzone = empty();
-  if(getPiece(board, position) == 2 || getPiece(board, position) == 4) {
-    return getAllowedGuyMoves(board, position)
+  if (getPiece(board, position) == 2 || getPiece(board, position) == 4) {
+    return getAllowedGuyMoves(board, position);
   } else {
-    return getAllowedRockMoves(board, position)
+    return getAllowedRockMoves(board, position);
   }
 }
 
 function getAllowedRockMoves(board, position) {
-  throwRockAllowed = false;
   let allowedMoves = empty();
+  let allowedThrows = [];
   let i = position[0];
   while (++i < 8 && !getPiece(board, [i, position[1]])) {
     allowedMoves[i][position[1]] = true;
@@ -46,22 +50,21 @@ function getAllowedRockMoves(board, position) {
   }
   if (i < 8) {
     allowedMoves[position[0]][i] = isOpposing(getPiece(board, position), getPiece(board, [position[0], i]));
-  } else if (!isOofPiece(position)) {
-    throwRockAllowed = true;
-    highlightedEndzone[position[0]][oofTurn ? 0 : 1] = true;
+  } else if (!isOofPiece(getPiece(board, position))) {
+    allowedThrows[position[0]] = true;
   }
 
   i = position[1];
   while (--i >= 0 && !getPiece(board, [position[0], i])) {
     allowedMoves[position[0]][i] = true;
   }
+
   if (i >= 0) {
     allowedMoves[position[0]][i] = isOpposing(getPiece(board, position), getPiece(board, [position[0], i]));
-  } else if (isOofPiece(position)) {
-    throwRockAllowed = true;
-    highlightedEndzone[position[0]][oofTurn ? 0 : 1] = true;
+  } else if (isOofPiece(getPiece(board, position))) {
+    allowedThrows[position[0]] = true;
   }
-  return allowedMoves;
+  return [allowedMoves, allowedThrows];
 }
 
 function getAllowedGuyMoves(board, position) {
@@ -98,7 +101,7 @@ function getAllowedGuyMoves(board, position) {
       isOpposing(getPiece(board, position), getPiece(board, [position[0], i]));
   }
 
-  return allowedMoves;
+  return [allowedMoves, []];
 }
 
 function isOpposing(pa, pb) {
@@ -109,7 +112,7 @@ function isOpposing(pa, pb) {
   );
 }
 
-function isOofPiece (piece) {
+function isOofPiece(piece) {
   return piece == 1 || piece == 2;
 }
 
@@ -162,7 +165,21 @@ module.exports = {
           } else if (targetPiece == 2) {
             game.state.winner = 2;
           }
-          setPiece(game.state.board, move[1], getPiece(game.state.board, move[0]));
+          if (move[1][1] == -1 || move[1][1] == 8) {
+            if (game.state.oofTurn) {
+              game.state.tuggHp -= 1;
+              if (game.state.tuggHp <= 0) {
+                game.state.winner = 1;
+              }
+            } else {
+              game.state.oofHp -= 1;
+              if (game.state.oofHp <= 0) {
+                game.state.winner = 2;
+              }
+            }
+          } else {
+            setPiece(game.state.board, move[1], getPiece(game.state.board, move[0])); 
+          }
           setPiece(game.state.board, move[0], 0);
           game.state.oofTurn = !game.state.oofTurn;
           return true;

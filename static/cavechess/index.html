@@ -58,8 +58,25 @@ body {
   background-color: #666;
 }
 
+.button.disabled {
+  background-color: #ccc;
+  color: #777;
+}
+
+.button.disabled:hover {
+  background-color: #ccc;
+}
+
 #gameCodeLabel {
   font-size: 30px;
+}
+
+#error {
+  font-size: 25px;
+  text-align: center;
+  color: red;
+  height: 100px;
+  width: 100%;
 }
 
 </style>
@@ -71,8 +88,9 @@ body {
   </div>
   <div id="controls">
     <div class="button" id="newGame">new game</div>
-    <div class="button" id="joinGame">join game</div>
+    <div class="button disabled" id="joinGame">join game</div>
     <input type="text" id="gameCode" placeholder="enter code...">
+    <div id="error"></div>
   </div>
 </div>
 <div id="game" class="hidden">
@@ -83,18 +101,19 @@ body {
 
 const menuSection = document.getElementById("menu");
 const gameSection = document.getElementById("game");
-const boardCanvas = document.getElementById('board');
+const boardCanvas = document.getElementById("board");
 const newGame = document.getElementById("newGame");
 const joinGame = document.getElementById("joinGame");
 const gameCode = document.getElementById("gameCode");
-const ctx = boardCanvas.getContext('2d');
-const infoCanvas = document.getElementById('info');
-const infoCtx = infoCanvas.getContext('2d');
-const lightSquare = '#956205';
-const darkSquare = '#c1861a';
-const highlightedColor = '#ef4141';
-const tuggColor = '#000';
-const oofColor = '#fff';
+const errorDisplay = document.getElementById("error");
+const ctx = boardCanvas.getContext("2d");
+const infoCanvas = document.getElementById("info");
+const infoCtx = infoCanvas.getContext("2d");
+const lightSquare = "#956205";
+const darkSquare = "#c1861a";
+const highlightedColor = "#ef4141";
+const tuggColor = "#000";
+const oofColor = "#fff";
 const squareSize = 70;
 const lifeSize = 70;
 
@@ -110,8 +129,9 @@ const startingBoard = [
   [1, 1, 1, 2, 1, 1, 1, 1]
 ];
 
-
 const empty = () => { return [ [], [], [], [], [], [], [], [] ]; };
+
+let joinGameEnabled = false;
 
 let highlightedSquares = empty();
 let highlightedEndzone = empty();
@@ -174,16 +194,13 @@ document.fonts.ready.then(()=>{
       opponentConnected = true;
     } else if (message.type == "moved") {
       game = message.data;
-      allowedMoves = empty();
-      highlightedSquares = empty();
-      highlightedEndzone = empty();
-      console.log("got move");
-      console.log(game);
+      leaveMoveMode();
     } else if (message.type == "disconnect") {
       opponentConnected = false;
     } else if (message.type == "error") {
       console.log("error");
       console.log(message.data);
+      errorDisplay.innerText = `${message.data.type}: ${message.data.description}`;
     }
     draw();
   });
@@ -194,8 +211,18 @@ document.fonts.ready.then(()=>{
 
   joinGame.addEventListener("click", (e) => {
     const code = gameCode.value;
-    if (!code || !(code.length == 4)) { return; }
+    if (!joinGameEnabled || !code || !(code.length == 4)) { return; }
     send("joinGame", code);
+  });
+
+  gameCode.addEventListener("keyup", () => {
+    if (gameCode.value.length == 4) {
+      joinGame.classList.remove("disabled");
+      joinGameEnabled = true;
+    } else {
+      joinGame.classList.add("disabled");
+      joinGameEnabled = false;
+    }
   });
 
   function draw(){
@@ -446,43 +473,8 @@ document.fonts.ready.then(()=>{
     game.state.board[position[1]][position[0]] = piece;
   }
 
-  function changeTurn() {
-    oofTurn = !oofTurn
-  }
-
   function movePiece(position) {
-    let movingPiece = getPiece(activePosition);
-    let targetPiece = getPiece(position);
-
     send("move", [activePosition, position]);
-
-    // if (targetPiece == 2 || targetPiece == 4) {
-    //   endGame();
-    // } else {
-    //   setPiece(position, movingPiece);
-    //   setPiece(activePosition, 0);
-    // }
-    // leaveMoveMode();
-    // changeTurn();
-  }
-
-  function throwRock () {
-    console.log('outch');
-    setPiece(activePosition, 0);
-    if (oofTurn) {
-      tuggHp -= 1;
-    } else {
-      oofHp -= 1;
-    }
-    if (tuggHp <= 0 || oofHp <= 0) {
-      endGame();
-    }
-    leaveMoveMode();
-    changeTurn();
-  }
-
-  function endGame() {
-    document.write(`you win (${oofTurn ? 'Oof' : 'Tugg'} win)`);
   }
 
   function enterMoveMode(position) {
@@ -492,10 +484,10 @@ document.fonts.ready.then(()=>{
   }
 
   function leaveMoveMode() {
+    moveMode = false;
     highlightedSquares = empty();
     highlightedEndzone = empty();
     allowedMoves = empty();
-    moveMode = false;
   }
 
   boardCanvas.addEventListener("mousemove", (e) => {
@@ -517,8 +509,8 @@ document.fonts.ready.then(()=>{
     } else if (moveMode) {
       if (piece >= 0 && allowedMoves[position[0]][position[1]]) {
         movePiece(position);
-      } else if(throwRockAllowed && (position[1] == -1 && game.state.oofTurn || position[1] == 8 && !game.state.oofTurn)){
-        throwRock();
+      } else if (throwRockAllowed && (position[1] == -1 && game.state.oofTurn || position[1] == 8 && !game.state.oofTurn)){
+        movePiece(position);
       } else {
         leaveMoveMode();
       }
