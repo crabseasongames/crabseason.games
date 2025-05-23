@@ -149,8 +149,6 @@ const port = process.env.PORT || 3000;
 app.use(express.static(path.join(__dirname, "static")));
 
 app.ws("/", (ws, req) => {
-  console.log("got websocket connection");
-
   ws.on("message", (messageString) => {
     let message;
     try {
@@ -170,6 +168,10 @@ app.ws("/", (ws, req) => {
     }
   });
 
+  const intervalId = setInterval(() => {
+    ws.send(WsResponse("ping"));
+  }, 10000);
+
   ws.on("close", (event) => {
     console.log(`websocket connection closed: (code: ${event}, user: ${ws["__userId"]})`);
     let id = ws["__userId"];
@@ -186,6 +188,7 @@ app.ws("/", (ws, req) => {
       delete users[id];
     }
     updateUsers();
+    clearInterval(intervalId);
   });
 
   ws.on("error", (event) => {

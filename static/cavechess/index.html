@@ -156,6 +156,7 @@ document.fonts.ready.then(()=>{
   }
 
   const userId = localStorage["userId"] || Math.floor(Math.random() * 10e9);
+  localStorage["userId"] = userId;
   const ws = new WebSocket(location.search.slice(1) == "LOCAL" ? "ws://localhost:3000" : "wss://crabseasongames-7ea0aa49408a.herokuapp.com/");
 
 
@@ -197,6 +198,9 @@ document.fonts.ready.then(()=>{
       leaveMoveMode();
     } else if (message.type == "disconnect") {
       opponentConnected = false;
+    } else if (message.type == "ping") {
+      // send("pong");
+      console.log("got ping");
     } else if (message.type == "error") {
       console.log("error");
       console.log(message.data);
