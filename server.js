@@ -217,16 +217,20 @@ function clean() {
 }
 
 function report() {
-  console.log("======== ACTIVE USERS ========");
-  Object.keys(users).forEach((id) => {
-    console.log(`user ${id} last seen at t=${Math.floor((users[id].last - START) / 1000)} seconds`);
-  });
-  console.log("==============================");
-  console.log("======== ACTIVE GAMES ========");
-  Object.keys(games).forEach((id) => {
-    console.log(id, games[id]);
-  });
-  console.log("==============================");
+  if (Object.keys(users).length) {
+    console.log("======== ACTIVE USERS ========");
+    Object.keys(users).forEach((id) => {
+      console.log(`user ${id} last seen at t=${Math.floor((users[id].last - START) / 1000)} seconds`);
+    });
+    console.log("==============================");
+  }
+  if (Object.keys(games).length) {
+    console.log("======== ACTIVE GAMES ========");
+    Object.keys(games).forEach((id) => {
+      console.log(id, games[id]);
+    });
+    console.log("==============================");
+  }
 }
 
 setInterval(clean, 20000);
