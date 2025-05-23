@@ -85,18 +85,26 @@ const Router = {
       return conn.send(WsError("CodeError", "invalid game code"));
     }
 
-    if (games[c].opponent) {
-      if (games[c].host != conn["__userId"] && games[c].opponent != conn["__userId"]) {
+    if (conn["__userId"] == games[c].host) {
+      conn.send(WsResponse("joinedGame", games[c]));
+      if (users[games[c].opponent]) {
+        conn.send(WsResponse("opponentJoinedGame"));
+        users[games[c].opponent].connection.send(WsResponse("opponentJoinedGame"));
+      }
+    } else {
+      if (games[c].opponent && games[c].opponent != conn["__userId"]) {
         return conn.send(WsError("CodeError", "invalid game code"));
       }
-      let peer = games[c].host == conn["__userId"] ? users[games[c].opponent] : users[games[c].host];
-      peer.connection.send(WsResponse("opponentJoinedGame"));
-    } else {
+
       games[c].opponent = conn["__userId"];
-      users[games[c].host].connection.send(WsResponse("opponentJoinedGame"));
+      conn.send(WsResponse("joinedGame", games[c]));
+      if (users[games[c].host]) {
+        conn.send(WsResponse("opponentJoinedGame"));
+        users[games[c].host].connection.send(WsResponse("opponentJoinedGame"));
+      }
     }
+
     users[conn["__userId"]].activeGame = c;
-    conn.send(WsResponse("joinedGame", games[c]));
   },
   move: (conn, move) => {
     let user = users[conn["__userId"]];
@@ -179,9 +187,7 @@ app.ws("/", (ws, req) => {
       let game = games[users[id].activeGame];
       if (game) {
         let peer = game.host == id ? users[game.opponent] : users[game.host];
-        if (!peer) {
-          delete games[users[id].activeGame];
-        } else {
+        if (peer) {
           peer.connection.send(WsResponse("disconnect"));
         }
       }
@@ -200,6 +206,16 @@ const server = app.listen(port, () => {
   console.log(`running on port ${port}`);
 });
 
+function clean() {
+  Object.keys(games).forEach((code) => {
+    if (!users[games[code].host] && !users[games[code].opponent] && now() - games[code].started > 1e6) {
+      delete games[code];
+    }
+  });
+
+  report()
+}
+
 function report() {
   console.log("======== ACTIVE USERS ========");
   Object.keys(users).forEach((id) => {
@@ -213,4 +229,4 @@ function report() {
   console.log("==============================");
 }
 
-setInterval(report, 20000);
+setInterval(clean, 20000);

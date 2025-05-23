@@ -157,57 +157,72 @@ document.fonts.ready.then(()=>{
 
   const userId = localStorage["userId"] || Math.floor(Math.random() * 10e9);
   localStorage["userId"] = userId;
-  const ws = new WebSocket(location.search.slice(1) == "LOCAL" ? "ws://localhost:3000" : "wss://crabseasongames-7ea0aa49408a.herokuapp.com/");
 
+  let ws;
 
-  ws.addEventListener("open", (event) => {
-    console.log("websocket connection opened");
-    console.log(event);
-    send("register", userId);
+  function connect() {
+    ws = new WebSocket(location.search.slice(1) == "LOCAL" ? "ws://localhost:3000" : "wss://crabseasongames-7ea0aa49408a.herokuapp.com/");
 
-    setInterval(() => { send("ping"); }, 10000);
-  });
+    ws.addEventListener("open", (event) => {
+      console.log("websocket connection opened");
+      console.log(event);
+      send("register", userId);
+    });
 
-  ws.addEventListener("message", (event) => {
-    // console.log(event);
-    let message;
-    try {
-      message = JSON.parse(event.data);
-    } catch (e) {
-      return send("error", `Error parsing: ${event.data}`);
-    }
-
-    if (message.type == "registered") {
-      console.log(`registered as ${userId}`);
+    ws.addEventListener("close", (event) => {
       menuSection.classList.remove("hidden");
-    } else if (message.type == "gameStarted") {
-      menuSection.classList.add("hidden");
-      gameSection.classList.remove("hidden");
-      isOof = true;
-      game = message.data;
-    } else if (message.type == "joinedGame") {
-      menuSection.classList.add("hidden");
-      gameSection.classList.remove("hidden");
-      isOof = false;
-      opponentConnected = true;
-      game = message.data;
-    } else if (message.type == "opponentJoinedGame") {
-      opponentConnected = true;
-    } else if (message.type == "moved") {
-      game = message.data;
-      leaveMoveMode();
-    } else if (message.type == "disconnect") {
-      opponentConnected = false;
-    } else if (message.type == "ping") {
-      // send("pong");
-      console.log("got ping");
-    } else if (message.type == "error") {
-      console.log("error");
-      console.log(message.data);
-      errorDisplay.innerText = `${message.data.type}: ${message.data.description}`;
-    }
-    draw();
-  });
+      gameSection.classList.add("hidden");
+      connect();
+    });
+
+    ws.addEventListener("message", (event) => {
+      // console.log(event);
+      let message;
+      try {
+        message = JSON.parse(event.data);
+      } catch (e) {
+        return send("error", `Error parsing: ${event.data}`);
+      }
+
+      if (message.type == "registered") {
+        console.log(`registered as ${userId}`);
+        menuSection.classList.remove("hidden");
+      } else if (message.type == "gameStarted") {
+        menuSection.classList.add("hidden");
+        gameSection.classList.remove("hidden");
+        isOof = true;
+        game = message.data;
+        gameCode.value = game.code;
+        joinGame.classList.remove("disabled");
+        joinGameEnabled = true;
+      } else if (message.type == "joinedGame") {
+        menuSection.classList.add("hidden");
+        gameSection.classList.remove("hidden");
+        game = message.data;
+        isOof = game.host == userId;
+      } else if (message.type == "opponentJoinedGame") {
+        opponentConnected = true;
+      } else if (message.type == "moved") {
+        game = message.data;
+        leaveMoveMode();
+      } else if (message.type == "disconnect") {
+        opponentConnected = false;
+      } else if (message.type == "ping") {
+        // send("pong");
+        console.log("got ping");
+      } else if (message.type == "error") {
+        console.log("error");
+        console.log(message.data);
+        errorDisplay.innerText = `${message.data.type}: ${message.data.description}`;
+      } else {
+        console.log("unknown message type");
+        console.log(message);
+      }
+      draw();
+    });
+  }
+
+  connect();
 
   newGame.addEventListener("click", (e) => {
     send("newGame");
