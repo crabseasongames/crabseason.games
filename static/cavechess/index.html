@@ -112,8 +112,8 @@ body {
 const menuSection = document.getElementById("menu");
 const gameSection = document.getElementById("game");
 const boardCanvas = document.getElementById("board");
-const newGame = document.getElementById("new-game");
-const joinGame = document.getElementById("join-game");
+const newGameButton = document.getElementById("new-game");
+const joinGameButton = document.getElementById("join-game");
 const gameCode = document.getElementById("game-code");
 const errorDisplay = document.getElementById("error");
 const ctx = boardCanvas.getContext("2d");
@@ -156,9 +156,15 @@ let isOof;
 let game;
 
 
-document.fonts.ready.then(()=>{
+document.fonts.ready.then(() => {
+
+  gameCode.value = "";
 
   function send(type, data) {
+    if (!ws || ws.readyState != 1) {
+      errorDisplay.innerText = "Error: lost connection";
+      return;
+    }
     ws.send(JSON.stringify({
       type: type,
       data: data
@@ -174,8 +180,6 @@ document.fonts.ready.then(()=>{
     ws = new WebSocket(location.search.slice(1) == "LOCAL" ? "ws://localhost:3000" : "wss://crabseasongames-7ea0aa49408a.herokuapp.com/");
 
     ws.addEventListener("open", (event) => {
-      console.log("websocket connection opened");
-      console.log(event);
       send("register", userId);
     });
 
@@ -186,7 +190,6 @@ document.fonts.ready.then(()=>{
     });
 
     ws.addEventListener("message", (event) => {
-      // console.log(event);
       let message;
       try {
         message = JSON.parse(event.data);
@@ -196,7 +199,6 @@ document.fonts.ready.then(()=>{
 
       if (message.type == "registered") {
         console.log(`registered as ${userId}`);
-        gameCode.value = "";
         menuSection.classList.remove("hidden");
       } else if (message.type == "gameStarted") {
         menuSection.classList.add("hidden");
@@ -204,7 +206,7 @@ document.fonts.ready.then(()=>{
         isOof = true;
         game = message.data;
         gameCode.value = game.code;
-        joinGame.classList.remove("disabled");
+        joinGameButton.classList.remove("disabled");
         joinGameEnabled = true;
       } else if (message.type == "joinedGame") {
         menuSection.classList.add("hidden");
@@ -235,26 +237,39 @@ document.fonts.ready.then(()=>{
 
   connect();
 
-  newGame.addEventListener("click", (e) => {
+  newGameButton.addEventListener("click", (e) => {
     send("newGame");
   });
 
-  joinGame.addEventListener("click", (e) => {
-    const code = gameCode.value;
-    if (!joinGameEnabled || !code || !(code.length == 4)) { return; }
-    send("joinGame", code);
+  joinGameButton.addEventListener("click", (e) => {
+    joinGame();
   });
 
-  gameCode.addEventListener("input", () => {
-    gameCode.value = gameCode.value.slice(0, 4);
+  gameCode.addEventListener("keydown", (e) => {
+    if (e.key == "Enter") {
+      if (joinGameEnabled) {
+        joinGame();
+      }
+      e.preventDefault();
+    }
+  });
+
+  gameCode.addEventListener("input", (e) => {
+    gameCode.value = gameCode.value.trim().slice(0, 4);
     if (gameCode.value.length == 4) {
-      joinGame.classList.remove("disabled");
+      joinGameButton.classList.remove("disabled");
       joinGameEnabled = true;
     } else {
-      joinGame.classList.add("disabled");
+      joinGameButton.classList.add("disabled");
       joinGameEnabled = false;
     }
   });
+
+  function joinGame() {
+    const code = gameCode.value;
+    if (!joinGameEnabled || !code || !(code.length == 4)) { return; }
+    send("joinGame", code);
+  }
 
   function draw(){
     if (!game) { return; }
@@ -275,7 +290,7 @@ document.fonts.ready.then(()=>{
           ctx.fillStyle = highlightedColor;
           ctx.fillRect(i * squareSize, (j + 1) * squareSize, squareSize, squareSize);
           ctx.fillStyle = color;
-          ctx.fillRect(i * squareSize + (squareSize * .1), (j + 1) * squareSize + (squareSize * .1), squareSize * .8, squareSize * .8);
+          ctx.fillRect(i * squareSize + (squareSize * 0.1), (j + 1) * squareSize + (squareSize * 0.1), squareSize * 0.8, squareSize * 0.8);
         }
 
         let piece;
@@ -294,12 +309,12 @@ document.fonts.ready.then(()=>{
     for (let i = 0; i < 8; i++) {
       if (game.state.oofTurn && highlightedEndzone[isOof ? i : 7 - i][0]) {
         ctx.beginPath();
-        ctx.arc(squareSize*i + squareSize * .5, squareSize * (isOof ? 0.5 : 9.5), squareSize * .33, 0, 2*Math.PI)
+        ctx.arc(squareSize*i + squareSize * 0.5, squareSize * (isOof ? 0.5 : 9.5), squareSize * 0.33, 0, 2*Math.PI)
         ctx.fillStyle = highlightedColor;
         ctx.fill()
       } else if (!game.state.oofTurn && highlightedEndzone[isOof ? i : 7 - i][1]) {
         ctx.beginPath();
-        ctx.arc(squareSize*i + squareSize * .5, squareSize * (isOof ? 9.5 : 0.5), squareSize * .33, 0, 2*Math.PI)
+        ctx.arc(squareSize*i + squareSize * 0.5, squareSize * (isOof ? 9.5 : 0.5), squareSize * 0.33, 0, 2*Math.PI)
         ctx.fillStyle = highlightedColor;
         ctx.fill()
       }
@@ -312,19 +327,19 @@ document.fonts.ready.then(()=>{
     let pieceColor = (piece == 1 || piece == 2) ? oofColor : tuggColor
     if (piece == 1 || piece == 3){
       ctx.beginPath();
-      ctx.arc(squareSize*p[0] + squareSize * .5, squareSize*p[1] + squareSize * .5, squareSize * .33, 0, 2*Math.PI)
+      ctx.arc(squareSize*p[0] + squareSize * 0.5, squareSize*p[1] + squareSize * 0.5, squareSize * 0.33, 0, 2*Math.PI)
       ctx.fillStyle = pieceColor;
       ctx.fill()
     } else {
       ctx.beginPath();
-      ctx.arc(squareSize*p[0] + squareSize * .5, squareSize*p[1] + squareSize * .5, squareSize * .15, 0, 2*Math.PI)
-      ctx.moveTo(squareSize * p[0] + squareSize * .1 , squareSize * p[1] + squareSize * .1);
-      ctx.lineTo(squareSize * p[0] + squareSize * .5, squareSize * p[1] + squareSize * .5);
-      ctx.lineTo(squareSize * p[0] + squareSize * .1, squareSize * p[1] + squareSize * .9);
-      ctx.lineTo(squareSize * p[0] + squareSize * .9, squareSize * p[1] + squareSize * .9);
-      ctx.lineTo(squareSize * p[0] + squareSize * .5, squareSize * p[1] + squareSize * .5);
-      ctx.lineTo(squareSize * p[0] + squareSize * .9, squareSize * p[1] + squareSize * .1);
-      ctx.lineTo(squareSize * p[0] + squareSize, squareSize * p[1] + squareSize * .1);
+      ctx.arc(squareSize*p[0] + squareSize * 0.5, squareSize*p[1] + squareSize * 0.5, squareSize * 0.15, 0, 2*Math.PI)
+      ctx.moveTo(squareSize * p[0] + squareSize * 0.1 , squareSize * p[1] + squareSize * 0.1);
+      ctx.lineTo(squareSize * p[0] + squareSize * 0.5, squareSize * p[1] + squareSize * 0.5);
+      ctx.lineTo(squareSize * p[0] + squareSize * 0.1, squareSize * p[1] + squareSize * 0.9);
+      ctx.lineTo(squareSize * p[0] + squareSize * 0.9, squareSize * p[1] + squareSize * 0.9);
+      ctx.lineTo(squareSize * p[0] + squareSize * 0.5, squareSize * p[1] + squareSize * 0.5);
+      ctx.lineTo(squareSize * p[0] + squareSize * 0.9, squareSize * p[1] + squareSize * 0.1);
+      ctx.lineTo(squareSize * p[0] + squareSize, squareSize * p[1] + squareSize * 0.1);
       ctx.fillStyle = pieceColor;
       ctx.fill()
       ctx.closePath();
@@ -360,10 +375,10 @@ document.fonts.ready.then(()=>{
     infoCtx.fillStyle = "black";
     infoCtx.font = `65px smilin-john`;
     if (game.state.winner) {
-      infoCtx.fillText(game.state.winner == 1 ? "OOF" : "TUGG", leftMargin, 4.5 * squareSize);
-      infoCtx.fillText("WIN", leftMargin, 5.5 * squareSize);
+      infoCtx.fillText(game.state.winner == 1 ? "OOF" : "TUGG", leftMargin, 4 * squareSize);
+      infoCtx.fillText("WIN", leftMargin, 5 * squareSize);
     } else {
-      infoCtx.fillText(game.code, leftMargin, 5 * squareSize);
+      infoCtx.fillText(game.code, leftMargin, 4.5 * squareSize);
     }
   }
 
@@ -498,11 +513,7 @@ document.fonts.ready.then(()=>{
   }
 
   function isOofPiece (position) {
-    if (getPiece(position) == 1 || getPiece(position) == 2) {
-      return true;
-    } else {
-      return false;
-    }
+    return getPiece(position) == 1 || getPiece(position) == 2;
   }
 
   function getPiece(position) {
