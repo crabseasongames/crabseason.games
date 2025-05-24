@@ -4,6 +4,7 @@
 
 body {
   margin: 0;
+  height: 100%;
   display: flex;
   justify-content: space-evenly;
   align-items: center;
@@ -186,6 +187,7 @@ document.fonts.ready.then(()=>{
 
       if (message.type == "registered") {
         console.log(`registered as ${userId}`);
+        gameCode.value = "";
         menuSection.classList.remove("hidden");
       } else if (message.type == "gameStarted") {
         menuSection.classList.add("hidden");
@@ -259,28 +261,35 @@ document.fonts.ready.then(()=>{
         ctx.fillStyle = color ;
         ctx.fillRect(i * squareSize, (j + 1) * squareSize, squareSize, squareSize);
 
-        if (highlightedSquares[i][j] || allowedMoves[i][j]) {
+        if (highlightedSquares[isOof ? i : 7 - i][isOof ? j : 7 - j] || allowedMoves[isOof ? i : 7 - i][isOof ? j : 7 - j]) {
           ctx.fillStyle = highlightedColor;
           ctx.fillRect(i * squareSize, (j + 1) * squareSize, squareSize, squareSize);
           ctx.fillStyle = color;
           ctx.fillRect(i * squareSize + (squareSize * .1), (j + 1) * squareSize + (squareSize * .1), squareSize * .8, squareSize * .8);
         }
 
-        let piece = getPiece([i, j]);
+        let piece;
+        if (isOof) {
+          piece = getPiece([i, j]);
+        } else {
+          piece = getPiece([7 - i, 7 - j]);
+        }
+
         if (piece){
           drawPiece([i, j], piece);
         }
       }
     }
+
     for (let i = 0; i < 8; i++) {
-      if (game.state.oofTurn && highlightedEndzone[i][0]) {
+      if (game.state.oofTurn && highlightedEndzone[isOof ? i : 7 - i][0]) {
         ctx.beginPath();
-        ctx.arc(squareSize*i + squareSize * .5, squareSize * .5, squareSize * .33, 0, 2*Math.PI)
+        ctx.arc(squareSize*i + squareSize * .5, squareSize * (isOof ? 0.5 : 9.5), squareSize * .33, 0, 2*Math.PI)
         ctx.fillStyle = highlightedColor;
         ctx.fill()
-      } else if (!game.state.oofTurn && highlightedEndzone[i][1]) {
+      } else if (!game.state.oofTurn && highlightedEndzone[isOof ? i : 7 - i][1]) {
         ctx.beginPath();
-        ctx.arc(squareSize*i + squareSize * .5, squareSize * 9.5, squareSize * .33, 0, 2*Math.PI)
+        ctx.arc(squareSize*i + squareSize * .5, squareSize * (isOof ? 9.5 : 0.5), squareSize * .33, 0, 2*Math.PI)
         ctx.fillStyle = highlightedColor;
         ctx.fill()
       }
@@ -324,18 +333,18 @@ document.fonts.ready.then(()=>{
     infoCtx.fillStyle = color;
     infoCtx.strokeStyle = color;
     let tuggText = "Tugg" + (opponentConnected || !isOof ? "" : " (waiting for enemy)");
-    infoCtx.fillText(tuggText, leftMargin, topMargin);
+    infoCtx.fillText(tuggText, leftMargin, isOof ? topMargin :  (10 * squareSize) - topMargin - fontSize);
     for (let i = 0; i < game.state.maxHp; i++) {
-      (i < game.state.tuggHp ? drawLife : drawDeath)(leftMargin + lifeSize * i, topMargin * 2 + fontSize);
+      (i < game.state.tuggHp ? drawLife : drawDeath)(leftMargin + lifeSize * i, isOof ? topMargin * 2 + fontSize : (10 * squareSize) - (topMargin + fontSize) * 2);
     }
 
     color = game.state.oofTurn && !game.state.winner ? "red" : "black";
     infoCtx.fillStyle = color;
     infoCtx.strokeStyle = color;
     let oofText = "Oof" + (opponentConnected || isOof ? "" : " (waiting for enemy)");
-    infoCtx.fillText(oofText, leftMargin, (10 * squareSize) - topMargin - fontSize);
+    infoCtx.fillText(oofText, leftMargin, isOof ? (10 * squareSize) - topMargin - fontSize : topMargin);
     for (let i = 0; i < game.state.maxHp; i++) {
-      (i < game.state.oofHp ? drawLife : drawDeath)(leftMargin + lifeSize * i, (10 * squareSize) - (topMargin + fontSize) * 2);
+      (i < game.state.oofHp ? drawLife : drawDeath)(leftMargin + lifeSize * i, isOof ? (10 * squareSize) - (topMargin + fontSize) * 2 : topMargin * 2 + fontSize);
     }
 
     infoCtx.fillStyle = "black";
@@ -379,7 +388,17 @@ document.fonts.ready.then(()=>{
   function getPosition(x, y) {
     let boundx = (c) => { return Math.min((squareSize * 8) - 1, Math.max(0, c)); };
     let boundy = (c) => { return Math.min((squareSize * 9) - 1, Math.max(-squareSize, c)); };
-    return([Math.floor(boundx(x) / squareSize), Math.floor(boundy(y - squareSize) / squareSize)]);
+    if (isOof) {
+      return [
+        Math.floor(boundx(x) / squareSize),
+        Math.floor(boundy(y - squareSize) / squareSize)
+      ];
+    } else {
+      return [
+        7 - Math.floor(boundx(x) / squareSize),
+        7 - Math.floor(boundy(y - squareSize) / squareSize)
+      ];
+    }
   }
 
   function isOpposing(pa, pb) {
@@ -427,7 +446,7 @@ document.fonts.ready.then(()=>{
       allowedMoves[position[0]][i] = isOpposing(position, [position[0], i]);
     } else if (!isOofPiece(position)) {
       throwRockAllowed = true;
-      highlightedEndzone[position[0]][game.state.oofTurn ? 0 : 1] = true;
+      highlightedEndzone[position[0]][1] = true;
     }
 
     i = position[1];
@@ -438,7 +457,7 @@ document.fonts.ready.then(()=>{
       allowedMoves[position[0]][i] = isOpposing(position, [position[0], i]);
     } else if (isOofPiece(position)) {
       throwRockAllowed = true;
-      highlightedEndzone[position[0]][game.state.oofTurn ? 0 : 1] = true;
+      highlightedEndzone[position[0]][0] = true;
     }
     return allowedMoves;
   }

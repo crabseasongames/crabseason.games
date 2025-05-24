@@ -213,7 +213,7 @@ function clean() {
     }
   });
 
-  report()
+  report();
 }
 
 function report() {
