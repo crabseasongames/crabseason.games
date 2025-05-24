@@ -20,10 +20,6 @@ body {
   display: none;
 }
 
-#tuggTurn {
-  visibility: hidden;
-}
-
 @font-face {
   font-family: dinotopia;
   src: url(dinopia-font/DinopiaRegular-mLrO9.otf);
@@ -68,8 +64,21 @@ body {
   background-color: #ccc;
 }
 
-#gameCodeLabel {
-  font-size: 30px;
+#game-code {
+  margin-top: -12px;
+  vertical-align: middle;
+  font-size: 25px;
+  height: 55px;
+  padding: 13px 0px 13px 10px;
+  width: 82px;
+  text-transform: uppercase;
+  resize: none;
+}
+
+#game-code::placeholder {
+  font-size: 15px;
+  line-height: 15px;
+  text-transform: none;
 }
 
 #error {
@@ -88,9 +97,9 @@ body {
   <div id="title">
   </div>
   <div id="controls">
-    <div class="button" id="newGame">new game</div>
-    <div class="button disabled" id="joinGame">join game</div>
-    <input type="text" id="gameCode" placeholder="enter code...">
+    <div class="button" id="new-game">new game</div>
+    <div class="button disabled" id="join-game">join game</div>
+    <textarea type="text" id="game-code" placeholder="enter code..."></textarea>
     <div id="error"></div>
   </div>
 </div>
@@ -103,9 +112,9 @@ body {
 const menuSection = document.getElementById("menu");
 const gameSection = document.getElementById("game");
 const boardCanvas = document.getElementById("board");
-const newGame = document.getElementById("newGame");
-const joinGame = document.getElementById("joinGame");
-const gameCode = document.getElementById("gameCode");
+const newGame = document.getElementById("new-game");
+const joinGame = document.getElementById("join-game");
+const gameCode = document.getElementById("game-code");
 const errorDisplay = document.getElementById("error");
 const ctx = boardCanvas.getContext("2d");
 const infoCanvas = document.getElementById("info");
@@ -211,7 +220,7 @@ document.fonts.ready.then(()=>{
         opponentConnected = false;
       } else if (message.type == "ping") {
         // send("pong");
-        console.log("got ping");
+        // console.log("got ping");
       } else if (message.type == "error") {
         console.log("error");
         console.log(message.data);
@@ -236,7 +245,8 @@ document.fonts.ready.then(()=>{
     send("joinGame", code);
   });
 
-  gameCode.addEventListener("keyup", () => {
+  gameCode.addEventListener("input", () => {
+    gameCode.value = gameCode.value.slice(0, 4);
     if (gameCode.value.length == 4) {
       joinGame.classList.remove("disabled");
       joinGameEnabled = true;
@@ -402,11 +412,7 @@ document.fonts.ready.then(()=>{
   }
 
   function isOpposing(pa, pb) {
-    return (
-      (isOofPiece(pa)) && (!isOofPiece(pb))
-    ) || (
-      (isOofPiece(pb)) && (!isOofPiece(pa))
-    );
+    return isOofPiece(pa) != isOofPiece(pb);
   }
 
   function getAllowedMoves(position) {
