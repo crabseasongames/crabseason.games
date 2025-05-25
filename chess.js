@@ -128,6 +128,7 @@ function setPiece(board, position, piece) {
   board[position[1]][position[0]] = piece;
 }
 
+/// empty = 0, ORock = 1, Oguy = 2, TRock = 3, TGuy = 4
 function newBoard() {
   return [
     [3, 3, 3, 4, 3, 3, 3, 3],

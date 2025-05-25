@@ -127,34 +127,19 @@ const oofColor = "#fff";
 const squareSize = 70;
 const lifeSize = 70;
 
-/// empty = 0, ORock = 1, Oguy = 2, TRock = 3, TGuy = 4
-const startingBoard = [
-  [3, 3, 3, 4, 3, 3, 3, 3],
-  [3, 3, 3, 3, 3, 3, 3, 3],
-  [0, 0, 0, 0, 0, 0, 0, 0],
-  [0, 0, 0, 0, 0, 0, 0, 0],
-  [0, 0, 0, 0, 0, 0, 0, 0],
-  [0, 0, 0, 0, 0, 0, 0, 0],
-  [1, 1, 1, 1, 1, 1, 1, 1],
-  [1, 1, 1, 2, 1, 1, 1, 1]
-];
-
 const empty = () => { return [ [], [], [], [], [], [], [], [] ]; };
 
 let joinGameEnabled = false;
+let opponentConnected = false;
+let isOof;
+let game;
 
 let highlightedSquares = empty();
 let highlightedEndzone = empty();
 let allowedMoves = empty();
 let activePosition = false;
 let moveMode = false;
-
 let throwRockAllowed = false;
-
-let opponentConnected = false;
-let isOof;
-let game;
-
 
 document.fonts.ready.then(() => {
 
@@ -266,9 +251,9 @@ document.fonts.ready.then(() => {
   });
 
   function joinGame() {
-    const code = gameCode.value;
-    if (!joinGameEnabled || !code || !(code.length == 4)) { return; }
-    send("joinGame", code);
+    if (joinGameEnabled) {
+      send("joinGame", gameCode.value);
+    }
   }
 
   function draw(){
@@ -293,14 +278,8 @@ document.fonts.ready.then(() => {
           ctx.fillRect(i * squareSize + (squareSize * 0.1), (j + 1) * squareSize + (squareSize * 0.1), squareSize * 0.8, squareSize * 0.8);
         }
 
-        let piece;
-        if (isOof) {
-          piece = getPiece([i, j]);
-        } else {
-          piece = getPiece([7 - i, 7 - j]);
-        }
-
-        if (piece){
+        let piece = isOof ? getPiece([i, j]) : getPiece([7 - i, 7 - j]);
+        if (piece) {
           drawPiece([i, j], piece);
         }
       }
@@ -309,12 +288,12 @@ document.fonts.ready.then(() => {
     for (let i = 0; i < 8; i++) {
       if (game.state.oofTurn && highlightedEndzone[isOof ? i : 7 - i][0]) {
         ctx.beginPath();
-        ctx.arc(squareSize*i + squareSize * 0.5, squareSize * (isOof ? 0.5 : 9.5), squareSize * 0.33, 0, 2*Math.PI)
+        ctx.arc(squareSize*i + squareSize * 0.5, squareSize * (isOof ? 0.5 : 9.5), squareSize * 0.33, 0, 2 * Math.PI)
         ctx.fillStyle = highlightedColor;
         ctx.fill()
       } else if (!game.state.oofTurn && highlightedEndzone[isOof ? i : 7 - i][1]) {
         ctx.beginPath();
-        ctx.arc(squareSize*i + squareSize * 0.5, squareSize * (isOof ? 9.5 : 0.5), squareSize * 0.33, 0, 2*Math.PI)
+        ctx.arc(squareSize*i + squareSize * 0.5, squareSize * (isOof ? 9.5 : 0.5), squareSize * 0.33, 0, 2 * Math.PI)
         ctx.fillStyle = highlightedColor;
         ctx.fill()
       }
@@ -327,12 +306,12 @@ document.fonts.ready.then(() => {
     let pieceColor = (piece == 1 || piece == 2) ? oofColor : tuggColor
     if (piece == 1 || piece == 3){
       ctx.beginPath();
-      ctx.arc(squareSize*p[0] + squareSize * 0.5, squareSize*p[1] + squareSize * 0.5, squareSize * 0.33, 0, 2*Math.PI)
+      ctx.arc(squareSize * p[0] + squareSize * 0.5, squareSize * p[1] + squareSize * 0.5, squareSize * 0.33, 0, 2 * Math.PI)
       ctx.fillStyle = pieceColor;
-      ctx.fill()
+      ctx.fill();
     } else {
       ctx.beginPath();
-      ctx.arc(squareSize*p[0] + squareSize * 0.5, squareSize*p[1] + squareSize * 0.5, squareSize * 0.15, 0, 2*Math.PI)
+      ctx.arc(squareSize * p[0] + squareSize * 0.5, squareSize * p[1] + squareSize * 0.5, squareSize * 0.15, 0, 2 * Math.PI)
       ctx.moveTo(squareSize * p[0] + squareSize * 0.1 , squareSize * p[1] + squareSize * 0.1);
       ctx.lineTo(squareSize * p[0] + squareSize * 0.5, squareSize * p[1] + squareSize * 0.5);
       ctx.lineTo(squareSize * p[0] + squareSize * 0.1, squareSize * p[1] + squareSize * 0.9);
@@ -341,16 +320,16 @@ document.fonts.ready.then(() => {
       ctx.lineTo(squareSize * p[0] + squareSize * 0.9, squareSize * p[1] + squareSize * 0.1);
       ctx.lineTo(squareSize * p[0] + squareSize, squareSize * p[1] + squareSize * 0.1);
       ctx.fillStyle = pieceColor;
-      ctx.fill()
-      ctx.closePath();
+      ctx.fill();
     }
   }
 
   function drawInfo() {
-    infoCtx.clearRect(0, 0, 350, 10 * squareSize);
     const leftMargin = 20;
     const topMargin = 20;
     const fontSize = 30;
+
+    infoCtx.clearRect(0, 0, 350, 10 * squareSize);
     infoCtx.textBaseline = "top";
     infoCtx.font = `${fontSize}px dinotopia`;
 
@@ -413,17 +392,11 @@ document.fonts.ready.then(() => {
   function getPosition(x, y) {
     let boundx = (c) => { return Math.min((squareSize * 8) - 1, Math.max(0, c)); };
     let boundy = (c) => { return Math.min((squareSize * 9) - 1, Math.max(-squareSize, c)); };
-    if (isOof) {
-      return [
-        Math.floor(boundx(x) / squareSize),
-        Math.floor(boundy(y - squareSize) / squareSize)
-      ];
-    } else {
-      return [
-        7 - Math.floor(boundx(x) / squareSize),
-        7 - Math.floor(boundy(y - squareSize) / squareSize)
-      ];
-    }
+    let p = [
+      Math.floor(boundx(x) / squareSize),
+      Math.floor(boundy(y - squareSize) / squareSize)
+    ];
+    return isOof ? p : [7 - p[0], 7 - p[1]];
   }
 
   function isOpposing(pa, pb) {
@@ -433,10 +406,10 @@ document.fonts.ready.then(() => {
   function getAllowedMoves(position) {
     highlightedSquares = empty();
     highlightedEndzone = empty();
-    if(getPiece(position) == 2 || getPiece(position) == 4) {
-      return getAllowedGuyMoves(position)
+    if (getPiece(position) == 2 || getPiece(position) == 4) {
+      return getAllowedGuyMoves(position);
     } else {
-      return getAllowedRockMoves(position)
+      return getAllowedRockMoves(position);
     }
   }
 
