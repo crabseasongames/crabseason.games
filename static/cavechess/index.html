@@ -147,7 +147,6 @@ document.fonts.ready.then(() => {
 
   function send(type, data) {
     if (!ws || ws.readyState != 1) {
-      errorDisplay.innerText = "Error: lost connection";
       return;
     }
     ws.send(JSON.stringify({
@@ -166,11 +165,13 @@ document.fonts.ready.then(() => {
 
     ws.addEventListener("open", (event) => {
       send("register", userId);
+      errorDisplay.innerText = "";
     });
 
     ws.addEventListener("close", (event) => {
       menuSection.classList.remove("hidden");
       gameSection.classList.add("hidden");
+      errorDisplay.innerText = "Error: lost connection";
       connect();
     });
 
