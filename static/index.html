@@ -381,7 +381,8 @@ addEventListener("load", () => {
     p = { x: e.clientX, y: e.clientY };
   }, { once: true });
 
-  draw(bg, `#version 300 es
+  draw(bg, [],
+  `#version 300 es
     precision highp float;
 
     uniform vec2 u_resolution;

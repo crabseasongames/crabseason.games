@@ -32,7 +32,7 @@ function resizeCanvasToDisplaySize(canvas) {
   return needResize;
 }
 
-function draw(canvas, fragmentShaderString) {
+function draw(canvas, uniformList, fragmentShaderString) {
   resizeCanvasToDisplaySize(canvas);
 
   const gl = canvas.getContext("webgl2");
@@ -50,9 +50,15 @@ function draw(canvas, fragmentShaderString) {
     createShader(gl, gl.FRAGMENT_SHADER, fragmentShaderString)
   );
   const positionAttributeLocation = gl.getAttribLocation(program, "a_position");
-  const resolutionLocation = gl.getUniformLocation(program, "u_resolution");
-  const timeLocation = gl.getUniformLocation(program, "u_time");
-  const mouseLocation = gl.getUniformLocation(program, "u_mouse");
+
+  const uniforms = uniformList.concat([
+    { n: 2, name: "u_resolution", value: () => { return [ gl.canvas.width, gl.canvas.height ]; } },
+    { n: 1, name: "u_time", value: () => { return [ time ]; } },
+    { n: 2, name: "u_mouse", value: () => { return [ mouseX, mouseY ]; } },
+  ]).map((u) => {
+    return { n: u.n, l: gl.getUniformLocation(program, u.name), value: u.value };
+  });
+
   const vao = gl.createVertexArray();
   gl.bindVertexArray(vao);
   gl.bindBuffer(gl.ARRAY_BUFFER, gl.createBuffer());
@@ -63,25 +69,32 @@ function draw(canvas, fragmentShaderString) {
   gl.enableVertexAttribArray(positionAttributeLocation);
   gl.vertexAttribPointer(positionAttributeLocation, 2, gl.FLOAT, false, 0, 0);
 
-
   let mouseX = 0.5;
   let mouseY = 0.5;
+
+  let time;
 
   addEventListener("mousemove", (e) => {
     mouseX = (e.screenX / gl.canvas.width) - 0.5;
     mouseY = (e.screenY / gl.canvas.height) - 0.5;
   });
 
-  const render = (time) => {
-    time *= 0.001;
+  const render = (t) => {
+    time = t * 0.001;
     resizeCanvasToDisplaySize(gl.canvas);
 
     gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
     gl.useProgram(program);
     gl.bindVertexArray(vao);
-    gl.uniform2f(resolutionLocation, gl.canvas.width, gl.canvas.height);
-    gl.uniform1f(timeLocation, time);
-    gl.uniform2f(mouseLocation, mouseX, mouseY);
+
+    uniforms.forEach((u) => {
+      const args = u.value();
+      gl[`uniform${u.n}f`].bind(gl, u.l).apply(gl, args);
+    });
+
+    // gl.uniform2f(resolutionLocation, gl.canvas.width, gl.canvas.height);
+    // gl.uniform1f(timeLocation, time);
+    // gl.uniform2f(mouseLocation, mouseX, mouseY);
     gl.drawArrays(gl.TRIANGLES, 0, 6);
 
     requestAnimationFrame(render);
