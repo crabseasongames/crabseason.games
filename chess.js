@@ -16,8 +16,6 @@ function allowed(state, player, move) {
 }
 
 function getAllowedMoves(board, position) {
-  highlightedSquares = empty();
-  highlightedEndzone = empty();
   if (getPiece(board, position) == 2 || getPiece(board, position) == 4) {
     return getAllowedGuyMoves(board, position);
   } else {
