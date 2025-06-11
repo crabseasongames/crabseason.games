@@ -59,6 +59,20 @@ const Router = {
       }));
     }
   },
+  chesschat: (conn, data) => {
+    let userId = conn["__userId"];
+    if (!users[userId]) {
+      return conn.send(WsError("UserError", "invalid user id"));
+    }
+
+    if (!users[data.targetId]) {
+      return conn.send(WsError("UserError", "invalid user id"));
+    }
+
+    console.log(data);
+    users[userId].connection.send(WsResponse("chessMessage", { id: userId, message: data.message }));
+    users[data.targetId].connection.send(WsResponse("chessMessage", { id: userId, message: data.message }));
+  },
   ping: (conn) => {
     conn.send(WsResponse("pong"));
   },
@@ -88,8 +102,8 @@ const Router = {
     if (conn["__userId"] == games[c].host) {
       conn.send(WsResponse("joinedGame", games[c]));
       if (users[games[c].opponent]) {
-        conn.send(WsResponse("opponentJoinedGame"));
-        users[games[c].opponent].connection.send(WsResponse("opponentJoinedGame"));
+        conn.send(WsResponse("opponentJoinedGame", games[c].opponent));
+        users[games[c].opponent].connection.send(WsResponse("opponentJoinedGame", games[c].host));
       }
     } else {
       if (games[c].opponent && games[c].opponent != conn["__userId"]) {
@@ -99,8 +113,8 @@ const Router = {
       games[c].opponent = conn["__userId"];
       conn.send(WsResponse("joinedGame", games[c]));
       if (users[games[c].host]) {
-        conn.send(WsResponse("opponentJoinedGame"));
-        users[games[c].host].connection.send(WsResponse("opponentJoinedGame"));
+        conn.send(WsResponse("opponentJoinedGame", games[c].host));
+        users[games[c].host].connection.send(WsResponse("opponentJoinedGame", games[c].opponent));
       }
     }
 
@@ -128,9 +142,6 @@ const Router = {
 
     users[game.host].connection.send(WsResponse("moved", games[user.activeGame]));
     users[game.opponent].connection.send(WsResponse("moved", games[user.activeGame]));
-    if (game.state.winner) {
-      delete games[user.activeGame];
-    }
   }
 };
 
@@ -187,7 +198,7 @@ app.ws("/", (ws, req) => {
       let game = games[users[id].activeGame];
       if (game) {
         let peer = game.host == id ? users[game.opponent] : users[game.host];
-        if (peer) {
+        if (peer && users[id].activeGame == peer.activeGame) {
           peer.connection.send(WsResponse("disconnect"));
         }
       }
@@ -208,7 +219,7 @@ const server = app.listen(port, () => {
 
 function clean() {
   Object.keys(games).forEach((code) => {
-    if (!users[games[code].host] && !users[games[code].opponent] && now() - games[code].started > 1e6) {
+    if (!users[games[code].host] && !users[games[code].opponent] && (games[code].winner || now() - games[code].started > 1e6)) {
       delete games[code];
     }
   });

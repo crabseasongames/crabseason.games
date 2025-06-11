@@ -170,6 +170,7 @@
 // TODO:
 //  - wait for user input to reconnect when disconnected
 
+const startChat = (() => {
 
 let userId
 let ws;
@@ -256,3 +257,6 @@ function startChat(onReady, onNotification, onMessage, onData, updatePeers) {
     }
   };
 }
+
+return startChat;
+})();

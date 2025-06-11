@@ -157,34 +157,31 @@ module.exports = {
         winner: false
       },
       move: (player, move) => {
-        if (allowed(game.state, player, move)) {
-          let targetPiece = getPiece(game.state.board, move[1]);
-          if (targetPiece == 4) {
-            game.state.winner = 1;
-          } else if (targetPiece == 2) {
-            game.state.winner = 2;
-          }
-          if (move[1][1] == -1 || move[1][1] == 8) {
-            if (game.state.oofTurn) {
-              game.state.tuggHp -= 1;
-              if (game.state.tuggHp <= 0) {
-                game.state.winner = 1;
-              }
-            } else {
-              game.state.oofHp -= 1;
-              if (game.state.oofHp <= 0) {
-                game.state.winner = 2;
-              }
+        if (game.state.winner || !allowed(game.state, player, move)) { return false; }
+        let targetPiece = getPiece(game.state.board, move[1]);
+        if (targetPiece == 4) {
+          game.state.winner = 1;
+        } else if (targetPiece == 2) {
+          game.state.winner = 2;
+        }
+        if (move[1][1] == -1 || move[1][1] == 8) {
+          if (game.state.oofTurn) {
+            game.state.tuggHp -= 1;
+            if (game.state.tuggHp <= 0) {
+              game.state.winner = 1;
             }
           } else {
-            setPiece(game.state.board, move[1], getPiece(game.state.board, move[0])); 
+            game.state.oofHp -= 1;
+            if (game.state.oofHp <= 0) {
+              game.state.winner = 2;
+            }
           }
-          setPiece(game.state.board, move[0], 0);
-          game.state.oofTurn = !game.state.oofTurn;
-          return true;
         } else {
-          return false;
+          setPiece(game.state.board, move[1], getPiece(game.state.board, move[0])); 
         }
+        setPiece(game.state.board, move[0], 0);
+        game.state.oofTurn = !game.state.oofTurn;
+        return true;
       }
     };
 

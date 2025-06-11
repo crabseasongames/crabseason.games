@@ -6,11 +6,19 @@
 body {
   margin: 0;
   height: 100vh;
+  font-family: monospace;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+}
+
+#content {
   display: flex;
   justify-content: space-evenly;
   align-items: center;
   flex-direction: row;
-  font-family: monospace;
+  min-width: 1305px;
 }
 
  canvas {
@@ -29,6 +37,27 @@ body {
 @font-face {
   font-family: smilin-john;
   src: url(smilin-john-font/SmilinJohn-KzX.ttf);
+}
+
+#title {
+  text-align: center;
+  margin-top: -60px;
+}
+
+#head {
+  font-family: dinotopia;
+  font-size: 100px;
+}
+
+#subhead {
+  font-family: dinotopia;
+  font-size: 50px;
+  margin-top: -15px;
+  margin-bottom: 10px;
+}
+
+#controls {
+  text-align: center;
 }
 
 #font {
@@ -91,24 +120,89 @@ body {
   width: 100%;
 }
 
-</style>
+#chat {
+  height: calc(100ch - 7px);
+  display: inline-block;
+  color: #fff;
+  background-color: rgba(0, 0, 0, 0.5);
+  width: 350px;
+  word-wrap: break-word;
+  overflow: hidden;
+  transition: height 0.5s, opacity 0.5s;
+}
 
+#chat-contents {
+  height: calc(100% - 90px);
+  overflow-y: scroll;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.3) rgba(0, 0, 0, 0.3);
+  padding: 10px 20px 0 30px;
+  transition: height 0.5s, opacity 0.5s;
+}
+
+#chat-textbox {
+  width: calc(100% - 40px);
+  padding: 20px 20px 20px 20px;
+  background-color: rgba(0, 0, 0, 0.666);
+  transition: height 0.5s, opacity 0.5s;
+}
+
+#chat-textbox textarea {
+  resize: none;
+  width: 100%
+}
+
+.id {
+  font-size: 14px;
+  font-weight: 900;
+  color: var(--text-color);
+}
+
+.chat-entry {
+  text-indent: -10px;
+  font-size: 16px;
+}
+
+.message {
+
+}
+
+.notif {
+  color: black;
+  font-weight: bold;
+  text-shadow: 0 0 6px white;
+}
+
+</style>
 </head>
-<body>
-<div id="menu" class="hidden">
-  <div id="title">
+<body class="hidden">
+<div id="title"><div id="head">CAVE CHESS</div><div id="subhead">cave style chess</div></div>
+<div id="content">
+  <div id="menu">
+    <div id="controls">
+      <div class="button" id="new-game">new game</div><div class="button disabled" id="join-game">join game</div><textarea type="text" id="game-code" placeholder="enter code..." spellcheck="false"></textarea>
+      <div id="error"></div>
+    </div>
   </div>
-  <div id="controls">
-    <div class="button" id="new-game">new game</div><div class="button disabled" id="join-game">join game</div><textarea type="text" id="game-code" placeholder="enter code..." spellcheck="false"></textarea>
-    <div id="error"></div>
-  </div>
+  <div id="game" class="hidden">
+    <div id="chat">
+      <div id="chat-contents"></div>
+      <div id="chat-textbox">
+        <textarea id="textbox" spellcheck="false" disabled></textarea>
+      </div>
+    </div>
+    <canvas id="board" width="560" height="700"></canvas>
+    <canvas id="info" width="350" height="700"></canvas>
+  </div><div id="font">sup</div><div id="font2">sup</div>
 </div>
-<div id="game" class="hidden">
-  <canvas id="board" width="560" height="700"></canvas>
-  <canvas id="info" width="350" height="700"></canvas>
-</div><div id="font">sup</div><div id="font2">sup</div>
 <script>
 
+const userId = localStorage["userId"] || Math.floor(Math.random() * 10e9);
+localStorage["userId"] = userId;
+
+const chatContents = document.getElementById("chat-contents");
+const chatBox = document.getElementById("textbox");
+const chatContainer = document.getElementById("chat");
 const menuSection = document.getElementById("menu");
 const gameSection = document.getElementById("game");
 const boardCanvas = document.getElementById("board");
@@ -119,6 +213,7 @@ const errorDisplay = document.getElementById("error");
 const ctx = boardCanvas.getContext("2d");
 const infoCanvas = document.getElementById("info");
 const infoCtx = infoCanvas.getContext("2d");
+
 const lightSquare = "#956205";
 const darkSquare = "#c1861a";
 const highlightedColor = "#ef4141";
@@ -155,8 +250,34 @@ document.fonts.ready.then(() => {
     }));
   }
 
-  const userId = localStorage["userId"] || Math.floor(Math.random() * 10e9);
-  localStorage["userId"] = userId;
+  function appendToChat(entry) {
+    chatContents.appendChild(entry);
+    chatContents.scroll(0, Number.MAX_SAFE_INTEGER);
+  }
+
+  function addMessage(id, text) {
+    const message = document.createElement("div");
+    message.classList.add("chat-entry");
+    const idText = document.createElement("span");
+    idText.classList.add("id");
+    idText.innerText = id == userId  && isOof || id != userId && !isOof ? "Oof: " : "Tugg: ";
+    const messageText = document.createElement("span");
+    messageText.classList.add("message");
+    messageText.innerText = text;
+    message.appendChild(idText);
+    message.appendChild(messageText);
+    appendToChat(message);
+  }
+
+  function addNotification(message) {
+    const notification = document.createElement("div");
+    notification.classList.add("chat-entry");
+    const notificationText = document.createElement("span");
+    notificationText.classList.add("notif");
+    notificationText.innerText = ">> " + message;
+    notification.appendChild(notificationText);
+    appendToChat(notification);
+  }
 
   let ws;
 
@@ -169,10 +290,12 @@ document.fonts.ready.then(() => {
     });
 
     ws.addEventListener("close", (event) => {
-      menuSection.classList.remove("hidden");
-      gameSection.classList.add("hidden");
-      errorDisplay.innerText = "Error: lost connection";
-      connect();
+      setTimeout(() => {
+        menuSection.classList.remove("hidden");
+        gameSection.classList.add("hidden");
+        errorDisplay.innerText = "Error: lost connection";
+        connect();
+      }, 1000);
     });
 
     ws.addEventListener("message", (event) => {
@@ -185,27 +308,38 @@ document.fonts.ready.then(() => {
 
       if (message.type == "registered") {
         console.log(`registered as ${userId}`);
-        menuSection.classList.remove("hidden");
+        document.body.classList.remove("hidden");
       } else if (message.type == "gameStarted") {
-        menuSection.classList.add("hidden");
-        gameSection.classList.remove("hidden");
-        isOof = true;
-        game = message.data;
-        gameCode.value = game.code;
-        joinGameButton.classList.remove("disabled");
-        joinGameEnabled = true;
+        initialize(message.data);
       } else if (message.type == "joinedGame") {
-        menuSection.classList.add("hidden");
-        gameSection.classList.remove("hidden");
-        game = message.data;
-        isOof = game.host == userId;
+        initialize(message.data);
       } else if (message.type == "opponentJoinedGame") {
         opponentConnected = true;
+        chatBox.addEventListener("keydown", (e) => {
+          if (e.keyCode == 13) {
+            let text = chatBox.value.trim();
+            if (text.length) {
+              send("chesschat", {
+                targetId: message.data,
+                message: chatBox.value
+              });
+            }
+            chatBox.value = "";
+            e.preventDefault();
+          }
+        });
+        chatBox.focus();
+        chatBox.disabled = false;
+        addNotification(`${isOof ? "Tugg" : "Oof"} has joined`);
       } else if (message.type == "moved") {
         game = message.data;
         leaveMoveMode();
       } else if (message.type == "disconnect") {
         opponentConnected = false;
+        chatBox.disabled = true;
+        addNotification(`${isOof ? "Tugg" : "Oof"} has left`);
+      } else if (message.type == "chessMessage") {
+        addMessage(message.data.id, message.data.message);
       } else if (message.type == "ping") {
         // send("pong");
         // console.log("got ping");
@@ -250,6 +384,18 @@ document.fonts.ready.then(() => {
       joinGameEnabled = false;
     }
   });
+
+  function initialize(gameData) {
+    chatContents.innerHTML = "";
+    menuSection.classList.add("hidden");
+    gameSection.classList.remove("hidden");
+    game = gameData;
+    isOof = game.host == userId;
+    gameCode.value = game.code;
+    joinGameButton.classList.remove("disabled");
+    joinGameEnabled = true;
+    addNotification(`welcome ${isOof ? "Oof" : "Tugg"}`);
+  }
 
   function joinGame() {
     if (joinGameEnabled) {
@@ -353,7 +499,7 @@ document.fonts.ready.then(() => {
     }
 
     infoCtx.fillStyle = "black";
-    infoCtx.font = `65px smilin-john`;
+    infoCtx.font = "65px smilin-john";
     if (game.state.winner) {
       infoCtx.fillText(game.state.winner == 1 ? "OOF" : "TUGG", leftMargin, 4 * squareSize);
       infoCtx.fillText("WIN", leftMargin, 5 * squareSize);
@@ -520,7 +666,7 @@ document.fonts.ready.then(() => {
   }
 
   boardCanvas.addEventListener("mousemove", (e) => {
-    if (!opponentConnected || game.state.winner) { return; }
+    if (!opponentConnected || game.state.winner || game.state.oofTurn != isOof) { return; }
     let position = getPosition(e.offsetX, e.offsetY);
     if (!moveMode) {
       highlightedSquares = empty();
@@ -548,7 +694,7 @@ document.fonts.ready.then(() => {
   });
 
   draw();
-})
+});
 </script>
 </body>
 </html>

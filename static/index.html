@@ -315,18 +315,18 @@ addEventListener("load", () => {
   let p;
 
   function initialize(peers) {
-    textbox.addEventListener("keydown", (e) => {
+    chatBox.addEventListener("keydown", (e) => {
       if (e.keyCode == 13) {
-        let text = textbox.value.trim();
+        let text = chatBox.value.trim();
         if (text.length) {
-          chat.sendMessage(textbox.value);
+          chat.sendMessage(chatBox.value);
         }
-        textbox.value = "";
+        chatBox.value = "";
         e.preventDefault();
       }
     });
-    textbox.focus();
-    textbox.disabled = false;
+    chatBox.focus();
+    chatBox.disabled = false;
     peers.forEach((id) => {
       if (id != chat.id) {
         addBug(id);
