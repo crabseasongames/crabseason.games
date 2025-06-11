@@ -14,6 +14,12 @@ function createProgram(gl, vertexShader, fragmentShader) {
   gl.attachShader(program, vertexShader);
   gl.attachShader(program, fragmentShader);
   gl.linkProgram(program);
+
+  if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
+    const info = gl.getProgramInfoLog(program);
+    throw new Error(`Could not compile WebGL program. \n\n${info}`);
+  }
+
   return program;
 }
 
@@ -52,12 +58,10 @@ function draw(canvas, uniformList, fragmentShaderString) {
   const positionAttributeLocation = gl.getAttribLocation(program, "a_position");
 
   const uniforms = uniformList.concat([
-    { n: 2, name: "u_resolution", value: () => { return [ gl.canvas.width, gl.canvas.height ]; } },
-    { n: 1, name: "u_time", value: () => { return [ time ]; } },
-    { n: 2, name: "u_mouse", value: () => { return [ mouseX, mouseY ]; } },
-  ]).map((u) => {
-    return { n: u.n, l: gl.getUniformLocation(program, u.name), value: u.value };
-  });
+    { n: 2, t: "f", name: "u_resolution", get: () => { return [ gl.canvas.width, gl.canvas.height ]; } },
+    { n: 1, t: "f", name: "u_time", get: () => { return [ time ]; } },
+    { n: 2, t: "f", name: "u_mouse", get: () => { return [ mouseX, mouseY ]; } },
+  ]);
 
   const vao = gl.createVertexArray();
   gl.bindVertexArray(vao);
@@ -88,13 +92,9 @@ function draw(canvas, uniformList, fragmentShaderString) {
     gl.bindVertexArray(vao);
 
     uniforms.forEach((u) => {
-      const args = u.value();
-      gl[`uniform${u.n}f`].bind(gl, u.l).apply(gl, args);
+      gl[`uniform${u.n}${u.t}${u.v ? "v" : ""}`].bind(gl, gl.getUniformLocation(program, u.name)).apply(gl, u.get());
     });
 
-    // gl.uniform2f(resolutionLocation, gl.canvas.width, gl.canvas.height);
-    // gl.uniform1f(timeLocation, time);
-    // gl.uniform2f(mouseLocation, mouseX, mouseY);
     gl.drawArrays(gl.TRIANGLES, 0, 6);
 
     requestAnimationFrame(render);

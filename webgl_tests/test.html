@@ -19,23 +19,8 @@ canvas {
 <canvas id="stars"></canvas>
 <canvas id="background"></canvas>
 <script src="draw.js"></script>
-<script>
-
-const bg = document.getElementById("background");
-const stars = document.getElementById("stars");
-
-const min_height = 475;
-function resize() {
-  bg.setAttribute("width", window.innerWidth);
-  bg.setAttribute("height", Math.max(window.innerHeight, min_height));
-  stars.setAttribute("width", window.innerWidth);
-  stars.setAttribute("height", Math.max(window.innerHeight, min_height));
-}
-addEventListener("resize", resize);
-resize();
-
-draw(stars, [],
-`#version 300 es
+<script id="stars-vertex-shader" type="x-shader/x-vertex">
+#version 300 es
 precision highp float;
 
 out vec4 outColor;
@@ -62,11 +47,9 @@ void main() {
     outColor = vec4(0.2);
   }
 }
-
-`);
-
-draw(bg, [],
-`#version 300 es
+</script>
+<script id="background-vertex-shader" type="x-shader/x-vertex">
+#version 300 es
 precision highp float;
 
 uniform vec2 u_resolution;
@@ -74,7 +57,6 @@ uniform float u_time;
 uniform vec2 u_mouse;
 
 out vec4 outColor;
-
 
 const float TAU = 6.28318;
 
@@ -174,8 +156,10 @@ vec2 plus(vec2 a, vec2 b, float smoothness) {
 }
 
 vec2 sphereSDM(vec3 p) {
+    p += 10.0 * u_time * vec3(u_mouse.x, 0.0, u_mouse.y);
+
     float speed = SQUISH_SPEED;
-    float r = 15.0 * ccos(u_time * 0.1);
+    float r = 15.0;// * ccos(u_time * 0.1);
 
     // float l = length(p);
 
@@ -220,7 +204,7 @@ vec2 groundSDM(vec3 p) {
 
 vec2 scene(vec3 p) {
 
-    p = rotate(vec3(0.0, 1.0, 0.0), u_mouse.x * 6.0) * p;
+    //p = rotate(vec3(0.0, 1.0, 0.0), u_mouse.x * 6.0) * p;
 
     float w = 8.0;
     float smoothness = 0.0;//sin(u_time + w * p.x / p.z) * sin(-u_time + w * p.x / p.z);
@@ -343,7 +327,29 @@ void main() {
   vec2 uv = (vec2(gl_FragCoord.x, (u_resolution.y - gl_FragCoord.y)) / u_resolution.xx) - vec2(0.5, 0.25);
   outColor = render_scene(uv);
 }
-`);
+
+</script>
+<script>
+
+const bg = document.getElementById("background");
+const stars = document.getElementById("stars");
+
+const starsShader = document.getElementById("stars-vertex-shader").text.trim();
+const bgShader = document.getElementById("background-vertex-shader").text.trim();
+
+const min_height = 475;
+function resize() {
+  bg.setAttribute("width", window.innerWidth);
+  bg.setAttribute("height", Math.max(window.innerHeight, min_height));
+  stars.setAttribute("width", window.innerWidth);
+  stars.setAttribute("height", Math.max(window.innerHeight, min_height));
+}
+addEventListener("resize", resize);
+resize();
+
+draw(stars, [], starsShader);
+
+draw(bg, [], bgShader);
 
 </script>
 </body>

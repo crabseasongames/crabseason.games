@@ -1,0 +1,265 @@
+<html>
+<head>
+<style>
+
+body {
+  margin: 0;
+  background-color: black;
+}
+
+</style>
+</head>
+<body>
+<canvas id="canvas"></canvas>
+
+<script>
+
+function createShader(gl, type, source) {
+  var shader = gl.createShader(type);
+  gl.shaderSource(shader, source);
+  gl.compileShader(shader);
+  if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
+    const info = gl.getShaderInfoLog(shader);
+    throw `Could not compile WebGL program. \n\n${info}`;
+  }
+  return shader;
+}
+
+function createProgram(gl, vertexShader, fragmentShader) {
+  const program = gl.createProgram();
+  gl.attachShader(program, vertexShader);
+  gl.attachShader(program, fragmentShader);
+  gl.linkProgram(program);
+
+  if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
+    const info = gl.getProgramInfoLog(program);
+    throw new Error(`Could not compile WebGL program. \n\n${info}`);
+  }
+
+  return program;
+}
+
+function resizeCanvasToDisplaySize(canvas) {
+  const displayWidth  = canvas.clientWidth;
+  const displayHeight = canvas.clientHeight;
+
+  const needResize = canvas.width  !== displayWidth ||
+                     canvas.height !== displayHeight;
+
+  if (needResize) {
+    canvas.width  = displayWidth;
+    canvas.height = displayHeight;
+  }
+
+  return needResize;
+}
+
+const canvas = document.getElementById("canvas");
+
+const RAINS = 1000;
+const RAIN_SPEED = 2.0;
+const RAIN_SIZE = 1.5;
+
+function getPoints() {
+  let out = [];
+  for (let i = 0; i < RAINS; i++) {
+    let x = 2 * Math.random() - 1;
+    let y = 2 * Math.random() - 2;
+    out.push(x, y);
+    out.push(x, y + RAIN_SIZE / (2.5 * canvas.height));
+    out.push(x, y + 2 * RAIN_SIZE / (2.5 * canvas.height));
+    out.push(x, y + 3 * RAIN_SIZE / (2.5 * canvas.height));
+    out.push(x, y + 4 * RAIN_SIZE / (2.5 * canvas.height));
+    out.push(x, y + 5 * RAIN_SIZE / (2.5 * canvas.height));
+  }
+  return new Float32Array(out.flat());
+}
+
+function getColors() {
+  let out = [];
+  for (let i = 0; i < RAINS; i++) {
+    let c = Math.random();
+    for (let j = 0; j < 6; j++) {
+      out.push(c);
+    }
+  }
+  return new Float32Array(out.flat());
+}
+
+function getIndices() {
+  let out = [];
+  for (let i = 0; i < RAINS; i++) {
+    for (let j = 0; j < 6; j++) {
+      out.push(i);
+    }
+  }
+  return new Float32Array(out.flat());
+}
+
+function createTexture() {
+  // create to render to
+  const targetTextureWidth = 256;
+  const targetTextureHeight = 256;
+  const targetTexture = gl.createTexture();
+  gl.bindTexture(gl.TEXTURE_2D, targetTexture);
+   
+  {
+    // define size and format of level 0
+    const level = 0;
+    const internalFormat = gl.RGBA;
+    const border = 0;
+    const format = gl.RGBA;
+    const type = gl.UNSIGNED_BYTE;
+    const data = null;
+    gl.texImage2D(gl.TEXTURE_2D, level, internalFormat,
+                  targetTextureWidth, targetTextureHeight, border,
+                  format, type, data);
+   
+    // set the filtering so we don't need mips
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+  }
+
+  return targetTexture;
+}
+
+const points = getPoints();
+const colors = getColors();
+const indices = getIndices();
+
+function draw(canvas, uniforms, vertexShaderString, fragmentShaderString) {
+  resizeCanvasToDisplaySize(canvas);
+
+  const gl = canvas.getContext("webgl2");
+
+  const program = createProgram(
+    gl,
+    createShader(gl, gl.VERTEX_SHADER, vertexShaderString),
+    createShader(gl, gl.FRAGMENT_SHADER, fragmentShaderString)
+  );
+  const positionAttributeLocation = gl.getAttribLocation(program, "a_position");
+  const colorAttributeLocation = gl.getAttribLocation(program, "a_color");
+  const indexAttributeLocation = gl.getAttribLocation(program, "a_index");
+
+  const vao = gl.createVertexArray();
+  gl.bindVertexArray(vao);
+
+  let mouseX = 0.5;
+  let mouseY = 0.5;
+
+  let time;
+
+  addEventListener("mousemove", (e) => {
+    mouseX = (e.screenX / gl.canvas.width) - 0.5;
+    mouseY = (e.screenY / gl.canvas.height) - 0.5;
+  });
+
+
+  const render = (t) => {
+
+    time = t * 0.001;
+
+    resizeCanvasToDisplaySize(gl.canvas);
+
+    gl.bindBuffer(gl.ARRAY_BUFFER, gl.createBuffer());
+    gl.bufferData(gl.ARRAY_BUFFER, points, gl.STATIC_DRAW);
+    gl.enableVertexAttribArray(positionAttributeLocation);
+    gl.vertexAttribPointer(positionAttributeLocation, 2, gl.FLOAT, false, 0, 0);
+
+    gl.bindBuffer(gl.ARRAY_BUFFER, gl.createBuffer());
+    gl.bufferData(gl.ARRAY_BUFFER, colors, gl.STATIC_DRAW);
+    gl.enableVertexAttribArray(colorAttributeLocation);
+    gl.vertexAttribPointer(colorAttributeLocation, 1, gl.FLOAT, false, 0, 0);
+
+    gl.bindBuffer(gl.ARRAY_BUFFER, gl.createBuffer());
+    gl.bufferData(gl.ARRAY_BUFFER, indices, gl.STATIC_DRAW);
+    gl.enableVertexAttribArray(indexAttributeLocation);
+    gl.vertexAttribPointer(indexAttributeLocation, 1, gl.FLOAT, false, 0, 0);
+
+    gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
+    gl.useProgram(program);
+    gl.bindVertexArray(vao);
+
+    uniforms.concat([
+      { n: 2, t: "f", name: "u_resolution", get: () => { return [ gl.canvas.width, gl.canvas.height ]; } },
+      { n: 1, t: "f", name: "u_time", get: () => { return [ time ]; } },
+      { n: 2, t: "f", name: "u_mouse", get: () => { return [ mouseX, mouseY ]; } },
+    ]).forEach((u) => {
+      gl[`uniform${u.n}${u.t}${u.v ? "v" : ""}`].bind(gl, gl.getUniformLocation(program, u.name)).apply(gl, u.get());
+    });
+
+    gl.drawArrays(gl.POINTS, 0, points.length / 2);
+
+    requestAnimationFrame(render);
+  };
+
+  requestAnimationFrame(render);
+
+}
+
+const min_height = 475;
+function resize() {
+  canvas.setAttribute("width", window.innerWidth);
+  canvas.setAttribute("height", Math.max(window.innerHeight, min_height));
+}
+addEventListener("resize", resize);
+resize();
+
+draw(canvas, [
+  { n: 1, t: "f", name: "rainSpeed", get: () => { return [ RAIN_SPEED ]; } },
+  { n: 1, t: "f", name: "rainSize", get: () => { return [ RAIN_SIZE ]; } }
+],
+`
+attribute vec4 a_position;
+attribute float a_color;
+attribute float a_index;
+
+varying float v_color;
+varying float v_index;
+
+uniform float u_time;
+uniform vec2 u_resolution;
+uniform float rainSpeed;
+uniform float rainSize;
+
+mat2 rotate(float theta) {
+    return mat2(vec2(cos(theta), sin(theta)), vec2(sin(theta), -cos(theta)));
+}
+
+vec2 transform(vec2 p) {
+  // return rotate(0.0) * p * vec2(1.0, u_resolution.x / u_resolution.y);
+  float y = p.y - u_time * rainSpeed;
+  y += 2.0 * floor(abs(y) / 2.0);
+  return vec2(p.x, y + 1.0);
+}
+
+void main() {
+  gl_Position = vec4(transform(a_position.xy), 0.0, 1.0);
+  gl_PointSize = rainSize;
+  v_color = a_color;
+  v_index = a_index;
+}
+`,
+`
+precision highp float;
+
+uniform vec2 u_resolution;
+uniform float u_time;
+uniform vec2 u_mouse;
+
+varying float v_color;
+varying float v_index;
+
+void main() {
+  vec2 uv = (vec2(gl_FragCoord.x, (u_resolution.y - gl_FragCoord.y)) / u_resolution.xy);// - vec2(0.5, 0.25);
+  gl_FragColor = vec4(vec3(1.0) * v_color, 1.0);
+  if (int(v_index) < 0) {
+    gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0);
+  }
+}
+
+`);
+</script>
+</body>
+</html>
