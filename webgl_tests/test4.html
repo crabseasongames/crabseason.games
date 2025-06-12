@@ -7,9 +7,19 @@ body {
   background-color: black;
 }
 
+#umbrella {
+  position: absolute;
+  width: 230px;
+  height: 20px;
+  margin-top: -10px;
+  margin-left: -115px;
+  background-color: white;
+}
+
 </style>
 </head>
 <body>
+<div id="umbrella"></div>
 <canvas id="canvas"></canvas>
 
 <script>
@@ -55,10 +65,6 @@ function resizeCanvasToDisplaySize(canvas) {
 }
 
 const canvas = document.getElementById("canvas");
-
-const RAINS = 1000;
-const RAIN_SPEED = 2.0;
-const RAIN_SIZE = 1.5;
 
 function getPoints() {
   let out = [];
@@ -124,6 +130,10 @@ function createTexture() {
   return targetTexture;
 }
 
+const RAINS = 1500;
+const RAIN_SPEED = 2.0;
+const RAIN_SIZE = 1.5;
+
 const points = getPoints();
 const colors = getColors();
 const indices = getIndices();
@@ -151,14 +161,32 @@ function draw(canvas, uniforms, vertexShaderString, fragmentShaderString) {
   let time;
 
   addEventListener("mousemove", (e) => {
-    mouseX = (e.screenX / gl.canvas.width) - 0.5;
-    mouseY = (e.screenY / gl.canvas.height) - 0.5;
+    mouseX = 2 * (e.clientX / gl.canvas.width) - 1;
+    mouseY = -2 * (e.clientY / gl.canvas.height) + 1;
+
+    umbrella.style.left = e.clientX;
+    umbrella.style.top = e.clientY;
   });
 
+  const umbrella = document.getElementById("umbrella");
+
+  const UMBW = 0.3;
+  const UMBT = 0.05;
 
   const render = (t) => {
-
     time = t * 0.001;
+
+    for (let i = 0; i < points.length / 2; i++) {
+      let rx = points[i * 2];
+      let ry = points[i * 2 + 1] - time * RAIN_SPEED;
+      ry += 2.0 * Math.floor(Math.abs(ry) / 2.0) + 1;
+
+      if (Math.abs(rx - mouseX) < UMBW && Math.abs(ry - mouseY) < UMBT) {
+        colors[i] = 0;
+      } else if (Math.abs(ry - 1) < 0.05) {
+        colors[i] = Math.random();
+      }
+    }
 
     resizeCanvasToDisplaySize(gl.canvas);
 
