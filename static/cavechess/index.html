@@ -5,20 +5,9 @@
 
 body {
   margin: 0;
-  min-height: 100vh;
+  height: 100vh;
   font-family: monospace;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  flex-direction: column;
-}
-
-#content {
-  display: flex;
-  justify-content: space-evenly;
-  align-items: center;
-  flex-direction: row;
-  min-width: 1305px;
+  min-height: 100vh;
 }
 
  canvas {
@@ -26,7 +15,7 @@ body {
 }
 
 .hidden {
-  display: none;
+  display: none !important;
 }
 
 @font-face {
@@ -39,6 +28,7 @@ body {
   src: url(smilin-john-font/SmilinJohn-KzX.ttf);
 }
 
+
 #title {
   text-align: center;
 }
@@ -48,87 +38,16 @@ body {
   font-size: 100px;
 }
 
-#subhead {
-  font-family: dinotopia;
-  font-size: 50px;
-  margin-top: -15px;
-  margin-bottom: 10px;
-}
-
-#controls {
-  text-align: center;
-}
-
-#font {
-  position: absolute;
-  font-family: dinotopia;
-  visibility: hidden;
-}
-
-#font2 {
-  position: absolute;
-  font-family: smilin-john;
-  visibility: hidden;
-}
-
-.button {
-  cursor: pointer;
-  background-color: #999;
-  font-size: 30px;
-  margin: 10px 15px 10px 0;
-  padding: 10px;
-  display: inline-block;
-}
-
-.button:hover {
-  background-color: #666;
-}
-
-.button.disabled {
-  background-color: #ccc;
-  color: #777;
-}
-
-.button.disabled:hover {
-  background-color: #ccc;
-}
-
-#game-code {
-  margin-top: -12px;
-  vertical-align: middle;
-  font-size: 25px;
-  height: 26px;
-  padding: 13px 0px 13px 10px;
-  width: 65px;
-  text-transform: uppercase;
-  resize: none;
-  overflow: hidden;
-}
-
-#game-code::placeholder {
-  font-size: 15px;
-  line-height: 15px;
-  text-transform: none;
-}
-
-#error {
-  font-size: 25px;
-  text-align: center;
-  color: red;
-  height: 100px;
-  width: 100%;
-}
-
 #chat {
   height: calc(100ch - 76px);
+  width: 100%;
   display: inline-block;
   color: #fff;
   background-color: rgba(0, 0, 0, 0.5);
-  width: 350px;
   word-wrap: break-word;
   overflow: hidden;
   transition: height 0.5s, opacity 0.5s;
-}
+  }
 
 #chat-contents {
   height: calc(100% - 90px);
@@ -172,6 +91,209 @@ body {
   text-shadow: 0 0 6px white;
 }
 
+#subhead {
+  font-family: dinotopia;
+  font-size: 50px;
+  margin-top: -15px;
+  margin-bottom: 10px;
+}
+
+#controls {
+  text-align: center;
+}
+
+#font {
+  position: absolute;
+  font-family: dinotopia;
+  visibility: hidden;
+}
+
+#font2 {
+  position: absolute;
+  font-family: smilin-john;
+  visibility: hidden;
+}
+
+#info {
+
+}
+
+.h2 {
+  font-size: 1em;
+}
+
+.infoContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+}
+
+.btnContainer{
+  display: flex;
+  flex-direction: row;
+}
+
+.button {
+  cursor: pointer;
+  background-color: #999;
+  font-size: 30px;
+  margin: 10px 15px 10px 0;
+  padding: 10px;
+  display: inline-block;
+}
+
+.button:hover {
+  background-color: #666;
+}
+
+.button.disabled {
+  background-color: #ccc;
+  color: #777;
+}
+
+.button.disabled:hover {
+  background-color: #ccc;
+}
+
+#menu{
+  display: flex;
+  align-items: center;
+  justify-content: center;;
+}
+
+#controls {
+  margin-top: 100px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+#game{
+  display: grid; 
+  grid-template-columns: 3fr 4fr 4fr;
+  align-items: center;
+}
+
+#content{
+  padding: 0px 20px 0px 20px;
+}
+
+#gameCanvas {
+  display: grid;
+  grid-template-columns: 560px 350px;
+  grid-column-gap: 30px;
+  padding:   50px 0px 0px 75px;
+  justify-items: center;
+}
+
+#game-code {
+  margin-top: -12px;
+  vertical-align: middle;
+  font-size: 25px;
+  height: 26px;
+  padding: 13px 0px 13px 10px;
+  width: 65px;
+  text-transform: uppercase;
+  resize: none;
+  overflow: hidden;
+}
+
+#game-code::placeholder {
+  font-size: 15px;
+  line-height: 15px;
+  text-transform: none;
+}
+
+#error {
+  font-size: 25px;
+  text-align: center;
+  color: red;
+  height: 100px;
+  width: auto;
+}
+
+.break {
+  flex-basis: 100%;
+  height: 0;
+}
+
+.menuBtn {
+  background-color: #ffffff;
+  font-family: dinotopia;
+  font-size: 26px;
+  margin-top: 8px;
+}
+
+.tutorialBtnOpen {
+  height: 80px;
+  width: 140px;
+}
+
+.tutorialBtnClose{
+  height: 80px;
+  width: 100px;
+}
+
+.menuBtnOpen {
+  height: 65px;
+  width: 150px;
+}
+
+.menuBtnClose {
+  height: 65px;
+  width: 150px;
+}
+
+.menuModal {
+  font-family: dinotopia;
+  position: absolute;
+  top: 20%;
+  left: 45%;
+  max-width: 50%;
+  min-width: 200px;
+  background-color: rgba(255, 255, 255, 0.92);
+  padding: 10px 20px;
+  border-style: double;
+  border-width: 5px;
+  text-align: center;
+}
+
+.tutorial {
+
+}
+
+.settings {
+}
+
+.rulesInterior{
+  display: grid;
+  grid-template-columns: 3fr 2fr;
+  margin-bottom: 10px;
+  font-size: 20px;
+
+}
+
+.loreDump{
+  height: 115px;
+  overflow: auto;
+  padding-right: 12px;
+}
+
+.rulesCol{
+  display: grid;
+  grid-template-rows: 4fr 4fr 4fr;
+  justify-items: center;
+  font-size: 20px;
+  margin-bottom: 8px;
+}
+
+.rulesIcon {
+  height: 77px;
+  width: auto;
+}
+
 </style>
 </head>
 <body class="hidden">
@@ -191,7 +313,52 @@ body {
       </div>
     </div>
     <canvas id="board" width="560" height="700"></canvas>
-    <canvas id="info" width="350" height="700"></canvas>
+    <div class="infoContainer">
+      <canvas id="info" width="300" height="300"></canvas>
+      <div class="btnContainer">
+        <button class="menuBtn tutorialBtnOpen">TUTORIAL</button>
+        <button class="menuBtn settingsBtnOpen">SETTINGS</button>
+      </div>
+    </div>
+    <div class="menuModal tutorial hidden">
+      <h1>Here's How To Play Cave Chess</h1>
+      <h2>A Brief History of Cave Chess:</h2>
+      <h2 class="loreDump">Is it absurd to think that the first man experienced longing? If not longing for a mate, or for food - what did the first 
+        person long for? It is our opinion here at Crab Season Games that the answer to that question is that the first cave person 
+        actually experienced a longing for competition. That lead us to develop Cave Chess, a simulation of what we believe to be the 
+        first competitive game ever develop. 
+  
+        While cave chess appears to be a simple game, there are actually over one trillion permutations of how a game can unfold. But 
+        before we get to that, let's learn how to play.
+      </h2>
+      <div class="rulesInterior"> 
+        <div class="rulesCol">
+          <span>
+            These are rocks. You can move the rocks in a straight line in any direction. If you move a rock onto another piece, you smash it.
+          </span>
+          <span>
+            This is a guy. He is like you, so he can only go one space at a time. You lose the game if your guy gets smashed by a rock.
+          </span>
+          <span>
+            Oh there's another way to win I almost forgot. If you  move a rock off your oponents side of the board, you hit them with it.
+            If you hit the other person twice you win.
+          </span>
+        </div>
+        <div class="rulesCol">
+          <img class="rulesIcon" src="./assets/rock.png"/>
+          <img class="rulesIcon" src="./assets/guy.png"/>
+          <img class="rulesIcon" src="./assets/bonk.png"/>
+        </div>
+      </div>
+      <span>I think that's everything...</span>
+      <br/>
+      <button class="tutorialBtnClose menuBtn">Close</button>
+    </div>
+    <div class="menuModal settings hidden">
+      Settings:
+      Settings Go here
+      <button class="settingsBtnClose menuBtn">Close</button>
+    </div>
   </div><div id="font">sup</div><div id="font2">sup</div>
 </div>
 <script>
@@ -534,6 +701,29 @@ document.fonts.ready.then(() => {
     infoCtx.lineTo(x + 30, y + 20);
     infoCtx.stroke();
   }
+
+  const openTutorialButton = document.querySelector(".tutorialBtnOpen");
+  const closeTutorialButton = document.querySelector(".tutorialBtnClose");
+  const tutorialWindow = document.querySelector(".tutorial");
+  const openSettingsButton = document.querySelector(".settingsBtnOpen");
+  const closeSettingsButton = document.querySelector(".settingsBtnClose");
+  const settingsWindow = document.querySelector(".settings");
+
+  openTutorialButton.addEventListener("click", function (e) {
+    tutorialWindow.classList.remove("hidden")
+  });
+
+  closeTutorialButton.addEventListener("click", function (e) {
+    tutorialWindow.classList.add("hidden")
+  });
+
+  openSettingsButton.addEventListener("click", function (e) {
+    settingsWindow.classList.remove("hidden")
+  });
+
+  closeSettingsButton.addEventListener("click", function (e) {
+    settingsWindow.classList.add("hidden")
+  });
 
   function getPosition(x, y) {
     let boundx = (c) => { return Math.min((squareSize * 8) - 1, Math.max(0, c)); };
