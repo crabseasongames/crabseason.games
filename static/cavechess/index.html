@@ -11,7 +11,7 @@ body {
 }
 
  canvas {
-  border: 4px solid black;
+
 }
 
 .hidden {
@@ -39,7 +39,7 @@ body {
 }
 
 #chat {
-  height: calc(100ch - 76px);
+  height: 300px;
   width: 100%;
   display: inline-block;
   color: #fff;
@@ -47,7 +47,9 @@ body {
   word-wrap: break-word;
   overflow: hidden;
   transition: height 0.5s, opacity 0.5s;
-  }
+  grid-column: 7 / 9;
+  grid-row: 3 / 4;
+}
 
 #chat-contents {
   height: calc(100% - 90px);
@@ -122,17 +124,10 @@ body {
   font-size: 1em;
 }
 
-.infoContainer {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  height: 100%;
-}
-
 .btnContainer{
   display: flex;
   flex-direction: row;
+  justify-content: space-evenly;
 }
 
 .button {
@@ -159,8 +154,10 @@ body {
 
 #menu{
   display: flex;
+  flex-direction: column;
   align-items: center;
-  justify-content: center;;
+  justify-content: center;
+  margin-top: 25px;
 }
 
 #controls {
@@ -172,8 +169,33 @@ body {
 
 #game{
   display: grid; 
-  grid-template-columns: 3fr 4fr 4fr;
+  grid-template-columns: 6fr 5fr;
   align-items: center;
+  margin-top: 20px;
+  gap: 20px;
+}
+
+#infoCol {
+  height: 800px;
+  width: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border: 4px solid black;
+}
+
+.infoContainer {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+#gameBoard{
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 4px solid black;
 }
 
 #content{
@@ -297,68 +319,73 @@ body {
 </style>
 </head>
 <body class="hidden">
-<div id="title"><div id="head">CAVE CHESS</div><div id="subhead">cave style chess</div></div>
 <div id="content">
   <div id="menu">
+    <div id="title"><div id="head">CAVE CHESS</div><div id="subhead">cave style chess</div></div>
     <div id="controls">
       <div class="button" id="new-game">new game</div><div class="button disabled" id="join-game">join game</div><textarea type="text" id="game-code" placeholder="enter code..." spellcheck="false"></textarea>
       <div id="error"></div>
     </div>
   </div>
   <div id="game" class="hidden">
-    <div id="chat">
-      <div id="chat-contents"></div>
-      <div id="chat-textbox">
-        <textarea id="textbox" spellcheck="false" disabled></textarea>
-      </div>
+    <div id="gameBoard">
+      <canvas id="board" width="560" height="800"></canvas>
     </div>
-    <canvas id="board" width="560" height="700"></canvas>
-    <div class="infoContainer">
-      <canvas id="info" width="300" height="300"></canvas>
+    <div id="infoCol">
+      <div class="infoContainer">
+        <canvas id="info" width="500" height="400"></canvas>
+      </div>
+      <div class="menuModal tutorial hidden">
+        <h1>Here's How To Play Cave Chess</h1>
+        <h2>A Brief History of Cave Chess:</h2>
+        <h2 class="loreDump">Is it absurd to think that the first man experienced longing? If not longing for a mate, or for food - what did the first 
+          person long for? It is our opinion here at Crab Season Games that the answer to that question is that the first cave person 
+          actually experienced a longing for competition. That lead us to develop Cave Chess, a simulation of what we believe to be the 
+          first competitive game ever develop. 
+    
+          While cave chess appears to be a simple game, there are actually over one trillion permutations of how a game can unfold. But 
+          before we get to that, let's learn how to play.
+        </h2>
+        <div class="rulesInterior"> 
+          <div class="rulesCol">
+            <span>
+              These are rocks. You can move the rocks in a straight line in any direction. If you move a rock onto another piece, you smash it.
+            </span>
+            <span>
+              This is a guy. He is like you, so he can only go one space at a time. You lose the game if your guy gets smashed by a rock.
+            </span>
+            <span>
+              Oh there's another way to win I almost forgot. If you  move a rock off your oponents side of the board, you hit them with it.
+              If you hit the other person twice you win.
+            </span>
+          </div>
+          <div class="rulesCol">
+            <img class="rulesIcon" src="./assets/rock.png"/>
+            <img class="rulesIcon" src="./assets/guy.png"/>
+            <img class="rulesIcon" src="./assets/bonk.png"/>
+          </div>
+        </div>
+        <span>I think that's everything...</span>
+        <br/>
+        <button class="tutorialBtnClose menuBtn">Close</button>
+      </div>
+      <div class="menuModal settings hidden">
+        Settings:
+        Settings Go here
+        <button class="settingsBtnClose menuBtn">Close</button>
+      </div>
+      <div id="chat">
+        <div id="chat-contents"></div>
+        <div id="chat-textbox">
+          <textarea id="textbox" spellcheck="false" disabled></textarea>
+        </div>
+      </div>
       <div class="btnContainer">
         <button class="menuBtn tutorialBtnOpen">TUTORIAL</button>
         <button class="menuBtn settingsBtnOpen">SETTINGS</button>
       </div>
     </div>
-    <div class="menuModal tutorial hidden">
-      <h1>Here's How To Play Cave Chess</h1>
-      <h2>A Brief History of Cave Chess:</h2>
-      <h2 class="loreDump">Is it absurd to think that the first man experienced longing? If not longing for a mate, or for food - what did the first 
-        person long for? It is our opinion here at Crab Season Games that the answer to that question is that the first cave person 
-        actually experienced a longing for competition. That lead us to develop Cave Chess, a simulation of what we believe to be the 
-        first competitive game ever develop. 
-  
-        While cave chess appears to be a simple game, there are actually over one trillion permutations of how a game can unfold. But 
-        before we get to that, let's learn how to play.
-      </h2>
-      <div class="rulesInterior"> 
-        <div class="rulesCol">
-          <span>
-            These are rocks. You can move the rocks in a straight line in any direction. If you move a rock onto another piece, you smash it.
-          </span>
-          <span>
-            This is a guy. He is like you, so he can only go one space at a time. You lose the game if your guy gets smashed by a rock.
-          </span>
-          <span>
-            Oh there's another way to win I almost forgot. If you  move a rock off your oponents side of the board, you hit them with it.
-            If you hit the other person twice you win.
-          </span>
-        </div>
-        <div class="rulesCol">
-          <img class="rulesIcon" src="./assets/rock.png"/>
-          <img class="rulesIcon" src="./assets/guy.png"/>
-          <img class="rulesIcon" src="./assets/bonk.png"/>
-        </div>
-      </div>
-      <span>I think that's everything...</span>
-      <br/>
-      <button class="tutorialBtnClose menuBtn">Close</button>
-    </div>
-    <div class="menuModal settings hidden">
-      Settings:
-      Settings Go here
-      <button class="settingsBtnClose menuBtn">Close</button>
-    </div>
+  </div>
   </div><div id="font">sup</div><div id="font2">sup</div>
 </div>
 <script>
@@ -385,7 +412,7 @@ const darkSquare = "#c1861a";
 const highlightedColor = "#ef4141";
 const tuggColor = "#000";
 const oofColor = "#fff";
-const squareSize = 70;
+const squareSize = 80;
 const lifeSize = 70;
 
 const empty = () => { return [ [], [], [], [], [], [], [], [] ]; };
@@ -650,18 +677,18 @@ document.fonts.ready.then(() => {
     infoCtx.fillStyle = color;
     infoCtx.strokeStyle = color;
     let tuggText = "Tugg" + (opponentConnected || !isOof ? "" : " (waiting for enemy)");
-    infoCtx.fillText(tuggText, leftMargin, isOof ? topMargin :  (10 * squareSize) - topMargin - fontSize);
+    infoCtx.fillText(tuggText, leftMargin, isOof ? topMargin :  (5 * squareSize) - topMargin - fontSize);
     for (let i = 0; i < game.state.maxHp; i++) {
-      (i < game.state.tuggHp ? drawLife : drawDeath)(leftMargin + lifeSize * i, isOof ? topMargin * 2 + fontSize : (10 * squareSize) - (topMargin + fontSize) * 2);
+      (i < game.state.tuggHp ? drawLife : drawDeath)(leftMargin + lifeSize * i, isOof ? topMargin * 2 + fontSize : (5 * squareSize) - (topMargin + fontSize) * 2);
     }
 
     color = game.state.oofTurn && !game.state.winner ? "red" : "black";
     infoCtx.fillStyle = color;
     infoCtx.strokeStyle = color;
     let oofText = "Oof" + (opponentConnected || isOof ? "" : " (waiting for enemy)");
-    infoCtx.fillText(oofText, leftMargin, isOof ? (10 * squareSize) - topMargin - fontSize : topMargin);
+    infoCtx.fillText(oofText, leftMargin, isOof ? (5 * squareSize) - topMargin - fontSize : topMargin);
     for (let i = 0; i < game.state.maxHp; i++) {
-      (i < game.state.oofHp ? drawLife : drawDeath)(leftMargin + lifeSize * i, isOof ? (10 * squareSize) - (topMargin + fontSize) * 2 : topMargin * 2 + fontSize);
+      (i < game.state.oofHp ? drawLife : drawDeath)(leftMargin + lifeSize * i, isOof ? (5 * squareSize) - (topMargin + fontSize) * 2 : topMargin * 2 + fontSize);
     }
 
     infoCtx.fillStyle = "black";
@@ -670,7 +697,7 @@ document.fonts.ready.then(() => {
       infoCtx.fillText(game.state.winner == 1 ? "OOF" : "TUGG", leftMargin, 4 * squareSize);
       infoCtx.fillText("WIN", leftMargin, 5 * squareSize);
     } else {
-      infoCtx.fillText(game.code, leftMargin, 4.5 * squareSize);
+      infoCtx.fillText(game.code, leftMargin, 2.5 * squareSize);
     }
   }
 
