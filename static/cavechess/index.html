@@ -167,12 +167,11 @@ body {
   justify-content: center;
 }
 
-#game{
-  display: grid; 
-  grid-template-columns: 6fr 5fr;
+#game {
+  display: flex; 
+  justify-content: space-evenly;
   align-items: center;
-  margin-top: 20px;
-  gap: 20px;
+  height: 100vh;
 }
 
 #infoCol {
@@ -417,7 +416,7 @@ const darkSquare = "#c1861a";
 const highlightedColor = "#ef4141";
 const tuggColor = "#000";
 const oofColor = "#fff";
-const squareSize = 75;
+const squareSize = 70;
 const lifeSize = 70;
 
 const empty = () => { return [ [], [], [], [], [], [], [], [] ]; };
