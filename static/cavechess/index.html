@@ -168,14 +168,15 @@ body {
 }
 
 #game{
-  display: flex; 
-  justify-content: space-evenly;
+  display: grid; 
+  grid-template-columns: 6fr 5fr;
   align-items: center;
-  height: 100vh;
+  margin-top: 20px;
+  gap: 20px;
 }
 
 #infoCol {
-  height: 700px;
+  height: 750px;
   width: auto;
   display: flex;
   flex-direction: column;
@@ -201,7 +202,7 @@ body {
 }
 
 #content{
-
+  padding: 0px 20px 0px 20px;
 }
 
 #gameCanvas {
@@ -331,11 +332,11 @@ body {
   </div>
   <div id="game" class="hidden">
     <div id="gameBoard">
-      <canvas id="board" width="560" height="700"></canvas>
+      <canvas id="board" width="600" height="750"></canvas>
     </div>
     <div id="infoCol">
       <div class="infoContainer">
-        <canvas id="info" width="500" height="300"></canvas>
+        <canvas id="info" width="500" height="400"></canvas>
       </div>
       <div class="menuModal tutorial hidden">
         <h1>Here's How To Play Cave Chess</h1>
@@ -394,6 +395,8 @@ body {
 
 const userId = localStorage["userId"] || Math.floor(Math.random() * 10e9);
 localStorage["userId"] = userId;
+let muted = localStorage["muted"] || "";
+localStorage["muted"] = muted;
 
 const chatContents = document.getElementById("chat-contents");
 const chatBox = document.getElementById("textbox");
@@ -414,7 +417,7 @@ const darkSquare = "#c1861a";
 const highlightedColor = "#ef4141";
 const tuggColor = "#000";
 const oofColor = "#fff";
-const squareSize = 70;
+const squareSize = 75;
 const lifeSize = 70;
 
 const empty = () => { return [ [], [], [], [], [], [], [], [] ]; };
@@ -434,6 +437,11 @@ let throwRockAllowed = false;
 document.fonts.ready.then(() => {
 
   gameCode.value = "";
+
+  function mute() {
+    muted = 1;
+    localStorage["muted"] = "true";
+  }
 
   function send(type, data) {
     if (!ws || ws.readyState != 1) {
@@ -527,6 +535,11 @@ document.fonts.ready.then(() => {
         chatBox.disabled = false;
         addNotification(`${isOof ? "Tugg" : "Oof"} has joined`);
       } else if (message.type == "moved") {
+        if (game.state.oofHp != message.data.state.oofHp || game.state.tuggHp != message.data.state.tuggHp) {
+          yell();
+        } else {
+          tap();
+        }
         game = message.data;
         leaveMoveMode();
       } else if (message.type == "disconnect") {
@@ -590,6 +603,7 @@ document.fonts.ready.then(() => {
     joinGameButton.classList.remove("disabled");
     joinGameEnabled = true;
     addNotification(`welcome ${isOof ? "Oof" : "Tugg"}`);
+    addNotification(`room code: ${game.code}`);
   }
 
   function joinGame() {
@@ -732,6 +746,33 @@ document.fonts.ready.then(() => {
     infoCtx.moveTo(x + 40, y + 10);
     infoCtx.lineTo(x + 30, y + 20);
     infoCtx.stroke();
+  }
+
+  let actx;
+
+  function tap() {
+    if (!actx || muted) { return; }
+    let v = 2;
+    let f = 1.5;
+    let audio_buffer = actx.createBuffer(1, 5512, 96000);
+    let buffer = audio_buffer.getChannelData(0);
+    let r = 1 + Math.random() * 0.1;
+    // let r = 0.9;
+    for (let i = 0; i < buffer.length; i++) {
+      buffer[i] = Math.sin(i * 0.03 * f * r) * v * Math.pow(2, -(((i - buffer.length / 2) * 0.007) ** 2));
+    }
+    let source = actx.createBufferSource();
+    source.buffer = audio_buffer;
+    source.connect(actx.destination);
+    source.start();
+  }
+
+  let audio = new Audio("benscream.wav");
+  audio.volume = 0.05;
+
+  function yell() {
+    if (muted) { return; }
+    audio.play();
   }
 
   const openTutorialButton = document.querySelector(".tutorialBtnOpen");
@@ -897,6 +938,7 @@ document.fonts.ready.then(() => {
   });
 
   boardCanvas.addEventListener("click", (e) => {
+    if (!actx) { actx = new AudioContext(); }
     if (!opponentConnected || game.state.winner) { return; }
     let position = getPosition(e.offsetX, e.offsetY);
     let piece = getPiece(position);
