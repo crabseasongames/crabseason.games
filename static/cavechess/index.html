@@ -156,8 +156,8 @@ body {
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
-  margin-top: 25px;
+  justify-content: space-evenly;
+  height: 100vh;
 }
 
 #controls {
@@ -176,7 +176,7 @@ body {
 }
 
 #infoCol {
-  height: 750px;
+  height: 700px;
   width: auto;
   display: flex;
   flex-direction: column;
@@ -202,7 +202,7 @@ body {
 }
 
 #content{
-  padding: 0px 20px 0px 20px;
+
 }
 
 #gameCanvas {
@@ -332,11 +332,11 @@ body {
   </div>
   <div id="game" class="hidden">
     <div id="gameBoard">
-      <canvas id="board" width="600" height="750"></canvas>
+      <canvas id="board" width="560" height="700"></canvas>
     </div>
     <div id="infoCol">
       <div class="infoContainer">
-        <canvas id="info" width="500" height="400"></canvas>
+        <canvas id="info" width="500" height="300"></canvas>
       </div>
       <div class="menuModal tutorial hidden">
         <h1>Here's How To Play Cave Chess</h1>
