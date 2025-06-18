@@ -395,6 +395,8 @@ body {
 
 const userId = localStorage["userId"] || Math.floor(Math.random() * 10e9);
 localStorage["userId"] = userId;
+let muted = localStorage["muted"] || "";
+localStorage["muted"] = muted;
 
 const chatContents = document.getElementById("chat-contents");
 const chatBox = document.getElementById("textbox");
@@ -435,6 +437,11 @@ let throwRockAllowed = false;
 document.fonts.ready.then(() => {
 
   gameCode.value = "";
+
+  function mute() {
+    muted = 1;
+    localStorage["muted"] = "true";
+  }
 
   function send(type, data) {
     if (!ws || ws.readyState != 1) {
@@ -596,6 +603,7 @@ document.fonts.ready.then(() => {
     joinGameButton.classList.remove("disabled");
     joinGameEnabled = true;
     addNotification(`welcome ${isOof ? "Oof" : "Tugg"}`);
+    addNotification(`room code: ${game.code}`);
   }
 
   function joinGame() {
@@ -930,6 +938,7 @@ document.fonts.ready.then(() => {
   });
 
   boardCanvas.addEventListener("click", (e) => {
+    if (!actx) { actx = new AudioContext(); }
     if (!opponentConnected || game.state.winner) { return; }
     let position = getPosition(e.offsetX, e.offsetY);
     let piece = getPiece(position);
