@@ -698,7 +698,7 @@ document.fonts.ready.then(() => {
     let tuggText = "TUGG" + (opponentConnected || !isOof ? "" : " (WAITING FOR ENEMY)");
     infoCtx.fillText(tuggText, leftMargin, isOof ? topMargin :  (5 * squareSize) - topMargin - fontSize);
     for (let i = 0; i < game.state.maxHp; i++) {
-      (i < game.state.tuggHp ? drawLife : drawDeath)(leftMargin * 2 + lifeSize * i, isOof ? topMargin * 100 + fontSize : (5 * squareSize) - (topMargin + fontSize) * 2);
+      (i < game.state.tuggHp ? drawLife : drawDeath)(leftMargin * 2 + lifeSize * i - 30, isOof ? topMargin + fontSize + 100 : (7 * squareSize) - (topMargin + fontSize ) * 2);
     }
 
     color = game.state.oofTurn && !game.state.winner ? "red" : "black";
@@ -707,7 +707,7 @@ document.fonts.ready.then(() => {
     let oofText = "OOF" + (opponentConnected || isOof ? "" : " (WAITING FOR ENEMY)");
     infoCtx.fillText(oofText, leftMargin, isOof ? (5 * squareSize) - topMargin - fontSize : topMargin);
     for (let i = 0; i < game.state.maxHp; i++) {
-      (i < game.state.oofHp ? drawLife : drawDeath)(leftMargin + lifeSize * i, isOof ? (5 * squareSize) - (topMargin + fontSize) * 2 : topMargin * 2 + fontSize);
+      (i < game.state.oofHp ? drawLife : drawDeath)(leftMargin + lifeSize * i, isOof ? (5 * squareSize) - (topMargin + fontSize) * 2 : topMargin * 4 + fontSize);
     }
 
     infoCtx.fillStyle = "black";
