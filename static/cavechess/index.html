@@ -3,6 +3,21 @@
 <head>
 <style>
 
+@media (max-width: 1100px) {
+  #game {
+    flex-direction: column-reverse;
+    flex-direction: flex-end;
+  }
+
+  #gameBoard {
+    margin-right: 0px !important;
+  }
+
+  #board {
+    margin-bottom: 30px;
+  }
+}
+
 body {
   margin: 0;
   height: 100vh;
@@ -124,6 +139,7 @@ body {
   display: flex;
   flex-direction: row;
   justify-content: space-evenly;
+  width:100%;
 }
 
 .button {
@@ -168,9 +184,10 @@ body {
 
 #game {
   display: flex; 
-  justify-content: space-evenly;
+  justify-content: center;
   align-items: center;
   height: 100vh;
+  background-image: url('./assets/cavewall.jpeg');
 }
 
 #infoCol {
@@ -180,7 +197,7 @@ body {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  border: 4px solid black;
+  background-color: lightsalmon;
 }
 
 .infoContainer {
@@ -193,10 +210,11 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
+  margin-right: 30px;
 }
 
 #board{
-  border: 4px solid black;
+  background-color: #999;
 }
 
 #content{
@@ -618,7 +636,6 @@ document.fonts.ready.then(() => {
   function draw(){
     if (!game) { return; }
     drawBoard();
-    drawInfo();
   }
 
   function drawBoard() {
@@ -681,75 +698,6 @@ document.fonts.ready.then(() => {
       ctx.fillStyle = pieceColor;
       ctx.fill();
     }
-  }
-
-  function drawInfo() {
-    const leftMargin = 70;
-    const topMargin = 10;
-    const fontSize = 35;
-
-    infoCtx.clearRect(0, 0, 350, 10 * squareSize);
-    infoCtx.textBaseline = "top";
-    infoCtx.font = `${fontSize}px dinotopia`;
-
-    let color = !game.state.oofTurn && !game.state.winner ? "red" : "black";
-    infoCtx.fillStyle = color;
-    infoCtx.strokeStyle = color;
-    let tuggText = "TUGG" + (opponentConnected || !isOof ? "" : " (WAITING FOR ENEMY)");
-    infoCtx.fillText(tuggText, leftMargin, isOof ? topMargin :  (5 * squareSize) - topMargin - fontSize);
-    for (let i = 0; i < game.state.maxHp; i++) {
-      (i < game.state.tuggHp ? drawLife : drawDeath)(leftMargin * 2 + lifeSize * i - 30, isOof ? topMargin + fontSize + 100 : (7 * squareSize) - (topMargin + fontSize ) * 2);
-    }
-
-    color = game.state.oofTurn && !game.state.winner ? "red" : "black";
-    infoCtx.fillStyle = color;
-    infoCtx.strokeStyle = color;
-    let oofText = "OOF" + (opponentConnected || isOof ? "" : " (WAITING FOR ENEMY)");
-    infoCtx.fillText(oofText, leftMargin, isOof ? (5 * squareSize) - topMargin - fontSize : topMargin);
-    for (let i = 0; i < game.state.maxHp; i++) {
-      (i < game.state.oofHp ? drawLife : drawDeath)(leftMargin + lifeSize * i, isOof ? (5 * squareSize) - (topMargin + fontSize) * 2 : topMargin * 4 + fontSize);
-    }
-
-    infoCtx.fillStyle = "black";
-    infoCtx.font = "65px smilin-john";
-    if (game.state.winner) {
-      infoCtx.fillText(game.state.winner == 1 ? "OOF" : "TUGG", leftMargin, 4 * squareSize);
-      infoCtx.fillText("WIN", leftMargin, 5 * squareSize);
-    } else {
-      infoCtx.font = "35px dinotopia";
-      infoCtx.fillText("GAME", leftMargin, 1.9 * squareSize);
-      infoCtx.fillText("CODE", leftMargin + 2, 2.4 * squareSize);
-      infoCtx.font = "65px smilin-john";
-      infoCtx.fillText(game.code, leftMargin * 2.3, 1.9 * squareSize);
-    }
-  }
-
-  function drawLife(x, y) {
-    infoCtx.beginPath();
-    infoCtx.arc(x + 25, y + 15, 30, 0, Math.PI * 2, true); // Outer circle
-    infoCtx.moveTo(x + 44, y + 20);
-    infoCtx.arc(x + 25, y + 20, 20, 0, Math.PI, false);  // Mouth (clockwise)
-    infoCtx.moveTo(x + 15, y + 5);
-    infoCtx.arc(x + 10, y + 5, 5, 0, Math.PI * 2, true);  // Left eye
-    infoCtx.moveTo(x + 45, y + 5);
-    infoCtx.arc(x + 40, y + 5, 5, 0, Math.PI * 2, true);  // Right eye
-    infoCtx.stroke();
-  }
-
-  function drawDeath(x, y) {
-    infoCtx.beginPath();
-    infoCtx.arc(x + 25, y + 15, 30, 0, Math.PI * 2, true); // Outer circle
-    infoCtx.moveTo(x + 40, y + 30);
-    infoCtx.arc(x + 25, y + 30, 15, 0, Math.PI, true);  // Mouth (clockwise)
-    infoCtx.moveTo(x + 10, y);
-    infoCtx.lineTo(x + 20, y + 10);
-    infoCtx.moveTo(x + 10, y + 10);
-    infoCtx.lineTo(x + 20, y);
-    infoCtx.moveTo(x + 30, y + 10);
-    infoCtx.lineTo(x + 40, y + 20);
-    infoCtx.moveTo(x + 40, y + 10);
-    infoCtx.lineTo(x + 30, y + 20);
-    infoCtx.stroke();
   }
 
   let actx;
