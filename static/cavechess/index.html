@@ -202,8 +202,11 @@ body {
 
 .infoContainer {
   display: flex;
-  justify-content: center;
+  justify-content: space-evenly;
   align-items: center;
+  flex-direction: column;
+  width: 300px;
+  height: 300px;
 }
 
 #gameBoard{
@@ -339,6 +342,10 @@ body {
 </style>
 </head>
 <body class="hidden">
+<div class="hidden">
+  <canvas id="lifePrototype" height="60" width="60"></canvas>
+  <canvas id="deathPrototype" height="60" width="60"></canvas>
+</div>
 <div id="content">
   <div id="menu">
     <div id="title"><div id="head">CAVE CHESS</div><div id="subhead">cave style chess</div></div>
@@ -357,7 +364,12 @@ body {
     </div>
     <div id="infoCol">
       <div class="infoContainer">
-        <canvas id="info" width="500" height="300"></canvas>
+        <div id="opponentName"></div>
+        <div id="opponentLives"></div>
+        <div id="roomCode"></div>
+        <div id="playerLives"></div>
+        <div id="playerName"></div>
+        <!-- <canvas id="info" width="500" height="300"></canvas> -->
       </div>
       <div class="menuModal tutorial hidden">
         <h1>Here's How To Play Cave Chess</h1>
@@ -431,7 +443,6 @@ const gameCode = document.getElementById("game-code");
 const errorDisplay = document.getElementById("error");
 const ctx = boardCanvas.getContext("2d");
 const infoCanvas = document.getElementById("info");
-const infoCtx = infoCanvas.getContext("2d");
 
 const lightSquare = "#956205";
 const darkSquare = "#c1861a";
@@ -555,6 +566,7 @@ document.fonts.ready.then(() => {
         chatBox.focus();
         chatBox.disabled = false;
         addNotification(`${isOof ? "Tugg" : "Oof"} has joined`);
+        document.getElementById("opponentName").innerText = (isOof ? "Tugg" : "Oof");
       } else if (message.type == "moved") {
         if (game.state.oofHp != message.data.state.oofHp || game.state.tuggHp != message.data.state.tuggHp) {
           yell();
@@ -567,6 +579,7 @@ document.fonts.ready.then(() => {
         opponentConnected = false;
         chatBox.disabled = true;
         addNotification(`${isOof ? "Tugg" : "Oof"} has left`);
+        document.getElementById("opponentName").innerText = (isOof ? "Tugg" : "Oof") + " (waiting for opponent)";
       } else if (message.type == "chessMessage") {
         addMessage(message.data.id, message.data.message);
       } else if (message.type == "ping") {
@@ -580,7 +593,7 @@ document.fonts.ready.then(() => {
         console.log("unknown message type");
         console.log(message);
       }
-      draw();
+      update();
     });
   }
 
@@ -625,6 +638,73 @@ document.fonts.ready.then(() => {
     joinGameEnabled = true;
     addNotification(`welcome ${isOof ? "Oof" : "Tugg"}`);
     addNotification(`room code: ${game.code}`);
+    drawFaces();
+
+    document.getElementById("opponentName").innerText = (isOof ? "Tugg" : "Oof") + " (waiting for opponent)";
+    document.getElementById("playerName").innerText = (isOof ? "Oof" : "Tugg");
+    document.getElementById("roomCode").innerText = game.code;
+  }
+
+  function drawFaces() {
+    const lifePrototype = document.getElementById("lifePrototype");
+    const lifeCtx = lifePrototype.getContext("2d");
+    const deathPrototype = document.getElementById("deathPrototype");
+    const deathCtx = deathPrototype.getContext("2d");
+
+    lifeCtx.beginPath();
+    lifeCtx.arc(30, 30, 30, 0, Math.PI * 2, true); // Outer circle
+    lifeCtx.moveTo(49, 35);
+    lifeCtx.arc(30, 35, 20, 0, Math.PI, false);  // Mouth (clockwise)
+    lifeCtx.moveTo(20, 20);
+    lifeCtx.arc(15, 20, 5, 0, Math.PI * 2, true);  // Left eye
+    lifeCtx.moveTo(50, 20);
+    lifeCtx.arc(45, 20, 5, 0, Math.PI * 2, true);  // Right eye
+    lifeCtx.stroke();
+
+    const lifeUrl = lifePrototype.toDataURL();
+
+    deathCtx.beginPath();
+    deathCtx.arc(30, 30, 30, 0, Math.PI * 2, true); // Outer circle
+    deathCtx.moveTo(45, 45);
+    deathCtx.arc(30, 45, 15, 0, Math.PI, true);  // Mouth (clockwise)
+    deathCtx.moveTo(15, 15);
+    deathCtx.lineTo(25, 25);
+    deathCtx.moveTo(15, 25);
+    deathCtx.lineTo(25, 15);
+    deathCtx.moveTo(35, 15);
+    deathCtx.lineTo(45, 25);
+    deathCtx.moveTo(45, 15);
+    deathCtx.lineTo(35, 25);
+    deathCtx.stroke();
+
+    const deathUrl = deathPrototype.toDataURL();
+
+    const opponentLives = document.getElementById("opponentLives");
+    const playerLives = document.getElementById("playerLives");
+
+    for (let i = 0; i < game.state.maxHp; i++) {
+      const opponentLife = document.createElement("img");
+      opponentLife.src = lifeUrl;
+      opponentLife.id = `opponentLife${i}`;
+      opponentLives.appendChild(opponentLife);
+
+      const opponentDeath = document.createElement("img");
+      opponentDeath.src = deathUrl;
+      opponentDeath.id = `opponentDeath${i}`;
+      opponentDeath.classList.add("hidden");
+      opponentLives.appendChild(opponentDeath);
+
+      const playerLife = document.createElement("img");
+      playerLife.src = lifeUrl;
+      playerLife.id = `playerLife${i}`;
+      playerLives.appendChild(playerLife);
+
+      const playerDeath = document.createElement("img");
+      playerDeath.src = deathUrl;
+      playerDeath.id = `playerDeath${i}`;
+      playerDeath.classList.add("hidden");
+      playerLives.appendChild(playerDeath);
+    }
   }
 
   function joinGame() {
@@ -633,9 +713,37 @@ document.fonts.ready.then(() => {
     }
   }
 
-  function draw(){
+  function update() {
     if (!game) { return; }
     drawBoard();
+    updateInfo();
+  }
+
+  function updateInfo() {
+    for (let i = 0; i < game.state.maxHp; i++) {
+      const playerHp = isOof ? game.state.oofHp : game.state.tuggHp;
+      const opponentHp = isOof ? game.state.tuggHp : game.state.oofHp;
+      const playerLife = document.getElementById(`playerLife${i}`);
+      const playerDeath = document.getElementById(`playerDeath${i}`);
+      const opponentLife = document.getElementById(`opponentLife${i}`);
+      const opponentDeath = document.getElementById(`opponentDeath${i}`);
+
+      if (playerHp < i + 1) {
+        playerLife.classList.add("hidden");
+        playerDeath.classList.remove("hidden");
+      } else {
+        playerLife.classList.remove("hidden");
+        playerDeath.classList.add("hidden");
+      }
+
+      if (opponentHp < i + 1) {
+        opponentLife.classList.add("hidden");
+        opponentDeath.classList.remove("hidden");
+      } else {
+        opponentLife.classList.remove("hidden");
+        opponentDeath.classList.add("hidden");
+      }
+    }
   }
 
   function drawBoard() {
@@ -885,7 +993,7 @@ document.fonts.ready.then(() => {
     if (!moveMode) {
       highlightedSquares = empty();
       highlightedSquares[position[0]][position[1]] = true;
-      draw();
+      update();
     }
   });
 
@@ -905,10 +1013,10 @@ document.fonts.ready.then(() => {
         leaveMoveMode();
       }
     }
-    draw();
+    update();
   });
 
-  draw();
+  update();
 });
 </script>
 </body>
