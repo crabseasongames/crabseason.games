@@ -43,9 +43,10 @@ body {
   src: url(smilin-john-font/SmilinJohn-KzX.ttf);
 }
 
-
 #title {
   text-align: center;
+  color: #fff;
+  text-shadow: 0 0 20px #000;
 }
 
 #head {
@@ -173,7 +174,6 @@ body {
 }
 
 #controls {
-  margin-top: 100px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -187,12 +187,12 @@ body {
   justify-content: center;
   align-items: center;
   height: 100vh;
-  background-image: url('./assets/cavewall.jpeg');
+/*  background-image: url('./assets/cavewall.jpeg');*/
 }
 
 #infoCol {
   height: 700px;
-  width: auto;
+  width: 350px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -207,6 +207,13 @@ body {
   flex-direction: column;
   width: 300px;
   height: 300px;
+  font-size: 18px;
+}
+
+#roomCode {
+  font-size: 60px;
+  font-family: smilin-john;
+  vertical-align: sub;
 }
 
 #gameBoard{
@@ -217,7 +224,7 @@ body {
 }
 
 #board{
-  background-color: #999;
+  background-color: #ccc;
 }
 
 #content{
@@ -267,37 +274,21 @@ body {
 .menuBtn {
   background-color: #ffffff;
   font-family: dinotopia;
-  font-size: 26px;
+  font-size: 22px;
   margin-top: 8px;
+  cursor: pointer;
+  height: 60px;
 }
 
-.tutorialBtnOpen {
-  height: 80px;
-  width: 140px;
-}
-
-.tutorialBtnClose{
-  height: 80px;
-  width: 100px;
-}
-
-.menuBtnOpen {
-  height: 65px;
-  width: 150px;
-}
-
-.menuBtnClose {
-  height: 65px;
-  width: 150px;
+.menuBtn:hover {
+  background-color: #999;
 }
 
 .menuModal {
-  font-family: dinotopia;
+  width: 600px;
   position: absolute;
-  top: 20%;
-  left: 45%;
-  max-width: 50%;
-  min-width: 200px;
+  left: calc(50% - 300px);
+  top: 15px;
   background-color: rgba(255, 255, 255, 0.92);
   padding: 10px 20px;
   border-style: double;
@@ -310,33 +301,45 @@ body {
 }
 
 .settings {
+
 }
 
-.rulesInterior{
+.rulesInterior {
   display: grid;
   grid-template-columns: 3fr 2fr;
   margin-bottom: 10px;
   font-size: 20px;
-
 }
 
-.loreDump{
+.loreDump {
   height: 115px;
   overflow: auto;
   padding-right: 12px;
+  font-size: 18px;
 }
 
-.rulesCol{
+.rulesCol {
   display: grid;
   grid-template-rows: 4fr 4fr 4fr;
   justify-items: center;
-  font-size: 20px;
+  font-size: 16px;
   margin-bottom: 8px;
 }
 
 .rulesIcon {
   height: 77px;
   width: auto;
+}
+
+#backgroundCave {
+  position: absolute;
+  width: 100vw;
+  height: 100vh;
+  z-index: -999;
+}
+
+.lifeDeathIcon {
+  margin: 5px;
 }
 
 </style>
@@ -347,6 +350,41 @@ body {
   <canvas id="deathPrototype" height="60" width="60"></canvas>
 </div>
 <div id="content">
+  <img id="backgroundCave" src="./assets/cavewall.jpeg">
+  <div class="menuModal tutorial hidden">
+    <h1>Here's How To Play Cave Chess</h1>
+    <h2>A Brief History of Cave Chess:</h2>
+    <h2 class="loreDump">Is it absurd to think that the first man experienced longing? If not longing for a mate, or for food - what did the first
+      person long for? It is our opinion here at Crab Season Games that the answer to that question is that the first cave person
+      actually experienced a longing for competition. That lead us to develop Cave Chess, a simulation of what we believe to be the
+      first competitive game ever develop.
+
+      While cave chess appears to be a simple game, there are actually over one trillion permutations of how a game can unfold. But
+      before we get to that, let's learn how to play.
+    </h2>
+    <div class="rulesInterior">
+      <div class="rulesCol">
+        <span>
+          These are rocks. You can move the rocks in a straight line in any direction. If you move a rock onto another piece, you smash it.
+        </span>
+        <span>
+          This is a guy. He is like you, so he can only go one space at a time. You lose the game if your guy gets smashed by a rock.
+        </span>
+        <span>
+          Oh there's another way to win I almost forgot. If you  move a rock off your oponents side of the board, you hit them with it.
+          If you hit the other person twice you win.
+        </span>
+      </div>
+      <div class="rulesCol">
+        <img class="rulesIcon" src="./assets/rock.png"/>
+        <img class="rulesIcon" src="./assets/guy.png"/>
+        <img class="rulesIcon" src="./assets/bonk.png"/>
+      </div>
+    </div>
+    <span>I think that's everything...</span>
+    <br/>
+    <button class="tutorialBtnClose menuBtn">Close</button>
+  </div>
   <div id="menu">
     <div id="title"><div id="head">CAVE CHESS</div><div id="subhead">cave style chess</div></div>
     <div id="controls">
@@ -370,40 +408,6 @@ body {
         <div id="playerLives"></div>
         <div id="playerName"></div>
         <!-- <canvas id="info" width="500" height="300"></canvas> -->
-      </div>
-      <div class="menuModal tutorial hidden">
-        <h1>Here's How To Play Cave Chess</h1>
-        <h2>A Brief History of Cave Chess:</h2>
-        <h2 class="loreDump">Is it absurd to think that the first man experienced longing? If not longing for a mate, or for food - what did the first 
-          person long for? It is our opinion here at Crab Season Games that the answer to that question is that the first cave person 
-          actually experienced a longing for competition. That lead us to develop Cave Chess, a simulation of what we believe to be the 
-          first competitive game ever develop. 
-    
-          While cave chess appears to be a simple game, there are actually over one trillion permutations of how a game can unfold. But 
-          before we get to that, let's learn how to play.
-        </h2>
-        <div class="rulesInterior"> 
-          <div class="rulesCol">
-            <span>
-              These are rocks. You can move the rocks in a straight line in any direction. If you move a rock onto another piece, you smash it.
-            </span>
-            <span>
-              This is a guy. He is like you, so he can only go one space at a time. You lose the game if your guy gets smashed by a rock.
-            </span>
-            <span>
-              Oh there's another way to win I almost forgot. If you  move a rock off your oponents side of the board, you hit them with it.
-              If you hit the other person twice you win.
-            </span>
-          </div>
-          <div class="rulesCol">
-            <img class="rulesIcon" src="./assets/rock.png"/>
-            <img class="rulesIcon" src="./assets/guy.png"/>
-            <img class="rulesIcon" src="./assets/bonk.png"/>
-          </div>
-        </div>
-        <span>I think that's everything...</span>
-        <br/>
-        <button class="tutorialBtnClose menuBtn">Close</button>
       </div>
       <div class="menuModal settings hidden">
         Settings:
@@ -686,22 +690,26 @@ document.fonts.ready.then(() => {
       const opponentLife = document.createElement("img");
       opponentLife.src = lifeUrl;
       opponentLife.id = `opponentLife${i}`;
+      opponentLife.classList.add("lifeDeathIcon");
       opponentLives.appendChild(opponentLife);
 
       const opponentDeath = document.createElement("img");
       opponentDeath.src = deathUrl;
       opponentDeath.id = `opponentDeath${i}`;
       opponentDeath.classList.add("hidden");
+      opponentDeath.classList.add("lifeDeathIcon");
       opponentLives.appendChild(opponentDeath);
 
       const playerLife = document.createElement("img");
       playerLife.src = lifeUrl;
       playerLife.id = `playerLife${i}`;
+      playerLife.classList.add("lifeDeathIcon");
       playerLives.appendChild(playerLife);
 
       const playerDeath = document.createElement("img");
       playerDeath.src = deathUrl;
       playerDeath.id = `playerDeath${i}`;
+      playerDeath.classList.add("lifeDeathIcon");
       playerDeath.classList.add("hidden");
       playerLives.appendChild(playerDeath);
     }
@@ -843,19 +851,39 @@ document.fonts.ready.then(() => {
   const settingsWindow = document.querySelector(".settings");
 
   openTutorialButton.addEventListener("click", function (e) {
-    tutorialWindow.classList.remove("hidden")
+    tutorialWindow.classList.remove("hidden");
+    e.preventDefault();
+    e.cancelBubble = true;
   });
 
   closeTutorialButton.addEventListener("click", function (e) {
-    tutorialWindow.classList.add("hidden")
+    tutorialWindow.classList.add("hidden");
   });
 
   openSettingsButton.addEventListener("click", function (e) {
-    settingsWindow.classList.remove("hidden")
+    settingsWindow.classList.remove("hidden");
+    e.preventDefault();
+    e.cancelBubble = true;
   });
 
   closeSettingsButton.addEventListener("click", function (e) {
-    settingsWindow.classList.add("hidden")
+    settingsWindow.classList.add("hidden");
+  });
+
+  tutorialWindow.addEventListener("click", (e) => {
+    e.preventDefault();
+    e.cancelBubble = true;
+  });
+  addEventListener("click", () => {
+    tutorialWindow.classList.add("hidden");
+  });
+
+  settingsWindow.addEventListener("click", (e) => {
+    e.preventDefault();
+    e.cancelBubble = true;
+  });
+  addEventListener("click", () => {
+    settingsWindow.classList.add("hidden");
   });
 
   function getPosition(x, y) {
