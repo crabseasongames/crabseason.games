@@ -212,7 +212,7 @@ body {
 }
 
 #board{
-  background-color: #ccc;
+  background-color: #cccccc96;
 }
 
 #content{
@@ -566,6 +566,11 @@ document.fonts.ready.then(() => {
           tap();
         }
         game = message.data;
+        if (game.state.winner == 1) {
+          document.getElementById("roomCode").innerHTML = "<marquee>OOF WIN</marquee>";
+        } else if (game.state.winner == 2) {
+          document.getElementById("roomCode").innerHTML = "<marquee>TUGG WIN</marquee>";
+        }
         leaveMoveMode();
       } else if (message.type == "disconnect") {
         opponentConnected = false;
