@@ -4,18 +4,36 @@
 <style>
 
 @media (max-width: 1100px) {
-  #game {
+  body #game {
     flex-direction: column-reverse;
     flex-direction: flex-end;
   }
 
-  #gameBoard {
-    margin-right: 0px !important;
+  body #gameBoard {
+    margin-right: 0px important;
   }
 
-  #board {
+  body #board {
     margin-bottom: 30px;
   }
+
+  body #infoCol {
+    height: 475px;
+    width: 800px;
+    flex-direction: row;
+    margin-bottom: 20px;
+    padding: 0px 20px;
+  }
+
+  body .btnContainer {
+    flex-direction: column;  
+  }
+
+  body #infoColRight {
+    margin-left: 20px;
+    width: 50%;
+  }
+  
 }
 
 body {
@@ -190,6 +208,10 @@ body {
   box-shadow: 0 0 5px #000;
 }
 
+#infoColRight{
+  width: 100%;
+}
+
 .infoContainer {
   display: flex;
   justify-content: space-evenly;
@@ -212,14 +234,19 @@ body {
   justify-content: center;
   margin-right: 30px;
   box-shadow: 0 0 3px #000;
+  background-image: url("./assets/slate.png");
 }
 
 #board{
-  background-color: #cccccc96;
 }
 
 #content{
 
+}
+
+#backgroundBoard{
+  height: 700px;
+  width: 580px;
 }
 
 #gameCanvas {
@@ -407,16 +434,18 @@ body {
         Settings Go here
         <button class="settingsBtnClose menuBtn">Close</button>
       </div>
-      <div id="chat">
-        <div id="chat-contents"></div>
-        <div id="chat-textbox">
-          <textarea id="textbox" spellcheck="false" disabled></textarea>
+      <div id="infoColRight">
+        <div id="chat">
+          <div id="chat-contents"></div>
+          <div id="chat-textbox">
+            <textarea id="textbox" spellcheck="false" disabled></textarea>
+          </div>
         </div>
-      </div>
-      <div class="btnContainer">
-        <button class="menuBtn tutorialBtnOpen">TUTORIAL</button>
-        <button class="menuBtn settingsBtnOpen">SETTINGS</button>
-      </div>
+        <div class="btnContainer">
+          <button class="menuBtn tutorialBtnOpen">TUTORIAL</button>
+          <button class="menuBtn settingsBtnOpen">SETTINGS</button>
+        </div>
+    </div>
     </div>
   </div>
 </div>
@@ -441,7 +470,10 @@ const ctx = boardCanvas.getContext("2d");
 const infoCanvas = document.getElementById("info");
 
 const lightSquare = "#956205";
+// const lightSquare = "#95620500";
 const darkSquare = "#c1861a";
+// const darkSquare = "#c1861a00";
+
 const highlightedColor = "#ef4141";
 const tuggColor = "#000";
 const oofColor = "#fff";
