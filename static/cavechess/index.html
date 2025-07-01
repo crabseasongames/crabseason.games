@@ -6,15 +6,11 @@
 @media (max-width: 1100px) {
   body #game {
     flex-direction: column-reverse;
-    flex-direction: flex-end;
+    padding: 20px 0;
   }
 
   body #gameBoard {
     margin-right: 0px important;
-  }
-
-  body #board {
-    margin-bottom: 30px;
   }
 
   body #infoCol {
@@ -33,14 +29,20 @@
     margin-left: 20px;
     width: 50%;
   }
+
+  .infoContainer {
+    width: 50% !important;
+    height: 100% !important;
+  }
   
 }
 
 body {
   margin: 0;
-  height: 100vh;
   font-family: monospace;
   min-height: 100vh;
+  background-image: url(./assets/cavewall.jpeg);
+  background-size: cover;
 }
 
  canvas {
@@ -193,8 +195,7 @@ body {
   display: flex; 
   justify-content: center;
   align-items: center;
-  height: 100vh;
-/*  background-image: url('./assets/cavewall.jpeg');*/
+  min-height: 100vh;
 }
 
 #infoCol {
@@ -351,13 +352,6 @@ body {
   width: auto;
 }
 
-#backgroundCave {
-  position: absolute;
-  width: 100vw;
-  height: 100vh;
-  z-index: -999;
-}
-
 .lifeDeathIcon {
   margin: 5px;
 }
@@ -370,7 +364,6 @@ body {
   <canvas id="deathPrototype" height="60" width="60"></canvas>
 </div>
 <div id="content">
-  <img id="backgroundCave" src="./assets/cavewall.jpeg">
   <div class="menuModal tutorial hidden">
     <h1>Here's How To Play Cave Chess</h1>
     <h2>A Brief History of Cave Chess:</h2>
@@ -714,6 +707,9 @@ document.fonts.ready.then(() => {
 
     const opponentLives = document.getElementById("opponentLives");
     const playerLives = document.getElementById("playerLives");
+
+    opponentLives.innerHTML = "";
+    playerLives.innerHTML = "";
 
     for (let i = 0; i < game.state.maxHp; i++) {
       const opponentLife = document.createElement("img");
