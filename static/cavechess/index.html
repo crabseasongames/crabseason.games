@@ -498,8 +498,10 @@ let moveMode = false;
 let throwRockAllowed = false;
 
 let preload = new Image();
+preload.addEventListener("load", init);
 preload.src = "./assets/cavewall.jpeg";
-preload.addEventListener("load", () => {
+
+function init() {
 
   document.fonts.ready.then(() => {
     gameCode.value = "";
@@ -1084,7 +1086,7 @@ preload.addEventListener("load", () => {
 
     update();
   });
-});
+}
 </script>
 </body>
 </html>
