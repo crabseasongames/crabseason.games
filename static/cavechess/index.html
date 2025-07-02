@@ -367,16 +367,18 @@ body {
 }
 
 #fontPreload {
+  visibility: hidden;
   font-family: smilin-john;
+  position: absolute;
 }
 
 </style>
 </head>
 <body class="secret">
+<div id="fontPreload">preload</div>
 <div class="hidden">
   <canvas id="lifePrototype" height="60" width="60"></canvas>
   <canvas id="deathPrototype" height="60" width="60"></canvas>
-  <div id="fontPreload">preload</div>
 </div>
 <div id="content">
   <div class="menuModal tutorial hidden">
