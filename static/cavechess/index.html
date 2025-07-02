@@ -492,7 +492,10 @@ let activePosition = false;
 let moveMode = false;
 let throwRockAllowed = false;
 
-document.fonts.ready.then(() => {
+let preload = new Image();
+preload.src = "./assets/cavewall.jpeg";
+
+preload.addEventListener("load", () => {
 
   gameCode.value = "";
 
