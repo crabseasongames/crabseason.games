@@ -3,7 +3,7 @@
 <head>
 <style>
 
-@media (max-width: 1100px) {
+@media (max-width: 1000px) {
   body #game {
     flex-direction: column-reverse;
     padding: 20px 0;
@@ -366,12 +366,17 @@ body {
   margin: 5px;
 }
 
+#fontPreload {
+  font-family: smilin-john;
+}
+
 </style>
 </head>
 <body class="secret">
 <div class="hidden">
   <canvas id="lifePrototype" height="60" width="60"></canvas>
   <canvas id="deathPrototype" height="60" width="60"></canvas>
+  <div id="fontPreload">preload</div>
 </div>
 <div id="content">
   <div class="menuModal tutorial hidden">
