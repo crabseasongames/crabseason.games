@@ -57,6 +57,11 @@ body {
   display: none !important;
 }
 
+.secret {
+  visibility: hidden;
+  background-image: none;
+}
+
 @font-face {
   font-family: dinotopia;
   src: url(dinopia-font/DinopiaRegular-mLrO9.otf);
@@ -363,7 +368,7 @@ body {
 
 </style>
 </head>
-<body class="hidden">
+<body class="secret">
 <div class="hidden">
   <canvas id="lifePrototype" height="60" width="60"></canvas>
   <canvas id="deathPrototype" height="60" width="60"></canvas>
@@ -494,590 +499,591 @@ let throwRockAllowed = false;
 
 let preload = new Image();
 preload.src = "./assets/cavewall.jpeg";
-
 preload.addEventListener("load", () => {
 
-  gameCode.value = "";
+  document.fonts.ready.then(() => {
+    gameCode.value = "";
 
-  function mute() {
-    muted = 1;
-    localStorage["muted"] = "true";
-  }
-
-  function send(type, data) {
-    if (!ws || ws.readyState != 1) {
-      return;
+    function mute() {
+      muted = 1;
+      localStorage["muted"] = "true";
     }
-    ws.send(JSON.stringify({
-      type: type,
-      data: data
-    }));
-  }
 
-  function appendToChat(entry) {
-    chatContents.appendChild(entry);
-    chatContents.scroll(0, Number.MAX_SAFE_INTEGER);
-  }
-
-  function addMessage(id, text) {
-    const message = document.createElement("div");
-    message.classList.add("chat-entry");
-    const idText = document.createElement("span");
-    idText.classList.add("id");
-    idText.innerText = id == userId  && isOof || id != userId && !isOof ? "Oof: " : "Tugg: ";
-    const messageText = document.createElement("span");
-    messageText.classList.add("message");
-    messageText.innerText = text;
-    message.appendChild(idText);
-    message.appendChild(messageText);
-    appendToChat(message);
-  }
-
-  function addNotification(message) {
-    const notification = document.createElement("div");
-    notification.classList.add("chat-entry");
-    const notificationText = document.createElement("span");
-    notificationText.classList.add("notif");
-    notificationText.innerText = ">> " + message;
-    notification.appendChild(notificationText);
-    appendToChat(notification);
-  }
-
-  let ws;
-
-  function connect() {
-    ws = new WebSocket(location.search.slice(1) == "LOCAL" ? "ws://localhost:3000" : "wss://crabseasongames-7ea0aa49408a.herokuapp.com/");
-
-    ws.addEventListener("open", (event) => {
-      send("register", userId);
-      errorDisplay.innerText = "";
-    });
-
-    ws.addEventListener("close", (event) => {
-      setTimeout(() => {
-        menuSection.classList.remove("hidden");
-        gameSection.classList.add("hidden");
-        errorDisplay.innerText = "Error: lost connection";
-        connect();
-      }, 1000);
-    });
-
-    ws.addEventListener("message", (event) => {
-      let message;
-      try {
-        message = JSON.parse(event.data);
-      } catch (e) {
-        return send("error", `Error parsing: ${event.data}`);
+    function send(type, data) {
+      if (!ws || ws.readyState != 1) {
+        return;
       }
+      ws.send(JSON.stringify({
+        type: type,
+        data: data
+      }));
+    }
 
-      if (message.type == "registered") {
-        console.log(`registered as ${userId}`);
-        document.body.classList.remove("hidden");
-      } else if (message.type == "gameStarted") {
-        initialize(message.data);
-      } else if (message.type == "joinedGame") {
-        initialize(message.data);
-      } else if (message.type == "opponentJoinedGame") {
-        opponentConnected = true;
-        chatBox.addEventListener("keydown", (e) => {
-          if (e.keyCode == 13) {
-            let text = chatBox.value.trim();
-            if (text.length) {
-              send("chesschat", {
-                targetId: message.data,
-                message: chatBox.value
-              });
+    function appendToChat(entry) {
+      chatContents.appendChild(entry);
+      chatContents.scroll(0, Number.MAX_SAFE_INTEGER);
+    }
+
+    function addMessage(id, text) {
+      const message = document.createElement("div");
+      message.classList.add("chat-entry");
+      const idText = document.createElement("span");
+      idText.classList.add("id");
+      idText.innerText = id == userId  && isOof || id != userId && !isOof ? "Oof: " : "Tugg: ";
+      const messageText = document.createElement("span");
+      messageText.classList.add("message");
+      messageText.innerText = text;
+      message.appendChild(idText);
+      message.appendChild(messageText);
+      appendToChat(message);
+    }
+
+    function addNotification(message) {
+      const notification = document.createElement("div");
+      notification.classList.add("chat-entry");
+      const notificationText = document.createElement("span");
+      notificationText.classList.add("notif");
+      notificationText.innerText = ">> " + message;
+      notification.appendChild(notificationText);
+      appendToChat(notification);
+    }
+
+    let ws;
+
+    function connect() {
+      ws = new WebSocket(location.search.slice(1) == "LOCAL" ? "ws://localhost:3000" : "wss://crabseasongames-7ea0aa49408a.herokuapp.com/");
+
+      ws.addEventListener("open", (event) => {
+        send("register", userId);
+        errorDisplay.innerText = "";
+      });
+
+      ws.addEventListener("close", (event) => {
+        setTimeout(() => {
+          menuSection.classList.remove("hidden");
+          gameSection.classList.add("hidden");
+          errorDisplay.innerText = "Error: lost connection";
+          connect();
+        }, 1000);
+      });
+
+      ws.addEventListener("message", (event) => {
+        let message;
+        try {
+          message = JSON.parse(event.data);
+        } catch (e) {
+          return send("error", `Error parsing: ${event.data}`);
+        }
+
+        if (message.type == "registered") {
+          console.log(`registered as ${userId}`);
+          document.body.classList.remove("secret");
+        } else if (message.type == "gameStarted") {
+          initialize(message.data);
+        } else if (message.type == "joinedGame") {
+          initialize(message.data);
+        } else if (message.type == "opponentJoinedGame") {
+          opponentConnected = true;
+          chatBox.addEventListener("keydown", (e) => {
+            if (e.keyCode == 13) {
+              let text = chatBox.value.trim();
+              if (text.length) {
+                send("chesschat", {
+                  targetId: message.data,
+                  message: chatBox.value
+                });
+              }
+              chatBox.value = "";
+              e.preventDefault();
             }
-            chatBox.value = "";
-            e.preventDefault();
+          });
+          chatBox.focus();
+          chatBox.disabled = false;
+          addNotification(`${isOof ? "Tugg" : "Oof"} has joined`);
+          document.getElementById("opponentName").innerText = (isOof ? "Tugg" : "Oof");
+        } else if (message.type == "moved") {
+          if (game.state.oofHp != message.data.state.oofHp || game.state.tuggHp != message.data.state.tuggHp) {
+            yell();
+          } else {
+            tap();
           }
-        });
-        chatBox.focus();
-        chatBox.disabled = false;
-        addNotification(`${isOof ? "Tugg" : "Oof"} has joined`);
-        document.getElementById("opponentName").innerText = (isOof ? "Tugg" : "Oof");
-      } else if (message.type == "moved") {
-        if (game.state.oofHp != message.data.state.oofHp || game.state.tuggHp != message.data.state.tuggHp) {
-          yell();
+          game = message.data;
+          if (game.state.winner == 1) {
+            document.getElementById("roomCode").innerHTML = "<marquee>OOF WIN</marquee>";
+          } else if (game.state.winner == 2) {
+            document.getElementById("roomCode").innerHTML = "<marquee>TUGG WIN</marquee>";
+          }
+          leaveMoveMode();
+        } else if (message.type == "disconnect") {
+          opponentConnected = false;
+          chatBox.disabled = true;
+          addNotification(`${isOof ? "Tugg" : "Oof"} has left`);
+          document.getElementById("opponentName").innerText = (isOof ? "Tugg" : "Oof") + " (waiting for opponent)";
+        } else if (message.type == "chessMessage") {
+          addMessage(message.data.id, message.data.message);
+        } else if (message.type == "ping") {
+          // send("pong");
+          // console.log("got ping");
+        } else if (message.type == "error") {
+          console.log("error");
+          console.log(message.data);
+          errorDisplay.innerText = `${message.data.type}: ${message.data.description}`;
         } else {
-          tap();
+          console.log("unknown message type");
+          console.log(message);
         }
-        game = message.data;
-        if (game.state.winner == 1) {
-          document.getElementById("roomCode").innerHTML = "<marquee>OOF WIN</marquee>";
-        } else if (game.state.winner == 2) {
-          document.getElementById("roomCode").innerHTML = "<marquee>TUGG WIN</marquee>";
-        }
-        leaveMoveMode();
-      } else if (message.type == "disconnect") {
-        opponentConnected = false;
-        chatBox.disabled = true;
-        addNotification(`${isOof ? "Tugg" : "Oof"} has left`);
-        document.getElementById("opponentName").innerText = (isOof ? "Tugg" : "Oof") + " (waiting for opponent)";
-      } else if (message.type == "chessMessage") {
-        addMessage(message.data.id, message.data.message);
-      } else if (message.type == "ping") {
-        // send("pong");
-        // console.log("got ping");
-      } else if (message.type == "error") {
-        console.log("error");
-        console.log(message.data);
-        errorDisplay.innerText = `${message.data.type}: ${message.data.description}`;
-      } else {
-        console.log("unknown message type");
-        console.log(message);
-      }
-      update();
-    });
-  }
-
-  connect();
-
-  newGameButton.addEventListener("click", (e) => {
-    send("newGame");
-  });
-
-  joinGameButton.addEventListener("click", (e) => {
-    joinGame();
-  });
-
-  gameCode.addEventListener("keydown", (e) => {
-    if (e.key == "Enter") {
-      if (joinGameEnabled) {
-        joinGame();
-      }
-      e.preventDefault();
+        update();
+      });
     }
-  });
 
-  gameCode.addEventListener("input", (e) => {
-    gameCode.value = gameCode.value.trim().slice(0, 4);
-    if (gameCode.value.length == 4) {
+    connect();
+
+    newGameButton.addEventListener("click", (e) => {
+      send("newGame");
+    });
+
+    joinGameButton.addEventListener("click", (e) => {
+      joinGame();
+    });
+
+    gameCode.addEventListener("keydown", (e) => {
+      if (e.key == "Enter") {
+        if (joinGameEnabled) {
+          joinGame();
+        }
+        e.preventDefault();
+      }
+    });
+
+    gameCode.addEventListener("input", (e) => {
+      gameCode.value = gameCode.value.trim().slice(0, 4);
+      if (gameCode.value.length == 4) {
+        joinGameButton.classList.remove("disabled");
+        joinGameEnabled = true;
+      } else {
+        joinGameButton.classList.add("disabled");
+        joinGameEnabled = false;
+      }
+    });
+
+    function initialize(gameData) {
+      chatContents.innerHTML = "";
+      menuSection.classList.add("hidden");
+      gameSection.classList.remove("hidden");
+      game = gameData;
+      isOof = game.host == userId;
+      gameCode.value = game.code;
       joinGameButton.classList.remove("disabled");
       joinGameEnabled = true;
-    } else {
-      joinGameButton.classList.add("disabled");
-      joinGameEnabled = false;
+      addNotification(`welcome ${isOof ? "Oof" : "Tugg"}`);
+      addNotification(`room code: ${game.code}`);
+      drawFaces();
+
+      document.getElementById("opponentName").innerText = (isOof ? "Tugg" : "Oof") + " (waiting for opponent)";
+      document.getElementById("playerName").innerText = (isOof ? "Oof" : "Tugg");
+      document.getElementById("roomCode").innerText = game.code;
     }
-  });
 
-  function initialize(gameData) {
-    chatContents.innerHTML = "";
-    menuSection.classList.add("hidden");
-    gameSection.classList.remove("hidden");
-    game = gameData;
-    isOof = game.host == userId;
-    gameCode.value = game.code;
-    joinGameButton.classList.remove("disabled");
-    joinGameEnabled = true;
-    addNotification(`welcome ${isOof ? "Oof" : "Tugg"}`);
-    addNotification(`room code: ${game.code}`);
-    drawFaces();
+    function drawFaces() {
+      const lifePrototype = document.getElementById("lifePrototype");
+      const lifeCtx = lifePrototype.getContext("2d");
+      const deathPrototype = document.getElementById("deathPrototype");
+      const deathCtx = deathPrototype.getContext("2d");
 
-    document.getElementById("opponentName").innerText = (isOof ? "Tugg" : "Oof") + " (waiting for opponent)";
-    document.getElementById("playerName").innerText = (isOof ? "Oof" : "Tugg");
-    document.getElementById("roomCode").innerText = game.code;
-  }
+      lifeCtx.beginPath();
+      lifeCtx.arc(30, 30, 30, 0, Math.PI * 2, true); // Outer circle
+      lifeCtx.moveTo(49, 35);
+      lifeCtx.arc(30, 35, 20, 0, Math.PI, false);  // Mouth (clockwise)
+      lifeCtx.moveTo(20, 20);
+      lifeCtx.arc(15, 20, 5, 0, Math.PI * 2, true);  // Left eye
+      lifeCtx.moveTo(50, 20);
+      lifeCtx.arc(45, 20, 5, 0, Math.PI * 2, true);  // Right eye
+      lifeCtx.stroke();
 
-  function drawFaces() {
-    const lifePrototype = document.getElementById("lifePrototype");
-    const lifeCtx = lifePrototype.getContext("2d");
-    const deathPrototype = document.getElementById("deathPrototype");
-    const deathCtx = deathPrototype.getContext("2d");
+      const lifeUrl = lifePrototype.toDataURL();
 
-    lifeCtx.beginPath();
-    lifeCtx.arc(30, 30, 30, 0, Math.PI * 2, true); // Outer circle
-    lifeCtx.moveTo(49, 35);
-    lifeCtx.arc(30, 35, 20, 0, Math.PI, false);  // Mouth (clockwise)
-    lifeCtx.moveTo(20, 20);
-    lifeCtx.arc(15, 20, 5, 0, Math.PI * 2, true);  // Left eye
-    lifeCtx.moveTo(50, 20);
-    lifeCtx.arc(45, 20, 5, 0, Math.PI * 2, true);  // Right eye
-    lifeCtx.stroke();
+      deathCtx.beginPath();
+      deathCtx.arc(30, 30, 30, 0, Math.PI * 2, true); // Outer circle
+      deathCtx.moveTo(45, 45);
+      deathCtx.arc(30, 45, 15, 0, Math.PI, true);  // Mouth (clockwise)
+      deathCtx.moveTo(15, 15);
+      deathCtx.lineTo(25, 25);
+      deathCtx.moveTo(15, 25);
+      deathCtx.lineTo(25, 15);
+      deathCtx.moveTo(35, 15);
+      deathCtx.lineTo(45, 25);
+      deathCtx.moveTo(45, 15);
+      deathCtx.lineTo(35, 25);
+      deathCtx.stroke();
 
-    const lifeUrl = lifePrototype.toDataURL();
+      const deathUrl = deathPrototype.toDataURL();
 
-    deathCtx.beginPath();
-    deathCtx.arc(30, 30, 30, 0, Math.PI * 2, true); // Outer circle
-    deathCtx.moveTo(45, 45);
-    deathCtx.arc(30, 45, 15, 0, Math.PI, true);  // Mouth (clockwise)
-    deathCtx.moveTo(15, 15);
-    deathCtx.lineTo(25, 25);
-    deathCtx.moveTo(15, 25);
-    deathCtx.lineTo(25, 15);
-    deathCtx.moveTo(35, 15);
-    deathCtx.lineTo(45, 25);
-    deathCtx.moveTo(45, 15);
-    deathCtx.lineTo(35, 25);
-    deathCtx.stroke();
+      const opponentLives = document.getElementById("opponentLives");
+      const playerLives = document.getElementById("playerLives");
 
-    const deathUrl = deathPrototype.toDataURL();
+      opponentLives.innerHTML = "";
+      playerLives.innerHTML = "";
 
-    const opponentLives = document.getElementById("opponentLives");
-    const playerLives = document.getElementById("playerLives");
+      for (let i = 0; i < game.state.maxHp; i++) {
+        const opponentLife = document.createElement("img");
+        opponentLife.src = lifeUrl;
+        opponentLife.id = `opponentLife${i}`;
+        opponentLife.classList.add("lifeDeathIcon");
+        opponentLives.appendChild(opponentLife);
 
-    opponentLives.innerHTML = "";
-    playerLives.innerHTML = "";
-
-    for (let i = 0; i < game.state.maxHp; i++) {
-      const opponentLife = document.createElement("img");
-      opponentLife.src = lifeUrl;
-      opponentLife.id = `opponentLife${i}`;
-      opponentLife.classList.add("lifeDeathIcon");
-      opponentLives.appendChild(opponentLife);
-
-      const opponentDeath = document.createElement("img");
-      opponentDeath.src = deathUrl;
-      opponentDeath.id = `opponentDeath${i}`;
-      opponentDeath.classList.add("hidden");
-      opponentDeath.classList.add("lifeDeathIcon");
-      opponentLives.appendChild(opponentDeath);
-
-      const playerLife = document.createElement("img");
-      playerLife.src = lifeUrl;
-      playerLife.id = `playerLife${i}`;
-      playerLife.classList.add("lifeDeathIcon");
-      playerLives.appendChild(playerLife);
-
-      const playerDeath = document.createElement("img");
-      playerDeath.src = deathUrl;
-      playerDeath.id = `playerDeath${i}`;
-      playerDeath.classList.add("lifeDeathIcon");
-      playerDeath.classList.add("hidden");
-      playerLives.appendChild(playerDeath);
-    }
-  }
-
-  function joinGame() {
-    if (joinGameEnabled) {
-      send("joinGame", gameCode.value);
-    }
-  }
-
-  function update() {
-    if (!game) { return; }
-    drawBoard();
-    updateInfo();
-  }
-
-  function updateInfo() {
-    for (let i = 0; i < game.state.maxHp; i++) {
-      const playerHp = isOof ? game.state.oofHp : game.state.tuggHp;
-      const opponentHp = isOof ? game.state.tuggHp : game.state.oofHp;
-      const playerLife = document.getElementById(`playerLife${i}`);
-      const playerDeath = document.getElementById(`playerDeath${i}`);
-      const opponentLife = document.getElementById(`opponentLife${i}`);
-      const opponentDeath = document.getElementById(`opponentDeath${i}`);
-
-      if (playerHp < i + 1) {
-        playerLife.classList.add("hidden");
-        playerDeath.classList.remove("hidden");
-      } else {
-        playerLife.classList.remove("hidden");
-        playerDeath.classList.add("hidden");
-      }
-
-      if (opponentHp < i + 1) {
-        opponentLife.classList.add("hidden");
-        opponentDeath.classList.remove("hidden");
-      } else {
-        opponentLife.classList.remove("hidden");
+        const opponentDeath = document.createElement("img");
+        opponentDeath.src = deathUrl;
+        opponentDeath.id = `opponentDeath${i}`;
         opponentDeath.classList.add("hidden");
+        opponentDeath.classList.add("lifeDeathIcon");
+        opponentLives.appendChild(opponentDeath);
+
+        const playerLife = document.createElement("img");
+        playerLife.src = lifeUrl;
+        playerLife.id = `playerLife${i}`;
+        playerLife.classList.add("lifeDeathIcon");
+        playerLives.appendChild(playerLife);
+
+        const playerDeath = document.createElement("img");
+        playerDeath.src = deathUrl;
+        playerDeath.id = `playerDeath${i}`;
+        playerDeath.classList.add("lifeDeathIcon");
+        playerDeath.classList.add("hidden");
+        playerLives.appendChild(playerDeath);
       }
     }
-  }
 
-  function drawBoard() {
-    ctx.clearRect(0, 0, 8 * squareSize, squareSize);
-    ctx.clearRect(0, 9 * squareSize, 8 * squareSize, squareSize);
-    for (let i = 0; i < 8; i++) {
-      for (let j = 0; j < 8; j++) {
-        let color = (i + j) % 2 == 0 ? lightSquare : darkSquare;
-        ctx.fillStyle = color ;
-        ctx.fillRect(i * squareSize, (j + 1) * squareSize, squareSize, squareSize);
+    function joinGame() {
+      if (joinGameEnabled) {
+        send("joinGame", gameCode.value);
+      }
+    }
 
-        if (highlightedSquares[isOof ? i : 7 - i][isOof ? j : 7 - j] || allowedMoves[isOof ? i : 7 - i][isOof ? j : 7 - j]) {
-          ctx.fillStyle = highlightedColor;
+    function update() {
+      if (!game) { return; }
+      drawBoard();
+      updateInfo();
+    }
+
+    function updateInfo() {
+      for (let i = 0; i < game.state.maxHp; i++) {
+        const playerHp = isOof ? game.state.oofHp : game.state.tuggHp;
+        const opponentHp = isOof ? game.state.tuggHp : game.state.oofHp;
+        const playerLife = document.getElementById(`playerLife${i}`);
+        const playerDeath = document.getElementById(`playerDeath${i}`);
+        const opponentLife = document.getElementById(`opponentLife${i}`);
+        const opponentDeath = document.getElementById(`opponentDeath${i}`);
+
+        if (playerHp < i + 1) {
+          playerLife.classList.add("hidden");
+          playerDeath.classList.remove("hidden");
+        } else {
+          playerLife.classList.remove("hidden");
+          playerDeath.classList.add("hidden");
+        }
+
+        if (opponentHp < i + 1) {
+          opponentLife.classList.add("hidden");
+          opponentDeath.classList.remove("hidden");
+        } else {
+          opponentLife.classList.remove("hidden");
+          opponentDeath.classList.add("hidden");
+        }
+      }
+    }
+
+    function drawBoard() {
+      ctx.clearRect(0, 0, 8 * squareSize, squareSize);
+      ctx.clearRect(0, 9 * squareSize, 8 * squareSize, squareSize);
+      for (let i = 0; i < 8; i++) {
+        for (let j = 0; j < 8; j++) {
+          let color = (i + j) % 2 == 0 ? lightSquare : darkSquare;
+          ctx.fillStyle = color ;
           ctx.fillRect(i * squareSize, (j + 1) * squareSize, squareSize, squareSize);
-          ctx.fillStyle = color;
-          ctx.fillRect(i * squareSize + (squareSize * 0.1), (j + 1) * squareSize + (squareSize * 0.1), squareSize * 0.8, squareSize * 0.8);
-        }
 
-        let piece = isOof ? getPiece([i, j]) : getPiece([7 - i, 7 - j]);
-        if (piece) {
-          drawPiece([i, j], piece);
+          if (highlightedSquares[isOof ? i : 7 - i][isOof ? j : 7 - j] || allowedMoves[isOof ? i : 7 - i][isOof ? j : 7 - j]) {
+            ctx.fillStyle = highlightedColor;
+            ctx.fillRect(i * squareSize, (j + 1) * squareSize, squareSize, squareSize);
+            ctx.fillStyle = color;
+            ctx.fillRect(i * squareSize + (squareSize * 0.1), (j + 1) * squareSize + (squareSize * 0.1), squareSize * 0.8, squareSize * 0.8);
+          }
+
+          let piece = isOof ? getPiece([i, j]) : getPiece([7 - i, 7 - j]);
+          if (piece) {
+            drawPiece([i, j], piece);
+          }
+        }
+      }
+
+      for (let i = 0; i < 8; i++) {
+        if (game.state.oofTurn && highlightedEndzone[isOof ? i : 7 - i][0]) {
+          ctx.beginPath();
+          ctx.arc(squareSize*i + squareSize * 0.5, squareSize * (isOof ? 0.5 : 9.5), squareSize * 0.33, 0, 2 * Math.PI)
+          ctx.fillStyle = highlightedColor;
+          ctx.fill()
+        } else if (!game.state.oofTurn && highlightedEndzone[isOof ? i : 7 - i][1]) {
+          ctx.beginPath();
+          ctx.arc(squareSize*i + squareSize * 0.5, squareSize * (isOof ? 9.5 : 0.5), squareSize * 0.33, 0, 2 * Math.PI)
+          ctx.fillStyle = highlightedColor;
+          ctx.fill()
         }
       }
     }
 
-    for (let i = 0; i < 8; i++) {
-      if (game.state.oofTurn && highlightedEndzone[isOof ? i : 7 - i][0]) {
+    function drawPiece(position, piece) {
+      let p = [position[0], position[1] + 1];
+
+      let pieceColor = (piece == 1 || piece == 2) ? oofColor : tuggColor
+      if (piece == 1 || piece == 3){
         ctx.beginPath();
-        ctx.arc(squareSize*i + squareSize * 0.5, squareSize * (isOof ? 0.5 : 9.5), squareSize * 0.33, 0, 2 * Math.PI)
-        ctx.fillStyle = highlightedColor;
-        ctx.fill()
-      } else if (!game.state.oofTurn && highlightedEndzone[isOof ? i : 7 - i][1]) {
-        ctx.beginPath();
-        ctx.arc(squareSize*i + squareSize * 0.5, squareSize * (isOof ? 9.5 : 0.5), squareSize * 0.33, 0, 2 * Math.PI)
-        ctx.fillStyle = highlightedColor;
-        ctx.fill()
-      }
-    }
-  }
-
-  function drawPiece(position, piece) {
-    let p = [position[0], position[1] + 1];
-
-    let pieceColor = (piece == 1 || piece == 2) ? oofColor : tuggColor
-    if (piece == 1 || piece == 3){
-      ctx.beginPath();
-      ctx.arc(squareSize * p[0] + squareSize * 0.5, squareSize * p[1] + squareSize * 0.5, squareSize * 0.33, 0, 2 * Math.PI)
-      ctx.fillStyle = pieceColor;
-      ctx.fill();
-    } else {
-      ctx.beginPath();
-      ctx.arc(squareSize * p[0] + squareSize * 0.5, squareSize * p[1] + squareSize * 0.5, squareSize * 0.15, 0, 2 * Math.PI)
-      ctx.moveTo(squareSize * p[0] + squareSize * 0.1 , squareSize * p[1] + squareSize * 0.1);
-      ctx.lineTo(squareSize * p[0] + squareSize * 0.5, squareSize * p[1] + squareSize * 0.5);
-      ctx.lineTo(squareSize * p[0] + squareSize * 0.1, squareSize * p[1] + squareSize * 0.9);
-      ctx.lineTo(squareSize * p[0] + squareSize * 0.9, squareSize * p[1] + squareSize * 0.9);
-      ctx.lineTo(squareSize * p[0] + squareSize * 0.5, squareSize * p[1] + squareSize * 0.5);
-      ctx.lineTo(squareSize * p[0] + squareSize * 0.9, squareSize * p[1] + squareSize * 0.1);
-      ctx.lineTo(squareSize * p[0] + squareSize, squareSize * p[1] + squareSize * 0.1);
-      ctx.fillStyle = pieceColor;
-      ctx.fill();
-    }
-  }
-
-  let actx;
-
-  function tap() {
-    if (!actx || muted) { return; }
-    let v = 2;
-    let f = 1.5;
-    let audio_buffer = actx.createBuffer(1, 5512, 96000);
-    let buffer = audio_buffer.getChannelData(0);
-    let r = 1 + Math.random() * 0.1;
-    // let r = 0.9;
-    for (let i = 0; i < buffer.length; i++) {
-      buffer[i] = Math.sin(i * 0.03 * f * r) * v * Math.pow(2, -(((i - buffer.length / 2) * 0.007) ** 2));
-    }
-    let source = actx.createBufferSource();
-    source.buffer = audio_buffer;
-    source.connect(actx.destination);
-    source.start();
-  }
-
-  let audio = new Audio("benscream.wav");
-  audio.volume = 0.05;
-
-  function yell() {
-    if (muted) { return; }
-    audio.play();
-  }
-
-  const openTutorialButton = document.querySelector(".tutorialBtnOpen");
-  const closeTutorialButton = document.querySelector(".tutorialBtnClose");
-  const tutorialWindow = document.querySelector(".tutorial");
-  const openSettingsButton = document.querySelector(".settingsBtnOpen");
-  const closeSettingsButton = document.querySelector(".settingsBtnClose");
-  const settingsWindow = document.querySelector(".settings");
-
-  openTutorialButton.addEventListener("click", function (e) {
-    tutorialWindow.classList.remove("hidden");
-    e.preventDefault();
-    e.cancelBubble = true;
-  });
-
-  closeTutorialButton.addEventListener("click", function (e) {
-    tutorialWindow.classList.add("hidden");
-  });
-
-  openSettingsButton.addEventListener("click", function (e) {
-    settingsWindow.classList.remove("hidden");
-    e.preventDefault();
-    e.cancelBubble = true;
-  });
-
-  closeSettingsButton.addEventListener("click", function (e) {
-    settingsWindow.classList.add("hidden");
-  });
-
-  tutorialWindow.addEventListener("click", (e) => {
-    e.preventDefault();
-    e.cancelBubble = true;
-  });
-  addEventListener("click", () => {
-    tutorialWindow.classList.add("hidden");
-  });
-
-  settingsWindow.addEventListener("click", (e) => {
-    e.preventDefault();
-    e.cancelBubble = true;
-  });
-  addEventListener("click", () => {
-    settingsWindow.classList.add("hidden");
-  });
-
-  function getPosition(x, y) {
-    let boundx = (c) => { return Math.min((squareSize * 8) - 1, Math.max(0, c)); };
-    let boundy = (c) => { return Math.min((squareSize * 9) - 1, Math.max(-squareSize, c)); };
-    let p = [
-      Math.floor(boundx(x) / squareSize),
-      Math.floor(boundy(y - squareSize) / squareSize)
-    ];
-    return isOof ? p : [7 - p[0], 7 - p[1]];
-  }
-
-  function isOpposing(pa, pb) {
-    return isOofPiece(pa) != isOofPiece(pb);
-  }
-
-  function getAllowedMoves(position) {
-    highlightedSquares = empty();
-    highlightedEndzone = empty();
-    if (getPiece(position) == 2 || getPiece(position) == 4) {
-      return getAllowedGuyMoves(position);
-    } else {
-      return getAllowedRockMoves(position);
-    }
-  }
-
-  function getAllowedRockMoves(position) {
-    throwRockAllowed = false;
-    let allowedMoves = empty();
-    let i = position[0];
-    while (++i < 8 && !getPiece([i, position[1]])) {
-      allowedMoves[i][position[1]] = true;
-    }
-    if (i < 8) {
-      allowedMoves[i][position[1]] = isOpposing(position, [i, position[1]]);
-    }
-
-    i = position[0];
-    while (--i >= 0 && !getPiece([i, position[1]])) {
-      allowedMoves[i][position[1]] = true;
-    }
-    if (i >= 0) {
-      allowedMoves[i][position[1]] = isOpposing(position, [i, position[1]]);
-    }
-
-    i = position[1];
-    while (++i < 8 && !getPiece([position[0], i])) {
-      allowedMoves[position[0]][i] = true;
-    }
-    if (i < 8) {
-      allowedMoves[position[0]][i] = isOpposing(position, [position[0], i]);
-    } else if (!isOofPiece(position)) {
-      throwRockAllowed = true;
-      highlightedEndzone[position[0]][1] = true;
-    }
-
-    i = position[1];
-    while (--i >= 0 && !getPiece([position[0], i])) {
-      allowedMoves[position[0]][i] = true;
-    }
-    if (i >= 0) {
-      allowedMoves[position[0]][i] = isOpposing(position, [position[0], i]);
-    } else if (isOofPiece(position)) {
-      throwRockAllowed = true;
-      highlightedEndzone[position[0]][0] = true;
-    }
-    return allowedMoves;
-  }
-
-  function getAllowedGuyMoves(position) {
-    let allowedMoves = empty();
-    let i = position[0] + 1;
-
-    if (i < 8) {
-      allowedMoves[i][position[1]] = !getPiece([i, position[1]]) || isOpposing(position, [i, position[1]]);
-    }
-
-    i = position[0] - 1;
-
-    if (i >= 0) {
-      allowedMoves[i][position[1]] = !getPiece([i, position[1]]) || isOpposing(position, [i, position[1]]);
-    }
-
-    i = position[1] + 1;
-
-    if (i < 8) {
-      allowedMoves[position[0]][i] = !getPiece([position[0], i]) || isOpposing(position, [position[0], i]);
-    }
-
-    i = position[1] - 1;
-
-    if (i >= 0) {
-      allowedMoves[position[0]][i] = !getPiece([position[0], i]) || isOpposing(position, [position[0], i]);
-    }
-
-    return allowedMoves;
-  }
-
-  function isOofPiece (position) {
-    return getPiece(position) == 1 || getPiece(position) == 2;
-  }
-
-  function getPiece(position) {
-    if (position[1] == -1 || position[1] == 8) {
-      return -1
-    } else {
-      return game.state.board[position[1]][position[0]];
-    }
-  }
-
-  function setPiece(position, piece) {
-    game.state.board[position[1]][position[0]] = piece;
-  }
-
-  function movePiece(position) {
-    send("move", [activePosition, position]);
-  }
-
-  function enterMoveMode(position) {
-    moveMode = true;
-    allowedMoves = getAllowedMoves(position);
-    activePosition = position;
-  }
-
-  function leaveMoveMode() {
-    moveMode = false;
-    highlightedSquares = empty();
-    highlightedEndzone = empty();
-    allowedMoves = empty();
-  }
-
-  boardCanvas.addEventListener("mousemove", (e) => {
-    if (!opponentConnected || game.state.winner || game.state.oofTurn != isOof) { return; }
-    let position = getPosition(e.offsetX, e.offsetY);
-    if (!moveMode) {
-      highlightedSquares = empty();
-      highlightedSquares[position[0]][position[1]] = true;
-      update();
-    }
-  });
-
-  boardCanvas.addEventListener("click", (e) => {
-    if (!actx) { actx = new AudioContext(); }
-    if (!opponentConnected || game.state.winner) { return; }
-    let position = getPosition(e.offsetX, e.offsetY);
-    let piece = getPiece(position);
-    if (!moveMode && (piece > 0) && game.state.oofTurn == isOof && isOofPiece(position) == isOof) {
-      enterMoveMode(position);
-    } else if (moveMode) {
-      if (piece >= 0 && allowedMoves[position[0]][position[1]]) {
-        movePiece(position);
-      } else if (throwRockAllowed && (position[1] == -1 && game.state.oofTurn || position[1] == 8 && !game.state.oofTurn)){
-        movePiece(position);
+        ctx.arc(squareSize * p[0] + squareSize * 0.5, squareSize * p[1] + squareSize * 0.5, squareSize * 0.33, 0, 2 * Math.PI)
+        ctx.fillStyle = pieceColor;
+        ctx.fill();
       } else {
-        leaveMoveMode();
+        ctx.beginPath();
+        ctx.arc(squareSize * p[0] + squareSize * 0.5, squareSize * p[1] + squareSize * 0.5, squareSize * 0.15, 0, 2 * Math.PI)
+        ctx.moveTo(squareSize * p[0] + squareSize * 0.1 , squareSize * p[1] + squareSize * 0.1);
+        ctx.lineTo(squareSize * p[0] + squareSize * 0.5, squareSize * p[1] + squareSize * 0.5);
+        ctx.lineTo(squareSize * p[0] + squareSize * 0.1, squareSize * p[1] + squareSize * 0.9);
+        ctx.lineTo(squareSize * p[0] + squareSize * 0.9, squareSize * p[1] + squareSize * 0.9);
+        ctx.lineTo(squareSize * p[0] + squareSize * 0.5, squareSize * p[1] + squareSize * 0.5);
+        ctx.lineTo(squareSize * p[0] + squareSize * 0.9, squareSize * p[1] + squareSize * 0.1);
+        ctx.lineTo(squareSize * p[0] + squareSize, squareSize * p[1] + squareSize * 0.1);
+        ctx.fillStyle = pieceColor;
+        ctx.fill();
       }
     }
+
+    let actx;
+
+    function tap() {
+      if (!actx || muted) { return; }
+      let v = 2;
+      let f = 1.5;
+      let audio_buffer = actx.createBuffer(1, 5512, 96000);
+      let buffer = audio_buffer.getChannelData(0);
+      let r = 1 + Math.random() * 0.1;
+      // let r = 0.9;
+      for (let i = 0; i < buffer.length; i++) {
+        buffer[i] = Math.sin(i * 0.03 * f * r) * v * Math.pow(2, -(((i - buffer.length / 2) * 0.007) ** 2));
+      }
+      let source = actx.createBufferSource();
+      source.buffer = audio_buffer;
+      source.connect(actx.destination);
+      source.start();
+    }
+
+    let audio = new Audio("benscream.wav");
+    audio.volume = 0.05;
+
+    function yell() {
+      if (muted) { return; }
+      audio.play();
+    }
+
+    const openTutorialButton = document.querySelector(".tutorialBtnOpen");
+    const closeTutorialButton = document.querySelector(".tutorialBtnClose");
+    const tutorialWindow = document.querySelector(".tutorial");
+    const openSettingsButton = document.querySelector(".settingsBtnOpen");
+    const closeSettingsButton = document.querySelector(".settingsBtnClose");
+    const settingsWindow = document.querySelector(".settings");
+
+    openTutorialButton.addEventListener("click", function (e) {
+      tutorialWindow.classList.remove("hidden");
+      e.preventDefault();
+      e.cancelBubble = true;
+    });
+
+    closeTutorialButton.addEventListener("click", function (e) {
+      tutorialWindow.classList.add("hidden");
+    });
+
+    openSettingsButton.addEventListener("click", function (e) {
+      settingsWindow.classList.remove("hidden");
+      e.preventDefault();
+      e.cancelBubble = true;
+    });
+
+    closeSettingsButton.addEventListener("click", function (e) {
+      settingsWindow.classList.add("hidden");
+    });
+
+    tutorialWindow.addEventListener("click", (e) => {
+      e.preventDefault();
+      e.cancelBubble = true;
+    });
+    addEventListener("click", () => {
+      tutorialWindow.classList.add("hidden");
+    });
+
+    settingsWindow.addEventListener("click", (e) => {
+      e.preventDefault();
+      e.cancelBubble = true;
+    });
+    addEventListener("click", () => {
+      settingsWindow.classList.add("hidden");
+    });
+
+    function getPosition(x, y) {
+      let boundx = (c) => { return Math.min((squareSize * 8) - 1, Math.max(0, c)); };
+      let boundy = (c) => { return Math.min((squareSize * 9) - 1, Math.max(-squareSize, c)); };
+      let p = [
+        Math.floor(boundx(x) / squareSize),
+        Math.floor(boundy(y - squareSize) / squareSize)
+      ];
+      return isOof ? p : [7 - p[0], 7 - p[1]];
+    }
+
+    function isOpposing(pa, pb) {
+      return isOofPiece(pa) != isOofPiece(pb);
+    }
+
+    function getAllowedMoves(position) {
+      highlightedSquares = empty();
+      highlightedEndzone = empty();
+      if (getPiece(position) == 2 || getPiece(position) == 4) {
+        return getAllowedGuyMoves(position);
+      } else {
+        return getAllowedRockMoves(position);
+      }
+    }
+
+    function getAllowedRockMoves(position) {
+      throwRockAllowed = false;
+      let allowedMoves = empty();
+      let i = position[0];
+      while (++i < 8 && !getPiece([i, position[1]])) {
+        allowedMoves[i][position[1]] = true;
+      }
+      if (i < 8) {
+        allowedMoves[i][position[1]] = isOpposing(position, [i, position[1]]);
+      }
+
+      i = position[0];
+      while (--i >= 0 && !getPiece([i, position[1]])) {
+        allowedMoves[i][position[1]] = true;
+      }
+      if (i >= 0) {
+        allowedMoves[i][position[1]] = isOpposing(position, [i, position[1]]);
+      }
+
+      i = position[1];
+      while (++i < 8 && !getPiece([position[0], i])) {
+        allowedMoves[position[0]][i] = true;
+      }
+      if (i < 8) {
+        allowedMoves[position[0]][i] = isOpposing(position, [position[0], i]);
+      } else if (!isOofPiece(position)) {
+        throwRockAllowed = true;
+        highlightedEndzone[position[0]][1] = true;
+      }
+
+      i = position[1];
+      while (--i >= 0 && !getPiece([position[0], i])) {
+        allowedMoves[position[0]][i] = true;
+      }
+      if (i >= 0) {
+        allowedMoves[position[0]][i] = isOpposing(position, [position[0], i]);
+      } else if (isOofPiece(position)) {
+        throwRockAllowed = true;
+        highlightedEndzone[position[0]][0] = true;
+      }
+      return allowedMoves;
+    }
+
+    function getAllowedGuyMoves(position) {
+      let allowedMoves = empty();
+      let i = position[0] + 1;
+
+      if (i < 8) {
+        allowedMoves[i][position[1]] = !getPiece([i, position[1]]) || isOpposing(position, [i, position[1]]);
+      }
+
+      i = position[0] - 1;
+
+      if (i >= 0) {
+        allowedMoves[i][position[1]] = !getPiece([i, position[1]]) || isOpposing(position, [i, position[1]]);
+      }
+
+      i = position[1] + 1;
+
+      if (i < 8) {
+        allowedMoves[position[0]][i] = !getPiece([position[0], i]) || isOpposing(position, [position[0], i]);
+      }
+
+      i = position[1] - 1;
+
+      if (i >= 0) {
+        allowedMoves[position[0]][i] = !getPiece([position[0], i]) || isOpposing(position, [position[0], i]);
+      }
+
+      return allowedMoves;
+    }
+
+    function isOofPiece (position) {
+      return getPiece(position) == 1 || getPiece(position) == 2;
+    }
+
+    function getPiece(position) {
+      if (position[1] == -1 || position[1] == 8) {
+        return -1
+      } else {
+        return game.state.board[position[1]][position[0]];
+      }
+    }
+
+    function setPiece(position, piece) {
+      game.state.board[position[1]][position[0]] = piece;
+    }
+
+    function movePiece(position) {
+      send("move", [activePosition, position]);
+    }
+
+    function enterMoveMode(position) {
+      moveMode = true;
+      allowedMoves = getAllowedMoves(position);
+      activePosition = position;
+    }
+
+    function leaveMoveMode() {
+      moveMode = false;
+      highlightedSquares = empty();
+      highlightedEndzone = empty();
+      allowedMoves = empty();
+    }
+
+    boardCanvas.addEventListener("mousemove", (e) => {
+      if (!opponentConnected || game.state.winner || game.state.oofTurn != isOof) { return; }
+      let position = getPosition(e.offsetX, e.offsetY);
+      if (!moveMode) {
+        highlightedSquares = empty();
+        highlightedSquares[position[0]][position[1]] = true;
+        update();
+      }
+    });
+
+    boardCanvas.addEventListener("click", (e) => {
+      if (!actx) { actx = new AudioContext(); }
+      if (!opponentConnected || game.state.winner) { return; }
+      let position = getPosition(e.offsetX, e.offsetY);
+      let piece = getPiece(position);
+      if (!moveMode && (piece > 0) && game.state.oofTurn == isOof && isOofPiece(position) == isOof) {
+        enterMoveMode(position);
+      } else if (moveMode) {
+        if (piece >= 0 && allowedMoves[position[0]][position[1]]) {
+          movePiece(position);
+        } else if (throwRockAllowed && (position[1] == -1 && game.state.oofTurn || position[1] == 8 && !game.state.oofTurn)){
+          movePiece(position);
+        } else {
+          leaveMoveMode();
+        }
+      }
+      update();
+    });
+
     update();
   });
-
-  update();
 });
 </script>
 </body>
