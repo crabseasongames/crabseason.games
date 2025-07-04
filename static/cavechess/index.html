@@ -506,8 +506,7 @@ let throwRockAllowed = false;
 
 function preload(cb) {
   const images = [
-    "./assets/cavewall.jpeg",
-    "./assets/slate.png"
+    "./assets/cavewall.jpeg"
   ];
   let i = 0;
   images.forEach((src) => {
@@ -639,6 +638,7 @@ function init() {
             document.getElementById("roomCode").innerHTML = "<marquee>TUGG WIN</marquee>";
           }
           leaveMoveMode();
+          update(true);
         } else if (message.type == "disconnect") {
           opponentConnected = false;
           chatBox.disabled = true;
@@ -657,7 +657,6 @@ function init() {
           console.log("unknown message type");
           console.log(message);
         }
-        update();
       });
     }
 
@@ -691,6 +690,7 @@ function init() {
       }
     });
 
+
     function initialize(gameData) {
       chatContents.innerHTML = "";
       menuSection.classList.add("hidden");
@@ -707,6 +707,8 @@ function init() {
       document.getElementById("opponentName").innerText = (isOof ? "Tugg" : "Oof") + " (waiting for opponent)";
       document.getElementById("playerName").innerText = (isOof ? "Oof" : "Tugg");
       document.getElementById("roomCode").innerText = game.code;
+
+      update(true);
     }
 
     function drawFaces() {
@@ -784,9 +786,9 @@ function init() {
       }
     }
 
-    function update() {
+    function update(redraw = false) {
       if (!game) { return; }
-      drawBoard();
+      drawBoard(redraw);
       updateInfo();
     }
 
@@ -817,83 +819,89 @@ function init() {
       }
     }
 
-  function drawBoard() {
-    ctx.clearRect(0, 0, 8 * squareSize, squareSize);
-    ctx.clearRect(0, 9 * squareSize, 8 * squareSize, squareSize);
-    for (let i = 0; i < 8; i++) {
-      for (let j = 0; j < 8; j++) {
+    function drawBoard(redraw) {
+      for (let i = 0; i < 8; i++) {
+        for (let j = 0; j < 8; j++) {
+          if (redraw) {
+            ctx.clearRect(i * squareSize, (j + 1) * squareSize, squareSize, squareSize);
+            let piece = isOof ? getPiece([i, j]) : getPiece([7 - i, 7 - j]);
+            if (piece) {
+              drawPiece([i, j], piece);
+            }
+          } else {
+            ctx.clearRect(i * squareSize, (j + 1) * squareSize, squareSize * 0.1, squareSize);
+            ctx.clearRect(i * squareSize, (j + 1.9) * squareSize, squareSize, squareSize * 0.1);
+            ctx.clearRect(i * squareSize, (j + 1) * squareSize, squareSize, squareSize * 0.1);
+            ctx.clearRect((i + 0.9) * squareSize, (j + 1) * squareSize, squareSize * 0.1, squareSize);
+          }
 
-        if (highlightedSquares[isOof ? i : 7 - i][isOof ? j : 7 - j] || allowedMoves[isOof ? i : 7 - i][isOof ? j : 7 - j]) {
-          ctx.fillStyle = highlightedColor;
-          ctx.fillRect(i * squareSize, (j + 1) * squareSize, squareSize, squareSize);
-          ctx.fillStyle = '#00000000';
-          ctx.fillRect(i * squareSize + (squareSize * 0.1), (j + 1) * squareSize + (squareSize * 0.1), squareSize * 0.8, squareSize * 0.8);
+          if (highlightedSquares[isOof ? i : 7 - i][isOof ? j : 7 - j] || allowedMoves[isOof ? i : 7 - i][isOof ? j : 7 - j]) {
+            ctx.fillStyle = highlightedColor;
+            ctx.fillRect(i * squareSize, (j + 1) * squareSize, squareSize * 0.1, squareSize);
+            ctx.fillRect(i * squareSize, (j + 1.9) * squareSize, squareSize, squareSize * 0.1);
+            ctx.fillRect(i * squareSize, (j + 1) * squareSize, squareSize, squareSize * 0.1);
+            ctx.fillRect((i + 0.9) * squareSize, (j + 1) * squareSize, squareSize * 0.1, squareSize);
+          }
         }
 
-          let piece = isOof ? getPiece([i, j]) : getPiece([7 - i, 7 - j]);
-          if (piece) {
-            drawPiece([i, j], piece);
+        for (let i = 0; i < 8; i++) {
+          if (game.state.oofTurn && highlightedEndzone[isOof ? i : 7 - i][0]) {
+            ctx.beginPath();
+            ctx.arc(squareSize*i + squareSize * 0.5, squareSize * (isOof ? 0.5 : 9.5), squareSize * 0.33, 0, 2 * Math.PI)
+            ctx.fillStyle = highlightedColor;
+            ctx.fill()
+          } else if (!game.state.oofTurn && highlightedEndzone[isOof ? i : 7 - i][1]) {
+            ctx.beginPath();
+            ctx.arc(squareSize*i + squareSize * 0.5, squareSize * (isOof ? 9.5 : 0.5), squareSize * 0.33, 0, 2 * Math.PI)
+            ctx.fillStyle = highlightedColor;
+            ctx.fill()
           }
         }
       }
+    }
 
-      for (let i = 0; i < 8; i++) {
-        if (game.state.oofTurn && highlightedEndzone[isOof ? i : 7 - i][0]) {
+    function drawPiece(position, piece) {
+      let p = [position[0], position[1] + 1];
+      let pieceColor = (piece == 1 || piece == 2) ? './assets/slateLight.png' : './assets/slateDark.png'
+      const img = new Image();
+      img.src = pieceColor;
+
+      if (piece == 1 || piece == 3){
+        img.onload = () => {
+          const pattern = ctx.createPattern(img, 'repeat');
           ctx.beginPath();
-          ctx.arc(squareSize*i + squareSize * 0.5, squareSize * (isOof ? 0.5 : 9.5), squareSize * 0.33, 0, 2 * Math.PI)
-          ctx.fillStyle = highlightedColor;
-          ctx.fill()
-        } else if (!game.state.oofTurn && highlightedEndzone[isOof ? i : 7 - i][1]) {
+          ctx.arc(squareSize * p[0] + squareSize * 0.5, squareSize * p[1] + squareSize * 0.5, squareSize * 0.33, 0, 2 * Math.PI)
+          ctx.fillStyle = pattern;
+          ctx.fill();
+          ctx.stroke();
+        }
+      } else {
+        img.onload = () => {
+          const pattern = ctx.createPattern(img, 'repeat');
           ctx.beginPath();
-          ctx.arc(squareSize*i + squareSize * 0.5, squareSize * (isOof ? 9.5 : 0.5), squareSize * 0.33, 0, 2 * Math.PI)
-          ctx.fillStyle = highlightedColor;
-          ctx.fill()
+          ctx.arc(squareSize * p[0] + squareSize * 0.5, squareSize * p[1] + squareSize * 0.5, squareSize * 0.33, 0, 2 * Math.PI)
+          ctx.beginPath();
+          ctx.arc(squareSize * p[0] + squareSize * 0.5, squareSize * p[1] + squareSize * 0.5, squareSize * 0.15, 0, 2 * Math.PI)
+          ctx.moveTo(squareSize * p[0] + squareSize * 0.1 , squareSize * p[1] + squareSize * 0.1);
+          ctx.lineTo(squareSize * p[0] + squareSize * 0.5, squareSize * p[1] + squareSize * 0.5);
+          ctx.lineTo(squareSize * p[0] + squareSize * 0.1, squareSize * p[1] + squareSize * 0.9);
+          ctx.lineTo(squareSize * p[0] + squareSize * 0.9, squareSize * p[1] + squareSize * 0.9);
+          ctx.lineTo(squareSize * p[0] + squareSize * 0.5, squareSize * p[1] + squareSize * 0.5);
+          ctx.lineTo(squareSize * p[0] + squareSize * 0.9, squareSize * p[1] + squareSize * 0.1);
+          ctx.lineTo(squareSize * p[0] + squareSize * 0.1 , squareSize * p[1] + squareSize * 0.1);
+          ctx.fillStyle = pattern;
+          ctx.fill();
+          ctx.stroke();
         }
       }
     }
-
-  function drawPiece(position, piece) {
-    let p = [position[0], position[1] + 1];
-    let pieceColor = (piece == 1 || piece == 2) ? './assets/slateLight.png' : './assets/slateDark.png'
-    const img = new Image();
-    img.src = pieceColor;
-
-    if (piece == 1 || piece == 3){
-      img.onload = () => {
-        const pattern = ctx.createPattern(img, 'repeat');
-        ctx.beginPath();
-        ctx.arc(squareSize * p[0] + squareSize * 0.5, squareSize * p[1] + squareSize * 0.5, squareSize * 0.33, 0, 2 * Math.PI)
-        ctx.fillStyle = pattern;
-        ctx.fill();
-        ctx.stroke();
-      }
-    } else {
-      img.onload = () => {
-        const pattern = ctx.createPattern(img, 'repeat');
-        ctx.beginPath();
-        ctx.arc(squareSize * p[0] + squareSize * 0.5, squareSize * p[1] + squareSize * 0.5, squareSize * 0.33, 0, 2 * Math.PI)
-        ctx.beginPath();
-        ctx.arc(squareSize * p[0] + squareSize * 0.5, squareSize * p[1] + squareSize * 0.5, squareSize * 0.15, 0, 2 * Math.PI)
-        ctx.moveTo(squareSize * p[0] + squareSize * 0.1 , squareSize * p[1] + squareSize * 0.1);
-        ctx.lineTo(squareSize * p[0] + squareSize * 0.5, squareSize * p[1] + squareSize * 0.5);
-        ctx.lineTo(squareSize * p[0] + squareSize * 0.1, squareSize * p[1] + squareSize * 0.9);
-        ctx.lineTo(squareSize * p[0] + squareSize * 0.9, squareSize * p[1] + squareSize * 0.9);
-        ctx.lineTo(squareSize * p[0] + squareSize * 0.5, squareSize * p[1] + squareSize * 0.5);
-        ctx.lineTo(squareSize * p[0] + squareSize * 0.9, squareSize * p[1] + squareSize * 0.1);
-        ctx.lineTo(squareSize * p[0] + squareSize, squareSize * p[1] + squareSize * 0.1);
-        ctx.fillStyle = pattern;
-        ctx.fill();
-        ctx.stroke();
-      }
-    }
-  }
 
 
     let actx;
 
     function tap() {
       if (!actx || muted) { return; }
-      let v = 2;
+      let v = 0.3;
       let f = 1.5;
       let audio_buffer = actx.createBuffer(1, 5512, 96000);
       let buffer = audio_buffer.getChannelData(0);
