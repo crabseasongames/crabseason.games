@@ -244,7 +244,7 @@ body {
   justify-content: center;
   margin-right: 30px;
   box-shadow: 0 0 3px #000;
-  background-image: url("./assets/slate.png");
+  background-image: url("./assets/slateBoard.png");
 }
 
 #board{
@@ -479,10 +479,10 @@ const errorDisplay = document.getElementById("error");
 const ctx = boardCanvas.getContext("2d");
 const infoCanvas = document.getElementById("info");
 
-const lightSquare = "#956205";
-// const lightSquare = "#95620500";
-const darkSquare = "#c1861a";
-// const darkSquare = "#c1861a00";
+// const lightSquare = "#956205";
+const lightSquare = "#95620500";
+// const darkSquare = "#c1861a";
+const darkSquare = "#c1861a00";
 
 const highlightedColor = "#ef4141";
 const tuggColor = "#000";
@@ -817,21 +817,18 @@ function init() {
       }
     }
 
-    function drawBoard() {
-      ctx.clearRect(0, 0, 8 * squareSize, squareSize);
-      ctx.clearRect(0, 9 * squareSize, 8 * squareSize, squareSize);
-      for (let i = 0; i < 8; i++) {
-        for (let j = 0; j < 8; j++) {
-          let color = (i + j) % 2 == 0 ? lightSquare : darkSquare;
-          ctx.fillStyle = color ;
-          ctx.fillRect(i * squareSize, (j + 1) * squareSize, squareSize, squareSize);
+  function drawBoard() {
+    ctx.clearRect(0, 0, 8 * squareSize, squareSize);
+    ctx.clearRect(0, 9 * squareSize, 8 * squareSize, squareSize);
+    for (let i = 0; i < 8; i++) {
+      for (let j = 0; j < 8; j++) {
 
-          if (highlightedSquares[isOof ? i : 7 - i][isOof ? j : 7 - j] || allowedMoves[isOof ? i : 7 - i][isOof ? j : 7 - j]) {
-            ctx.fillStyle = highlightedColor;
-            ctx.fillRect(i * squareSize, (j + 1) * squareSize, squareSize, squareSize);
-            ctx.fillStyle = color;
-            ctx.fillRect(i * squareSize + (squareSize * 0.1), (j + 1) * squareSize + (squareSize * 0.1), squareSize * 0.8, squareSize * 0.8);
-          }
+        if (highlightedSquares[isOof ? i : 7 - i][isOof ? j : 7 - j] || allowedMoves[isOof ? i : 7 - i][isOof ? j : 7 - j]) {
+          ctx.fillStyle = highlightedColor;
+          ctx.fillRect(i * squareSize, (j + 1) * squareSize, squareSize, squareSize);
+          ctx.fillStyle = '#00000000';
+          ctx.fillRect(i * squareSize + (squareSize * 0.1), (j + 1) * squareSize + (squareSize * 0.1), squareSize * 0.8, squareSize * 0.8);
+        }
 
           let piece = isOof ? getPiece([i, j]) : getPiece([7 - i, 7 - j]);
           if (piece) {
@@ -855,16 +852,26 @@ function init() {
       }
     }
 
-    function drawPiece(position, piece) {
-      let p = [position[0], position[1] + 1];
+  function drawPiece(position, piece) {
+    let p = [position[0], position[1] + 1];
+    let pieceColor = (piece == 1 || piece == 2) ? './assets/slateLight.png' : './assets/slateDark.png'
+    const img = new Image();
+    img.src = pieceColor;
 
-      let pieceColor = (piece == 1 || piece == 2) ? oofColor : tuggColor
-      if (piece == 1 || piece == 3){
+    if (piece == 1 || piece == 3){
+      img.onload = () => {
+        const pattern = ctx.createPattern(img, 'repeat');
         ctx.beginPath();
         ctx.arc(squareSize * p[0] + squareSize * 0.5, squareSize * p[1] + squareSize * 0.5, squareSize * 0.33, 0, 2 * Math.PI)
-        ctx.fillStyle = pieceColor;
+        ctx.fillStyle = pattern;
         ctx.fill();
-      } else {
+        ctx.stroke();
+      }
+    } else {
+      img.onload = () => {
+        const pattern = ctx.createPattern(img, 'repeat');
+        ctx.beginPath();
+        ctx.arc(squareSize * p[0] + squareSize * 0.5, squareSize * p[1] + squareSize * 0.5, squareSize * 0.33, 0, 2 * Math.PI)
         ctx.beginPath();
         ctx.arc(squareSize * p[0] + squareSize * 0.5, squareSize * p[1] + squareSize * 0.5, squareSize * 0.15, 0, 2 * Math.PI)
         ctx.moveTo(squareSize * p[0] + squareSize * 0.1 , squareSize * p[1] + squareSize * 0.1);
@@ -874,10 +881,13 @@ function init() {
         ctx.lineTo(squareSize * p[0] + squareSize * 0.5, squareSize * p[1] + squareSize * 0.5);
         ctx.lineTo(squareSize * p[0] + squareSize * 0.9, squareSize * p[1] + squareSize * 0.1);
         ctx.lineTo(squareSize * p[0] + squareSize, squareSize * p[1] + squareSize * 0.1);
-        ctx.fillStyle = pieceColor;
+        ctx.fillStyle = pattern;
         ctx.fill();
+        ctx.stroke();
       }
     }
+  }
+
 
     let actx;
 
