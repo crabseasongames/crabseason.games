@@ -837,10 +837,10 @@ function init() {
 
           if (highlightedSquares[isOof ? i : 7 - i][isOof ? j : 7 - j] || allowedMoves[isOof ? i : 7 - i][isOof ? j : 7 - j]) {
             ctx.fillStyle = highlightedColor;
-            ctx.fillRect(i * squareSize, (j + 1) * squareSize, squareSize * 0.1, squareSize);
-            ctx.fillRect(i * squareSize, (j + 1.9) * squareSize, squareSize, squareSize * 0.1);
-            ctx.fillRect(i * squareSize, (j + 1) * squareSize, squareSize, squareSize * 0.1);
-            ctx.fillRect((i + 0.9) * squareSize, (j + 1) * squareSize, squareSize * 0.1, squareSize);
+            ctx.fillRect(i * squareSize + 2, (j + 1) * squareSize + 2, squareSize * 0.1 - 2, squareSize - 2);
+            ctx.fillRect(i * squareSize + 2, (j + 1.9) * squareSize + 2, squareSize - 2, squareSize * 0.1 - 2);
+            ctx.fillRect(i * squareSize + 2, (j + 1) * squareSize + 2, squareSize - 2, squareSize * 0.1 - 2);
+            ctx.fillRect((i + 0.9) * squareSize + 2, (j + 1) * squareSize + 2, squareSize * 0.1 - 2, squareSize - 2);
           }
         }
 
