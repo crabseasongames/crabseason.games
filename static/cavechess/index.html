@@ -21,24 +21,23 @@
     padding: 0px 20px;
   }
 
-  body .btnContainer {
-    flex-direction: column;  
-  }
-
   body #infoColRight {
     margin-left: 20px;
     width: 50%;
   }
 
-  .infoContainer {
-    width: 50% !important;
-    height: 100% !important;
+  body .infoContainer {
+    width: 50%;
+    height: 100%;
   }
 
-  #content {
+  body #content {
     min-width: 840px;
   }
-  
+
+  body #chat {
+    height: 363px;
+  }
 }
 
 body {
@@ -55,6 +54,10 @@ body {
 
 .hidden {
   display: none !important;
+}
+
+.muted {
+  visibility: visible !important;
 }
 
 .secret {
@@ -239,11 +242,11 @@ body {
 }
 
 #gameBoard{
+  box-shadow: inset 0px 0px 0px 2px black;
   display: flex;
   align-items: center;
   justify-content: center;
   margin-right: 30px;
-  box-shadow: 0 0 3px #000;
   background-image: url("./assets/slateBoard.png");
 }
 
@@ -309,6 +312,7 @@ body {
   cursor: pointer;
   height: 60px;
   color: #000;
+  border-style: solid;
 }
 
 .menuBtn:hover {
@@ -327,13 +331,46 @@ body {
   text-align: center;
 }
 
-.tutorial {
+#tutorial {
 
 }
 
-.settings {
-
+#muteBtn {
+  width: 60px;
+  border-radius: 50%;
+  background-image: url('./assets/mute.png');
+  background-size: 70%;
+  background-repeat: no-repeat;
+  background-position: center;
 }
+
+#muteContainer{
+  height: 60px;
+  position: relative;
+  width: 60px;
+}
+
+#muteLine{
+  width: 56px;
+  height: 4px;
+  background-color:#ff2525;
+  transform: rotate(45deg);
+  z-index: 5;
+  position: relative;
+  top: 65%;
+  right: -5%;
+  visibility: hidden;
+}
+
+#muteContainer:hover #muteBtn{
+  background-color: #666;
+}
+
+#muteContainer:hover #muteLine{
+  cursor: pointer;
+  background-color: #f14f4f;
+}
+
 
 .rulesInterior {
   display: grid;
@@ -381,7 +418,7 @@ body {
   <canvas id="deathPrototype" height="60" width="60"></canvas>
 </div>
 <div id="content">
-  <div class="menuModal tutorial hidden">
+  <div id="tutorial" class="menuModal hidden">
     <h1>Here's How To Play Cave Chess</h1>
     <h2>A Brief History of Cave Chess:</h2>
     <h2 class="loreDump">Is it absurd to think that the first man experienced longing? If not longing for a mate, or for food - what did the first
@@ -413,7 +450,7 @@ body {
     </div>
     <span>I think that's everything...</span>
     <br/>
-    <button class="tutorialBtnClose menuBtn">Close</button>
+    <button id="tutorialBtnClose" class="menuBtn">Close</button>
   </div>
   <div id="menu">
     <div id="title"><div id="head">CAVE CHESS</div><div id="subhead">cave style chess</div></div>
@@ -439,11 +476,6 @@ body {
         <div id="playerName"></div>
         <!-- <canvas id="info" width="500" height="300"></canvas> -->
       </div>
-      <div class="menuModal settings hidden">
-        Settings:
-        Settings Go here
-        <button class="settingsBtnClose menuBtn">Close</button>
-      </div>
       <div id="infoColRight">
         <div id="chat">
           <div id="chat-contents"></div>
@@ -452,8 +484,11 @@ body {
           </div>
         </div>
         <div class="btnContainer">
-          <button class="menuBtn tutorialBtnOpen">TUTORIAL</button>
-          <button class="menuBtn settingsBtnOpen">SETTINGS</button>
+          <button class="menuBtn" id="tutorialBtnOpen">TUTORIAL</button>
+          <div id="muteContainer">
+            <div id="muteLine"></div>
+            <button class="menuBtn" id="muteBtn"></button>
+        </div>
         </div>
     </div>
     </div>
@@ -461,10 +496,28 @@ body {
 </div>
 <script>
 
+function muteGame() {
+    muteLine.classList.add("muted")
+    muted = 1;
+    console.log(muted)
+    localStorage["muted"] = 1;
+  }
+
+  function unmuteGame() {
+    muteLine.classList.remove("muted")
+    muted = 0;
+    console.log(muted)
+    localStorage["muted"] = 0;
+  }
+
 const userId = localStorage["userId"] || Math.floor(Math.random() * 10e9);
 localStorage["userId"] = userId;
-let muted = localStorage["muted"] || "";
-localStorage["muted"] = muted;
+let muted = parseInt(localStorage["muted"] || "0");
+if(muted){
+  muteGame()
+} else {
+  unmuteGame()
+}
 
 const chatContents = document.getElementById("chat-contents");
 const chatBox = document.getElementById("textbox");
@@ -527,11 +580,6 @@ function init() {
 
   document.fonts.ready.then(() => {
     gameCode.value = "";
-
-    function mute() {
-      muted = 1;
-      localStorage["muted"] = "true";
-    }
 
     function send(type, data) {
       if (!ws || ws.readyState != 1) {
@@ -896,7 +944,6 @@ function init() {
       }
     }
 
-
     let actx;
 
     function tap() {
@@ -924,12 +971,11 @@ function init() {
       audio.play();
     }
 
-    const openTutorialButton = document.querySelector(".tutorialBtnOpen");
-    const closeTutorialButton = document.querySelector(".tutorialBtnClose");
-    const tutorialWindow = document.querySelector(".tutorial");
-    const openSettingsButton = document.querySelector(".settingsBtnOpen");
-    const closeSettingsButton = document.querySelector(".settingsBtnClose");
-    const settingsWindow = document.querySelector(".settings");
+    const openTutorialButton = document.querySelector("#tutorialBtnOpen");
+    const closeTutorialButton = document.querySelector("#tutorialBtnClose");
+    const tutorialWindow = document.querySelector("#tutorial");
+    const muteButton = document.querySelector("#muteContainer");
+    const muteLine = document.querySelector("#muteLine");
 
     openTutorialButton.addEventListener("click", function (e) {
       tutorialWindow.classList.remove("hidden");
@@ -941,16 +987,6 @@ function init() {
       tutorialWindow.classList.add("hidden");
     });
 
-    openSettingsButton.addEventListener("click", function (e) {
-      settingsWindow.classList.remove("hidden");
-      e.preventDefault();
-      e.cancelBubble = true;
-    });
-
-    closeSettingsButton.addEventListener("click", function (e) {
-      settingsWindow.classList.add("hidden");
-    });
-
     tutorialWindow.addEventListener("click", (e) => {
       e.preventDefault();
       e.cancelBubble = true;
@@ -959,12 +995,12 @@ function init() {
       tutorialWindow.classList.add("hidden");
     });
 
-    settingsWindow.addEventListener("click", (e) => {
-      e.preventDefault();
-      e.cancelBubble = true;
-    });
-    addEventListener("click", () => {
-      settingsWindow.classList.add("hidden");
+    muteButton.addEventListener("click", (e) => {
+      if(muted) {
+         unmuteGame()
+      } else {
+        muteGame()
+      }
     });
 
     function getPosition(x, y) {
