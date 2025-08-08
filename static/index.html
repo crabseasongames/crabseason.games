@@ -1,168 +1,142 @@
 <head>
-<style>
-@font-face {
-  font-family: "Ubuntu Sans Mono";
-  src: url("UbuntuSansMono.ttf");
-}
+  <link rel="stylesheet" href="main.css">
+  <style>
 
-body {
-  font-family: "Ubuntu Sans Mono", monospace;
-  margin: 0;
-  overflow-x: hidden;
-  height: 100vh;
-}
+    #background {
+      background-color: #000;
+      position: absolute;
+      left: 0;
+      top: 0;
+      z-index: -10;
+    }
 
-#background {
-  background-color: #000;
-  position: absolute;
-  left: 0;
-  top: 0;
-  z-index: -10;
-}
+    #bugs {
+      background-color: rgba(0, 0, 0, 0);
+      position: absolute;
+      left: 0;
+      top: 0;
+      z-index: -1;
+    }
 
-#bugs {
-  background-color: rgba(0, 0, 0, 0);
-  position: absolute;
-  left: 0;
-  top: 0;
-  z-index: -1;
-}
+    #head-container {
+      width: 700px;
+      margin: 0 auto;
+      padding: 60px;
+      background-color: #fff;
+      position: relative;
+      top: 113px;
+      transform: translateY(-50%);
+      mix-blend-mode: lighten;
+      z-index: -5;
+    }
 
-#main-container {
-  width: 700px;
-  margin: 0 auto;
-  padding: 60px;
-  background-color: #fff;
-  position: relative;
-  top: 50%;
-  transform: translateY(-50%);
-  mix-blend-mode: lighten;
-  z-index: -5;
-}
+    #head {
+      text-align: center;
+      font-size: 70px;
+    }
 
-#head {
-  text-align: center;
-  font-size: 70px;
-}
+    #subhead {
+      font-size: 30px;
+      text-align: center;
+    }
 
-#subhead {
-  font-size: 30px;
-  text-align: center;
-}
+    #number-display {
+      position: absolute;
+      left: 10px;
+      top: 10px;
+      height: 30px;
+      width: 270px;
+      background-color: rgba(0, 0, 0, 0.666);
+      color: #fff;
+      padding: 10px 10px 0 20px;
+      z-index: 10;
+    }
 
-#number-display {
-  position: absolute;
-  left: 10px;
-  top: 10px;
-  height: 30px;
-  width: 270px;
-  background-color: rgba(0, 0, 0, 0.666);
-  color: #fff;
-  padding: 10px 10px 0 20px;
-  z-index: 10;
-}
+    #minimize {
+      display: inline-block;
+      position: absolute;
+      right: 10px;
+      top: 0;
+      padding-top: 6px;
+      font-size: 30px;
+      cursor: pointer;
+      transition: transform 0.2s;
+    }
 
-#minimize {
-  display: inline-block;
-  position: absolute;
-  right: 10px;
-  top: 0;
-  padding-top: 6px;
-  font-size: 30px;
-  cursor: pointer;
-  transition: transform 0.2s;
-}
+    #minimize:hover {
+      color: #bf36a6;
+      font-weight: 900;
+    }
 
-#minimize:hover {
-  color: #bf36a6;
-  font-weight: 900;
-}
+    #number-display.minimized {
+      opacity: 0.7;
+    }
 
-#number-display.minimized {
-  opacity: 0.7;
-}
+    #number-display.minimized #minimize {
+      transform: rotate(180deg);
+    }
 
-#number-display.minimized #minimize {
-  transform: rotate(180deg);
-}
+    #chat.minimized {
+      height: 0;
+      opacity: 0;
+    }
 
-#chat.minimized {
-  height: 0;
-  opacity: 0;
-}
+    #chat.minimized #chat-contents {
+      height: 0;
+      opacity: 0;
+    }
 
-#chat.minimized #chat-contents {
-  height: 0;
-  opacity: 0;
-}
+    #chat.minimized #chat-textbox {
+      height: 0;
+      opacity: 0;
+    }
 
-#chat.minimized #chat-textbox {
-  height: 0;
-  opacity: 0;
-}
+    #chat {
+      color: #fff;
+      position: absolute;
+      left: 10px;
+      top: 50px;
+      background-color: rgba(0, 0, 0, 0.3);
+      width: 300px;
+      height: 425px;
+      word-wrap: break-word;
+      overflow: hidden;
+      transition: height 0.5s, opacity 0.5s;
+    }
 
-#chat {
-  color: #fff;
-  position: absolute;
-  left: 10px;
-  top: 50px;
-  background-color: rgba(0, 0, 0, 0.3);
-  width: 300px;
-  height: 425px;
-  word-wrap: break-word;
-  overflow: hidden;
-  transition: height 0.5s, opacity 0.5s;
-}
+    #chat-contents {
+      overflow-y: scroll;
+      scrollbar-width: thin;
+      scrollbar-color: rgba(255, 255, 255, 0.3) rgba(0, 0, 0, 0.3);
+      padding: 10px 20px 0 30px;
+      height: 339px;
+      transition: height 0.5s, opacity 0.5s;
+    }
 
-#chat-contents {
-  overflow-y: scroll;
-  scrollbar-width: thin;
-  scrollbar-color: rgba(255, 255, 255, 0.3) rgba(0, 0, 0, 0.3);
-  padding: 10px 20px 0 30px;
-  height: 339px;
-  transition: height 0.5s, opacity 0.5s;
-}
+    #chat-textbox {
+      position: absolute;
+      bottom: 0;
+      width: calc(100% - 40px);
+      padding: 20px 20px 20px 20px;
+      background-color: rgba(0, 0, 0, 0.666);
+      transition: height 0.5s, opacity 0.5s;
+    }
 
-#chat-textbox {
-  position: absolute;
-  bottom: 0;
-  width: calc(100% - 40px);
-  padding: 20px 20px 20px 20px;
-  background-color: rgba(0, 0, 0, 0.666);
-  transition: height 0.5s, opacity 0.5s;
-}
+    #chat-textbox textarea {
+      resize: none;
+      width: 100%
+    }
 
-#chat-textbox textarea {
-  resize: none;
-  width: 100%
-}
+    #navigation {
+      width: 700px;
+      margin: 25px auto 0 auto;
+      padding: 30px 60px;
+      background-color: #fff;
+      display: flex;
+      justify-content: space-evenly;
+    }
 
-.id {
-  font-size: 14px;
-  font-weight: 900;
-  color: var(--text-color);
-}
-
-.chat-entry {
-  text-indent: -10px;
-  font-size: 16px;
-}
-
-.message {
-
-}
-
-.notif {
-  color: black;
-  font-weight: bold;
-  text-shadow: 0 0 6px white;
-}
-
-.hidden {
-  visibility: hidden;
-}
-
-</style>
+  </style>
 </head>
 <body class="hidden">
 <div id="number-display">
@@ -179,9 +153,13 @@ body {
 </div>
 <canvas id="background"></canvas>
 <canvas id="bugs"></canvas>
-<div id="main-container">
+<div id="head-container">
   <div id="head">Crab Season Games</div>
-  <div id="subhead">bug chat simulator</div>
+</div>
+<div id="navigation">
+  <div id="games-button" class="button">game list</div>
+  <div id="about-button" class="button">about</div>
+  <!-- <div id="about-button" class="button">contact us</div> -->
 </div>
 <script src="draw.js"></script>
 <script src="chat.js"></script>
@@ -197,6 +175,21 @@ addEventListener("load", () => {
   const chatContents = document.getElementById("chat-contents");
   const chatBox = document.getElementById("textbox");
   const chatContainer = document.getElementById("chat");
+  const gamesButton = document.getElementById("games-button");
+  const aboutButton = document.getElementById("about-button");
+  // const contactButton = document.getElementById("contact-button");
+
+  gamesButton.addEventListener("click", (e) => {
+    document.location.pathname = "gameslist.html";
+  });
+
+  aboutButton.addEventListener("click", (e) => {
+    document.location.pathname = "webgl_tests/test3.html";
+  });
+
+  // contactButton.addEventListener("click", (e) => {
+  //   document.location.pathname = "";
+  // });
 
   function palette(t) {
     return [
@@ -431,7 +424,7 @@ addEventListener("load", () => {
       float d;
       float s = 0.08;
       vec4 c = vec4(0.0);
-      int octaves = 2 + int(4.0 * (1.0 - cos(u_time * s)));
+      int octaves = 2 + int(3.0 * (1.0 - cos(u_time * s)));
       // int octaves = 2 + min(32, int(0.2 * pow(tan(0.1 * u_time), 2.0)));
       for (int i = 0; i < octaves; i++) {
           d = abs(circle(0.1, fract(pow(2.0, float(i)) * uv) - 0.5, u_time * 0.5));

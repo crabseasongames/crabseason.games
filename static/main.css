@@ -1,0 +1,51 @@
+
+@font-face {
+  font-family: "Ubuntu Sans Mono";
+  src: url("UbuntuSansMono.ttf");
+}
+
+body {
+  font-family: "Ubuntu Sans Mono", monospace;
+  margin: 0;
+  overflow-x: hidden;
+  height: 100vh;
+}
+
+.id {
+  font-size: 14px;
+  font-weight: 900;
+  color: var(--text-color);
+}
+
+.chat-entry {
+  text-indent: -10px;
+  font-size: 16px;
+}
+
+.message {
+
+}
+
+.notif {
+  color: black;
+  font-weight: bold;
+  text-shadow: 0 0 6px white;
+}
+
+.hidden {
+  visibility: hidden;
+}
+
+.button {
+  width: 200px;
+  display: inline-block;
+  font-size: 30px;
+  text-align: center;
+  padding: 5px 0;
+  cursor: pointer;
+  background-color: #ccc;
+}
+
+.button:hover {
+  color: #800;
+}
