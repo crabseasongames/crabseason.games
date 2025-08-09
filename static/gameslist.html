@@ -10,10 +10,10 @@ body {
 
 #umbrella {
   position: absolute;
-  width: 230px;
+  width: 250px;
   height: 20px;
   margin-top: -10px;
-  margin-left: -115px;
+  margin-left: -123px;
   background-color: white;
 }
 
@@ -210,9 +210,10 @@ function draw(canvas, uniforms, vertexShaderString, fragmentShaderString) {
 
   const umbrella = document.getElementById("umbrella");
 
-  const UMBW = 0.3;
+  const UMBW = 0.28;
   const UMBT = 0.05;
   const UMBSPEED = 10;
+  const UMBMAX = 0.05;
 
   const render = (t) => {
     let newTime = t * 0.001;
@@ -222,8 +223,8 @@ function draw(canvas, uniforms, vertexShaderString, fragmentShaderString) {
     let dx = newX - mouseX;
     let dy = newY - mouseY;
     let r = Math.sqrt(dx ** 2 + dy ** 2);
-    let c = r == 0 ? 0 : (1 - Math.E ** (-r * 0.05)) * UMBSPEED * dt;// / r;
-    c = Math.min(c, 0.05);
+    let c = r == 0 ? 0 : (1 - Math.E ** (-r * 0.25)) * UMBSPEED * dt;// / r;
+    c = Math.min(c, UMBMAX);
 
     let newPixels = {
       x: mouseX + dx * c,
@@ -243,7 +244,7 @@ function draw(canvas, uniforms, vertexShaderString, fragmentShaderString) {
 
       let normalized = pixelsToNormalized({ x: mouseX, y: mouseY });
 
-      if (Math.abs(rx - normalized.x) < UMBW && Math.abs(ry - normalized.y) < UMBT) {
+      if (Math.abs(rx - normalized.x) < (UMBW * gl.canvas.height / gl.canvas.width) && Math.abs(ry - normalized.y) < (UMBT * gl.canvas.height / gl.canvas.width)) {
         colors[i] = 0;
       } else if (Math.abs(ry - 1) < 0.05) {
         colors[i] = Math.random();
