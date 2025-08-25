@@ -223,7 +223,7 @@ function draw(canvas, uniforms, vertexShaderString, fragmentShaderString) {
     let dx = newX - mouseX;
     let dy = newY - mouseY;
     let r = Math.sqrt(dx ** 2 + dy ** 2);
-    let c = r == 0 ? 0 : (1 - Math.E ** (-r * 0.25)) * UMBSPEED * dt;// / r;
+    let c = r == 0 ? 0 : (1 - Math.E ** (-r * 0.25)) * UMBSPEED * dt;
     c = Math.min(c, UMBMAX);
 
     let newPixels = {
@@ -233,6 +233,10 @@ function draw(canvas, uniforms, vertexShaderString, fragmentShaderString) {
 
     umbrella.style.left = newPixels.x;
     umbrella.style.top = newPixels.y;
+    umbrella.style.width = UMBW * document.body.clientWidth;
+    umbrella.style.marginLeft = -UMBW * document.body.clientWidth / 2;
+
+
 
     mouseX = newPixels.x;
     mouseY = newPixels.y;
@@ -244,7 +248,7 @@ function draw(canvas, uniforms, vertexShaderString, fragmentShaderString) {
 
       let normalized = pixelsToNormalized({ x: mouseX, y: mouseY });
 
-      if (Math.abs(rx - normalized.x) < (UMBW * gl.canvas.height / gl.canvas.width) && Math.abs(ry - normalized.y) < (UMBT * gl.canvas.height / gl.canvas.width)) {
+      if (Math.abs(rx - normalized.x) < UMBW && Math.abs(ry - normalized.y) < (UMBT * gl.canvas.height / gl.canvas.width)) {
         colors[i] = 0;
       } else if (Math.abs(ry - 1) < 0.05) {
         colors[i] = Math.random();
