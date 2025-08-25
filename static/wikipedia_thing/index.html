@@ -1,0 +1,118 @@
+<html>
+<head>
+<style>
+
+#page {
+  padding: 20px;
+  border: 2px solid black;
+}
+
+.disabled {
+  color: red !important;
+}
+
+</style>
+</head>
+<body>
+
+<h1>WIKIPEDIA RACE (BUT BETTER)</h1>
+<h2 id="pageTitle"></h2>
+<h2 id="totalCounter"></h2>
+<h2 id="counter"></h2>
+<h3><button id="previousPage">previous</button></h3>
+
+<div id="page"></div>
+
+</body>
+
+<script>
+
+const page = document.getElementById("page");
+const pageTitle = document.getElementById("pageTitle");
+const counter = document.getElementById("counter");
+const totalCounter = document.getElementById("totalCounter");
+const previousPageButton = document.getElementById("previousPage");
+
+function wikiUrl(title) {
+  return `https://en.wikipedia.org/w/rest.php/v1/page/${title}/html`;
+}
+
+previousPageButton.addEventListener("click", previous);
+
+let currentPage;
+let history = [];
+let totalLinkCount = 0;
+
+function navigate(title, dontCountLinks = false) {
+  if (currentPage) {
+    if (currentPage.title == title) { return; }
+    history.push(currentPage);
+  }
+
+  fetch(wikiUrl(title)).then((res) => {
+    res.text().then((html) => {
+      showPage(html, title, dontCountLinks);
+    });
+  });
+}
+
+function previous() {
+  if (!history.length) { return; }
+  let page = history.pop();
+  showPage(page.html, page.title, true);
+}
+
+function showPage(html, title, dontCountLinks = false) {
+  currentPage = {
+    html: html,
+    title: title
+  };
+  page.innerHTML = html;
+  pageTitle.innerText = `Current Page: ${title}`;
+
+  window.scrollTo(0, 0);
+
+  let linkCount = 0;
+  let links = document.getElementsByTagName("a");
+  for (let i = 0; i < links.length; i++) {
+    if (links[i].attributes.href.value.slice(0, 2) == "./") {
+      let title = links[i].attributes.href.value.slice(2);
+      let hash = title.search("#");
+      if (hash >= 0) {
+        title = title.slice(0, hash);
+      }
+
+      if (title == currentPage.title) {
+        links[i].classList.add("disabled"); 
+      } else {
+        linkCount++;
+      }
+    } else {
+      links[i].classList.add("disabled");
+    }
+
+
+    links[i].addEventListener("click", (e) => {
+      e.preventDefault();
+      if (links[i].attributes.href.value.slice(0, 2) == "./") {
+        let hash = links[i].attributes.href.value.search("#");
+        if (hash == -1) {
+          navigate(links[i].attributes.href.value.slice(2));
+        } else {
+          navigate(links[i].attributes.href.value.slice(2, hash));
+        }
+      } 
+    });
+  }
+  if (!dontCountLinks) {
+    totalLinkCount += linkCount;
+  }
+  counter.innerText = `Link count: ${linkCount}`;
+  totalCounter.innerText = `Total link count: ${totalLinkCount}`;
+}
+
+navigate("Regional_geography", true);
+
+</script>
+
+</html>
